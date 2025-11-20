@@ -44,6 +44,7 @@ const NAV_SECTIONS = [
     items: [
       { label: "Issues", href: "/editor/issues", icon: FileText },
       { label: "Announcements", href: "/editor/announcements", icon: Megaphone },
+      { label: "Users & Roles", href: "/editor/users-roles", icon: Users },
       { label: "Settings: Workflow", href: "/editor/settings/workflow", icon: Settings },
     ],
   },
