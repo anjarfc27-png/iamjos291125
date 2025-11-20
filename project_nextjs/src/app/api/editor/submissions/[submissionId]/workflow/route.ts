@@ -136,11 +136,11 @@ export async function POST(request: Request, context: RouteParams) {
     // Handle editorial decision action
     if (body.action) {
       const decision = EDITORIAL_DECISIONS[body.action as keyof typeof EDITORIAL_DECISIONS];
-      if (decision.nextStage) {
+      if ("nextStage" in decision && decision.nextStage) {
         updates.current_stage = decision.nextStage;
         targetStage = decision.nextStage;
       }
-      if (decision.status) {
+      if ("status" in decision && decision.status) {
         updates.status = decision.status;
         targetStatus = decision.status;
       }
