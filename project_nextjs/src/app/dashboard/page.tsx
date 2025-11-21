@@ -56,7 +56,7 @@ export default function DashboardPage() {
             </a>
           )}
 
-          {user.roles.some(r => r.role_path === 'editor') && (
+          {user.roles.some(r => r.role_path === 'editor' || r.role_path === 'section_editor') && (
             <a href="/editor" className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow cursor-pointer">
               <h3 className="text-lg font-semibold text-[#002C40]">Editor Dashboard</h3>
               <p className="text-gray-600 mt-2">Manage submissions and editorial workflow</p>

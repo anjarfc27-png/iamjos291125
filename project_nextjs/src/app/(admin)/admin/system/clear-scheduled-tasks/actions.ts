@@ -1,11 +1,13 @@
 "use server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireSiteAdmin } from "@/lib/permissions";
 
 type Result = { ok: true; deleted: number } | { ok: false; message: string };
 
 export async function clearScheduledTaskLogsAction(): Promise<Result> {
   try {
+    await requireSiteAdmin();
     const supabase = getSupabaseAdminClient();
     const { error, count } = await supabase
       .from("scheduled_task_logs")

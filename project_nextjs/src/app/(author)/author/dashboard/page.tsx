@@ -17,6 +17,9 @@ import {
   Calendar
 } from "lucide-react";
 import { withAuth } from '@/lib/auth-client'
+import { USE_DUMMY } from '@/lib/dummy'
+import { useSupabase } from '@/providers/supabase-provider'
+import { useEffect, useState } from 'react'
 
 const mockStats = {
   totalSubmissions: 8,
@@ -112,6 +115,76 @@ const mockRecentActivity = [
 ];
 
 function AuthorDashboardPage() {
+  const supabase = useSupabase()
+  const [stats, setStats] = useState({
+    totalSubmissions: USE_DUMMY ? 8 : 0,
+    inReview: USE_DUMMY ? 3 : 0,
+    accepted: USE_DUMMY ? 2 : 0,
+    rejected: USE_DUMMY ? 1 : 0,
+    published: USE_DUMMY ? 2 : 0,
+    drafts: USE_DUMMY ? 2 : 0
+  })
+  const [submissions, setSubmissions] = useState(USE_DUMMY ? mockMySubmissions : [])
+  const [drafts, setDrafts] = useState(USE_DUMMY ? mockDrafts : [])
+  const [activities, setActivities] = useState(USE_DUMMY ? mockRecentActivity : [])
+
+  useEffect(() => {
+    if (USE_DUMMY) return
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Get author submissions
+      const { data: submissionsData } = await supabase
+        .from('submissions')
+        .select('id, title, journal_id, current_stage, status, created_at, updated_at')
+        .eq('author_id', user.id)
+        .order('updated_at', { ascending: false })
+
+      if (!submissionsData?.length) return
+
+      const journalIds = Array.from(new Set(submissionsData.map(s => s.journal_id)))
+      
+      // Get journal names
+      const { data: journals } = await supabase
+        .from('journals')
+        .select('id, title')
+        .in('id', journalIds)
+
+      const journalMap = new Map((journals ?? []).map(j => [j.id, j.title]))
+
+      // Calculate stats
+      const stats = {
+        totalSubmissions: submissionsData.length,
+        inReview: submissionsData.filter(s => s.current_stage === 'review').length,
+        accepted: submissionsData.filter(s => s.status === 'accepted').length,
+        rejected: submissionsData.filter(s => s.status === 'rejected').length,
+        published: submissionsData.filter(s => s.status === 'published').length,
+        drafts: submissionsData.filter(s => s.status === 'draft').length
+      }
+      setStats(stats)
+
+      // Format submissions data
+      const formattedSubmissions = submissionsData.map(s => ({
+        id: String(s.id),
+        title: String(s.title ?? 'Untitled'),
+        journal: String(journalMap.get(s.journal_id) ?? 'Unknown Journal'),
+        stage: String(s.current_stage ?? 'submission'),
+        status: String(s.status ?? 'submitted'),
+        submittedDate: String(s.created_at ?? '').split('T')[0] ?? '',
+        lastUpdated: String(s.updated_at ?? '').split('T')[0] ?? '',
+        daysInStage: Math.floor((Date.now() - new Date(s.updated_at ?? s.created_at).getTime()) / (1000 * 60 * 60 * 24)),
+        hasUnreadComments: false // TODO: Implement comment tracking
+      }))
+      setSubmissions(formattedSubmissions)
+
+      // TODO: Implement drafts and activities loading
+      setDrafts([])
+      setActivities([])
+    }
+    load()
+  }, [supabase])
+
   const getStageBadgeVariant = (stage: string) => {
     switch (stage) {
       case 'submission':

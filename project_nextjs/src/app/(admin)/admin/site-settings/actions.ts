@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireSiteAdmin } from "@/lib/permissions";
 
 const settingsSchema = z.object({
   site_name: z.string().trim().min(1),
@@ -44,6 +45,7 @@ type UpdateResult = { ok: true } | { ok: false; message: string };
 
 export async function updateSiteSettingsAction(formData: FormData): Promise<void> {
   try {
+    await requireSiteAdmin();
     const values = settingsSchema.safeParse({
       site_name: (formData.get("site_name") as string | null) ?? "",
       intro: (formData.get("intro") as string | null) ?? "",
@@ -104,6 +106,7 @@ export async function getSiteAppearance(): Promise<SiteAppearance> {
 
 export async function updateSiteAppearanceAction(formData: FormData): Promise<void> {
   try {
+    await requireSiteAdmin();
     const values = appearanceSchema.safeParse({
       theme: (formData.get("theme") as string | null) ?? "default",
       header_bg: (formData.get("header_bg") as string | null) ?? "#0a2d44",
@@ -157,12 +160,13 @@ export async function getSitePlugins(): Promise<PluginItem[]> {
   }
 }
 
-export async function toggleSitePluginAction(formData: FormData): Promise<void> {
+export async function toggleSitePluginAction(formData: FormData): Promise<{ success: boolean; message?: string }> {
   try {
+    await requireSiteAdmin();
     const id = (formData.get("plugin_id") as string | null) ?? "";
-    const enabled = (formData.get("enabled") as string | null) === "on";
+    const enabled = (formData.get("enabled") as string | null) === "true";
     if (!id) {
-      return;
+      return { success: false, message: "Plugin ID diperlukan" };
     }
     const meta = PLUGIN_CATALOG.find((plugin) => plugin.id === id);
     const supabase = getSupabaseAdminClient();
@@ -179,11 +183,12 @@ export async function toggleSitePluginAction(formData: FormData): Promise<void> 
         { onConflict: "id" },
       );
     if (error) {
-      return;
+      return { success: false, message: "Gagal mengubah status plugin" };
     }
     revalidatePath("/admin/site-settings/plugins");
+    return { success: true };
   } catch {
-    return;
+    return { success: false, message: "Terjadi kesalahan saat mengubah status plugin" };
   }
 }
 
@@ -218,6 +223,7 @@ export async function getSiteInformation(): Promise<SiteInformation> {
 
 export async function updateSiteInformationAction(formData: FormData): Promise<void> {
   try {
+    await requireSiteAdmin();
     const values = informationSchema.safeParse({
       support_name: (formData.get("support_name") as string | null) ?? "",
       support_email: (formData.get("support_email") as string | null) ?? "",
@@ -275,6 +281,7 @@ export async function getSiteLanguages(): Promise<SiteLanguages> {
 
 export async function updateSiteLanguagesAction(formData: FormData): Promise<void> {
   try {
+    await requireSiteAdmin();
     const entries = formData.getAll("enabled_locales").map((x) => String(x));
     const values = languagesSchema.safeParse({
       default_locale: (formData.get("default_locale") as string | null) ?? "en",
@@ -298,6 +305,7 @@ export async function updateSiteLanguagesAction(formData: FormData): Promise<voi
 
 export async function installLocaleAction(localeCode: string): Promise<UpdateResult> {
   try {
+    await requireSiteAdmin();
     const current = await getSiteLanguages();
     if (current.enabled_locales.includes(localeCode)) {
       return { ok: false, message: "Bahasa ini sudah terinstall." };
@@ -357,6 +365,7 @@ export async function getSiteNavigation(): Promise<SiteNavigation> {
 
 export async function updateSiteNavigationAction(formData: FormData): Promise<void> {
   try {
+    await requireSiteAdmin();
     const primary = String((formData.get("primary") as string | null) ?? "").split(",").map((s) => s.trim()).filter(Boolean);
     const user = String((formData.get("user") as string | null) ?? "").split(",").map((s) => s.trim()).filter(Boolean);
     const values = navigationSchema.safeParse({ primary, user });
@@ -408,6 +417,7 @@ export async function getBulkEmailPermissions(): Promise<BulkEmailPermissions> {
 
 export async function updateBulkEmailPermissionsAction(formData: FormData): Promise<void> {
   try {
+    await requireSiteAdmin();
     const ids = formData.getAll("journal_id").map((x) => String(x));
     const allows = new Set(formData.getAll("allow_journal").map((x) => String(x)));
     const permissions = ids.map((id) => ({ id, allow: allows.has(id) }));

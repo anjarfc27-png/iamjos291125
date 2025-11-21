@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import bcrypt from 'bcryptjs'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 // Create a Supabase client with service role key for server-side operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -128,49 +130,62 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       )
     }
 
-    // Simple password check against stored value (no hashing for now)
-    // TODO: replace with secure hashing in production
-    if (password !== userData.password) {
+    // Secure password check with bcrypt
+    const isPasswordValid = await bcrypt.compare(password, userData.password)
+    
+    if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       )
     }
 
-    // Get user roles from user_account_roles table
-    const roles = await getRolesFromAccountRoles(userData.user_id)
-    const uniqueRoles = Array.from(
-      new Map(
-        roles.map(r => [
-          `${r.user_group_id}|${r.journal_name || ''}|${r.context_id || ''}`,
-          r
-        ])
-      ).values()
-    )
+    // Create Supabase session
+    try {
+      const supabase = await createSupabaseServerClient()
+      
+      // Sign in with Supabase Auth (create session)
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: userData.email,
+        password: password // This will create a proper Supabase session
+      })
 
-    const user = {
-      id: userData.user_id,
-      username: userData.username,
-      email: userData.email,
-      full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || undefined,
-      roles: uniqueRoles
+      if (authError) {
+        console.error('Supabase auth error:', authError)
+        // If Supabase auth fails but DB validation succeeded, create custom session
+        // This handles cases where user exists in our DB but not in Supabase auth
+        return createCustomSession(userData, password)
+      }
+
+      // Get user roles from user_account_roles table
+      const roles = await getRolesFromAccountRoles(userData.user_id)
+      const uniqueRoles = Array.from(
+        new Map(
+          roles.map(r => [
+            `${r.user_group_id}|${r.journal_name || ''}|${r.context_id || ''}`,
+            r
+          ])
+        ).values()
+      )
+
+      const user = {
+        id: userData.user_id,
+        username: userData.username,
+        email: userData.email,
+        full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || undefined,
+        roles: uniqueRoles
+      }
+
+      const response = NextResponse.json({ user })
+      
+      // The Supabase session is automatically set in cookies by signInWithPassword
+      return response
+
+    } catch (error) {
+      console.error('Error creating Supabase session:', error)
+      // Fallback to custom session
+      return createCustomSession(userData, password)
     }
-
-    // Create session token (simple implementation)
-    const sessionToken = Buffer.from(`${userData.user_id}:${Date.now()}`).toString('base64')
-
-    const response = NextResponse.json({ user })
-
-    // Set session cookie
-    response.cookies.set('session-token', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/',
-    })
-
-    return response
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(

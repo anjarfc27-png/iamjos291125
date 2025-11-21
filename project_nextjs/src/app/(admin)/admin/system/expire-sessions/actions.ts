@@ -1,11 +1,13 @@
 "use server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireSiteAdmin } from "@/lib/permissions";
 
 type Result = { ok: true; expired: number } | { ok: false; message: string };
 
 export async function expireAllSessionsAction(): Promise<Result> {
   try {
+    await requireSiteAdmin();
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase.auth.admin.listUsers();
     if (error) {

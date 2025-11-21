@@ -6,21 +6,28 @@ import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { JournalSettings } from "@/features/journals/types";
 import { JOURNAL_ROLE_OPTIONS } from "@/features/journals/types";
+import { requireJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ journalId: string }>;
 };
 
-export async function GET(_request: Request, context: RouteParams) {
+export async function GET(request: Request, context: RouteParams) {
   const { journalId } = await context.params;
   if (!journalId) {
     return NextResponse.json({ ok: false, message: "Jurnal tidak ditemukan." }, { status: 400 });
   }
 
   try {
+    // Check permissions - only journal managers and admins can view settings
+    await requireJournalRole(request, journalId, ['admin', 'manager']);
+    
     const settings = await loadSettings(journalId);
     return NextResponse.json({ ok: true, settings });
-  } catch {
+  } catch (error: any) {
+    if (error.status === 403) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: 403 });
+    }
     return NextResponse.json({ ok: false, message: "Gagal memuat pengaturan jurnal." }, { status: 500 });
   }
 }

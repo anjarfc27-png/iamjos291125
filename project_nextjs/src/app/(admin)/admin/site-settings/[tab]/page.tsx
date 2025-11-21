@@ -12,7 +12,18 @@ import {
   updateSiteAppearanceAction,
   getSitePlugins,
   toggleSitePluginAction,
+  getSiteInformation,
+  updateSiteInformationAction,
+  getSiteLanguages,
+  updateSiteLanguagesAction,
+  installLocaleAction,
+  getSiteNavigation,
+  updateSiteNavigationAction,
+  getBulkEmailPermissions,
+  updateBulkEmailPermissionsAction,
 } from "../actions";
+import { LOCALE_MAP } from "@/lib/locales";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type Props = {
   params: Promise<{ tab: SiteSettingTab }>;
@@ -28,15 +39,25 @@ export default async function SiteSettingsTabPage({ params }: Props) {
   const initial = await getSiteSettings();
   const appearance = await getSiteAppearance();
   const plugins = await getSitePlugins();
+  const information = await getSiteInformation();
+  const languages = await getSiteLanguages();
+  const navigation = await getSiteNavigation();
+  const bulkEmailPerms = await getBulkEmailPermissions();
+  const supabase = getSupabaseAdminClient();
+  const { data: journalRows } = await supabase
+    .from("journals")
+    .select("id,title,path")
+    .order("created_at", { ascending: true });
+  const journals = (journalRows ?? []).map((j: any) => ({ id: String(j.id), name: String(j.title ?? j.path ?? j.id) }));
 
   return (
     <div className="space-y-8">
-      {tab === "site-setup" && <SiteSetupTab initial={initial} />}
+      {tab === "site-setup" && <SiteSetupTab initial={initial} information={information} />}
       {tab === "appearance" && <AppearanceTab initial={appearance} />}
-      {tab === "languages" && <LanguagesTab />}
+      {tab === "languages" && <LanguagesTab initial={languages} />}
       {tab === "plugins" && <PluginsTab items={plugins} />}
-      {tab === "navigation-menus" && <NavigationMenusTab />}
-      {tab === "bulk-emails" && <BulkEmailsTab />}
+      {tab === "navigation-menus" && <NavigationMenusTab initial={navigation} />}
+      {tab === "bulk-emails" && <BulkEmailsTab journals={journals} initial={bulkEmailPerms} />}
     </div>
   );
 }
@@ -73,7 +94,7 @@ function Section({
   );
 }
 
-function SiteSetupTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteSettings>> }) {
+function SiteSetupTab({ initial, information }: { initial: Awaited<ReturnType<typeof getSiteSettings>>; information: Awaited<ReturnType<typeof getSiteInformation>> }) {
   return (
     <>
       <Section
@@ -140,39 +161,33 @@ function SiteSetupTab({ initial }: { initial: Awaited<ReturnType<typeof getSiteS
         title="Contact Information"
         description="Informasi kontak yang tampil di seluruh situs."
       >
-        <div className="space-y-4">
+        <form action={updateSiteInformationAction} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="support-name" className="mb-2 block text-sm font-medium">
+              <Label htmlFor="support_name" className="mb-2 block text-sm font-medium">
                 Support name <span className="text-[#b91c1c]">*</span>
               </Label>
-              <Input id="support-name" defaultValue="Site Administrator" />
+              <Input id="support_name" name="support_name" defaultValue={information.support_name} />
             </div>
             <div>
-              <Label htmlFor="support-email" className="mb-2 block text-sm font-medium">
+              <Label htmlFor="support_email" className="mb-2 block text-sm font-medium">
                 Support email <span className="text-[#b91c1c]">*</span>
               </Label>
-              <Input id="support-email" type="email" defaultValue="admin@example.com" />
+              <Input id="support_email" name="support_email" type="email" defaultValue={information.support_email} />
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="support-phone" className="mb-2 block text-sm font-medium">
+              <Label htmlFor="support_phone" className="mb-2 block text-sm font-medium">
                 Support phone
               </Label>
-              <Input id="support-phone" defaultValue="+62 811 1234 5678" />
-            </div>
-            <div>
-              <Label htmlFor="min-password" className="mb-2 block text-sm font-medium">
-                Minimum password length <span className="text-[#b91c1c]">*</span>
-              </Label>
-              <Input id="min-password" type="number" defaultValue={8} className="max-w-xs" />
+              <Input id="support_phone" name="support_phone" defaultValue={information.support_phone} />
             </div>
           </div>
           <div className="flex justify-end pt-4">
-            <Button>Simulasi</Button>
+            <Button type="submit">Simpan Informasi</Button>
           </div>
-        </div>
+        </form>
       </Section>
     </>
   );

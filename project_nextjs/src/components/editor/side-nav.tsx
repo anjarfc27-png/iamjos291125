@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   LayoutDashboard, 
   Mail, 
@@ -17,7 +18,8 @@ import {
   Wrench,
   BarChart3,
   FileText,
-  User
+  User,
+  Layers
 } from "lucide-react";
 
 const NAV_SECTIONS = [
@@ -61,6 +63,24 @@ const NAV_SECTIONS = [
 export function EditorSideNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+
+  // Check if user is section editor
+  const isSectionEditor = user?.roles?.some(r => r.role_path === 'section_editor');
+
+  // Add Sections menu for section editors
+  const navSections = isSectionEditor 
+    ? [
+        ...NAV_SECTIONS.slice(0, 2), // WORKFLOW and MONITORING
+        {
+          label: "SECTION EDITOR",
+          items: [
+            { label: "Sections", href: "/section-editor/sections", icon: Layers },
+          ],
+        },
+        ...NAV_SECTIONS.slice(2) // MANAGEMENT and STATISTICS
+      ]
+    : NAV_SECTIONS;
 
   return (
     <aside className="pkp_structure_sidebar" style={{padding: '1.5rem'}}>

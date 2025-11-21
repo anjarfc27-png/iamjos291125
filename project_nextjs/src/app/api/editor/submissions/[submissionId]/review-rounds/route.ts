@@ -5,18 +5,33 @@ import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SUBMISSION_STAGES } from "@/features/editor/types";
+import { getCurrentUser } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
 };
 
-export async function GET(_request: Request, context: RouteParams) {
+export async function GET(request: NextRequest, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }
 
   try {
+    // Check permissions - editors, section editors, and managers can view review rounds
+    const user = await getCurrentUser(request)
+    if (!user) {
+      return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+    }
+
+    const hasPermission = user.roles.some(role => 
+      ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
+    )
+
+    if (!hasPermission) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
+    }
+
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("submission_review_rounds")
@@ -52,10 +67,24 @@ export async function GET(_request: Request, context: RouteParams) {
   }
 }
 
-export async function POST(request: Request, context: RouteParams) {
+export async function POST(request: NextRequest, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
+  }
+
+  // Check permissions - only editors, section editors, and managers can create review rounds
+  const user = await getCurrentUser(request)
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+  }
+
+  const hasPermission = user.roles.some(role => 
+    ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
+  )
+
+  if (!hasPermission) {
+    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
   }
 
   const body = (await request.json().catch(() => null)) as { stage?: string; notes?: string | null } | null;
@@ -89,6 +118,7 @@ export async function POST(request: Request, context: RouteParams) {
       category: "workflow",
       message: `Membuka review round ${nextRoundNumber} pada tahap ${stage}.`,
       metadata: { stage, round: nextRoundNumber },
+      actor_id: user.id,
     });
 
     return NextResponse.json({ ok: true });

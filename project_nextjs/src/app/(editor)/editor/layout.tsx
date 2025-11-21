@@ -70,7 +70,7 @@ export default function EditorLayout({ children }: Props) {
       router.replace("/login?source=/editor");
       return;
     }
-    const canEdit = user.roles?.some(r => r.role_path === "editor" || r.role_path === "admin");
+    const canEdit = user.roles?.some(r => r.role_path === "editor" || r.role_path === "section_editor" || r.role_path === "admin");
     if (!canEdit) {
       setAuthorized(false);
       // Redirect to role-appropriate route

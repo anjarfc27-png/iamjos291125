@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUser } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
@@ -13,6 +14,20 @@ export async function POST(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
+  }
+
+  // Check permissions - only editors, section editors, and managers can add activity notes
+  const user = await getCurrentUser(request)
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+  }
+
+  const hasPermission = user.roles.some(role => 
+    ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
+  )
+
+  if (!hasPermission) {
+    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
   }
 
   const body = (await request.json().catch(() => null)) as { message?: string } | null;
@@ -27,6 +42,7 @@ export async function POST(request: Request, context: RouteParams) {
       submission_id: submissionId,
       category: "note",
       message,
+      actor_id: user.id,
     });
     if (error) {
       throw error;

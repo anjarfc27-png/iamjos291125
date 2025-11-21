@@ -52,7 +52,7 @@ export function getRolePath(userGroupName: string): string {
     'Site admin': 'admin',
     'Manager': 'manager',
     'Editor': 'editor',
-    'Section editor': 'editor', // Map Section editor ke editor untuk kompatibilitas
+    'Section editor': 'section_editor',
     'Copyeditor': 'copyeditor',
     'Proofreader': 'proofreader',
     'Layout Editor': 'layout-editor',

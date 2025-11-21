@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { DEFAULT_JOURNAL_SETTINGS, type JournalSettings } from "@/features/journals/types";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireSiteAdmin, requireJournalRole } from "@/lib/permissions";
 
 const journalSchema = z.object({
   title: z.string().trim().min(3, "Judul minimal 3 karakter."),
@@ -117,6 +118,7 @@ export async function createJournalAction(input: {
     return { success: false, message: parsed.error.issues[0]?.message ?? "Validasi gagal." };
   }
 
+  await requireSiteAdmin();
   const supabase = getSupabaseAdminClient();
   const initialSettings = mergeSettings({
     context: {
@@ -156,6 +158,7 @@ export async function updateJournalAction(input: {
     return { success: false, message: parsed.error.issues[0]?.message ?? "Validasi gagal." };
   }
 
+  await requireJournalRole(input.id, ["manager", "editor"]);
   const supabase = getSupabaseAdminClient();
   const { data: existingSettings } = await supabase
     .from("journals")
@@ -190,6 +193,7 @@ export async function updateJournalAction(input: {
 }
 
 export async function deleteJournalAction(id: string): Promise<Result> {
+  await requireJournalRole(id, ["manager"]);
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("journals").delete().eq("id", id);
 
@@ -228,6 +232,7 @@ export async function updateJournalSettingsSection(
   }
 
   try {
+    await requireJournalRole(journalId, ["manager", "editor"]);
     const current = await getJournalSettings(journalId);
     const next: JournalSettings = {
       ...current,

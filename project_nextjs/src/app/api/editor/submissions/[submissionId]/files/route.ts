@@ -5,18 +5,34 @@ import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SUBMISSION_STAGES } from "@/features/editor/types";
+import { requireJournalRole, getCurrentUser } from "@/lib/permissions";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
 };
 
-export async function GET(_request: Request, context: RouteParams) {
+export async function GET(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }
 
   try {
+    // Check permissions - editors, section editors, and managers can view files
+    const user = await getCurrentUser(request)
+    if (!user) {
+      return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+    }
+
+    const hasPermission = user.roles.some(role => 
+      ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
+    )
+
+    if (!hasPermission) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
+    }
+
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("submission_files")
@@ -27,7 +43,8 @@ export async function GET(_request: Request, context: RouteParams) {
       throw error;
     }
     return NextResponse.json({ ok: true, files: data ?? [] });
-  } catch {
+  } catch (error) {
+    console.error('Error loading submission files:', error)
     return NextResponse.json({ ok: false, message: "Gagal memuat file workflow." }, { status: 500 });
   }
 }
@@ -36,6 +53,20 @@ export async function POST(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
+  }
+
+  // Check permissions - only editors, section editors, and managers can upload files
+  const user = await getCurrentUser(request)
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+  }
+
+  const hasPermission = user.roles.some(role => 
+    ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
+  )
+
+  if (!hasPermission) {
+    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
   }
 
   const body = (await request.json().catch(() => null)) as {

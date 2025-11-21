@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireSiteAdmin } from "@/lib/permissions";
 
 type Result = { ok: true };
 
 export async function clearDataCachesAction(): Promise<Result> {
+  await requireSiteAdmin();
   const paths = [
     "/admin/dashboard",
     "/admin/site-management",

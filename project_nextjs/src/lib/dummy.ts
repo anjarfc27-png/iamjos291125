@@ -1,0 +1,1 @@
+export const USE_DUMMY = (process.env.NEXT_PUBLIC_USE_DUMMY ?? 'true').toLowerCase() === 'true';

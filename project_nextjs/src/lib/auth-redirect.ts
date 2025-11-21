@@ -16,18 +16,23 @@ export function getRedirectPathByRole(user: User | null): string {
     return "/admin";
   } else if (rolePaths.includes("manager")) {
     return "/admin";
-  } else if (rolePaths.includes("editor") || rolePaths.includes("section-editor") || 
-             rolePaths.includes("copyeditor") || rolePaths.includes("proofreader") || 
-             rolePaths.includes("layout-editor")) {
+  } else if (rolePaths.includes("editor") || rolePaths.includes("section_editor")) {
     return "/editor";
+  } else if (rolePaths.includes("copyeditor")) {
+    return "/copyeditor";
+  } else if (rolePaths.includes("proofreader")) {
+    return "/proofreader";
+  } else if (rolePaths.includes("layout-editor")) {
+    return "/layout-editor";
   } else if (rolePaths.includes("author")) {
     return "/author";
   } else if (rolePaths.includes("reviewer")) {
     return "/reviewer";
+  } else if (rolePaths.includes("subscription-manager")) {
+    return "/subscription-manager";
   } else if (rolePaths.includes("reader")) {
     return "/reader";
   }
   
   return "/dashboard";
 }
-

@@ -94,14 +94,14 @@ export function LoginForm() {
         <div className="space-y-1">
           <Label htmlFor="username">
             <span className="label">
-              Email
+              Email atau Username
               <span className="text-[#b91c1c]" aria-hidden="true">*</span>
               <span className="sr-only">Required</span>
             </span>
           </Label>
           <Input
             id="username"
-            type="email"
+            type="text"
             autoComplete="username"
             maxLength={32}
             required

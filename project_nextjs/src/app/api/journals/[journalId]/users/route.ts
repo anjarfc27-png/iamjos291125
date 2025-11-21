@@ -5,14 +5,19 @@ import {
   listJournalUserRoles,
   removeJournalUserRole,
 } from "@/app/(admin)/admin/site-management/hosted-journals/actions";
+import { requireJournalRole } from "@/lib/permissions";
 
 type RouteContext = {
   params: Promise<{ journalId: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const { journalId } = await context.params;
+    
+    // Check permissions - only journal managers and admins can view user roles
+    await requireJournalRole(request, journalId, ['admin', 'manager']);
+    
     const rows = await listJournalUserRoles(journalId);
     const grouped = rows.reduce<Record<string, { userId: string; roles: { role: string; assignedAt: string }[] }>>((acc, row) => {
       if (!acc[row.user_id]) {
@@ -22,7 +27,10 @@ export async function GET(_request: Request, context: RouteContext) {
       return acc;
     }, {});
     return NextResponse.json({ ok: true, assignments: Object.values(grouped) });
-  } catch {
+  } catch (error: any) {
+    if (error.status === 403) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: 403 });
+    }
     return NextResponse.json({ ok: false, message: "Tidak dapat memuat pengguna jurnal." }, { status: 500 });
   }
 }
