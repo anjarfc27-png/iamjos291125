@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { PkpTabs, PkpTabsList, PkpTabsTrigger, PkpTabsContent } from "@/components/ui/pkp-tabs";
 import { PkpButton } from "@/components/ui/pkp-button";
 import { PkpCheckbox } from "@/components/ui/pkp-checkbox";
@@ -8,7 +9,74 @@ import { PkpTable, PkpTableHeader, PkpTableRow, PkpTableHead, PkpTableCell } fro
 import { DUMMY_USERS, DUMMY_ROLES } from "@/features/editor/settings-dummy-data";
 import { USE_DUMMY } from "@/lib/dummy";
 
+// Helper functions for localStorage
+const loadFromStorage = (key: string, defaultValue: any) => {
+  if (typeof window === "undefined") return defaultValue;
+  try {
+    const item = localStorage.getItem(`ojs_settings_${key}`);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
+const saveToStorage = (key: string, value: any) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`ojs_settings_${key}`, JSON.stringify(value));
+  } catch (error) {
+    console.error("Failed to save to localStorage:", error);
+  }
+};
+
 export default function SettingsAccessPage() {
+  // Form states - Site Access
+  const [siteAccess, setSiteAccess] = useState({
+    allowRegistrations: loadFromStorage("siteAccess_allowRegistrations", false),
+    requireReviewerInterests: loadFromStorage("siteAccess_requireReviewerInterests", false),
+    allowRememberMe: loadFromStorage("siteAccess_allowRememberMe", true),
+    sessionLifetime: loadFromStorage("siteAccess_sessionLifetime", "3600"),
+    forceSSL: loadFromStorage("siteAccess_forceSSL", false),
+  });
+
+  // Feedback states
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+  const [saving, setSaving] = useState(false);
+
+  // Save handler
+  const handleSaveSiteAccess = async () => {
+    setSaving(true);
+    setFeedback({ type: null, message: "" });
+    
+    try {
+      // Validate session lifetime
+      if (siteAccess.sessionLifetime && parseInt(siteAccess.sessionLifetime) < 60) {
+        setFeedback({ type: "error", message: "Session lifetime must be at least 60 seconds." });
+        setSaving(false);
+        return;
+      }
+
+      // Save to localStorage (temporary - ready for database integration)
+      Object.keys(siteAccess).forEach((key) => {
+        saveToStorage(`siteAccess_${key}`, siteAccess[key as keyof typeof siteAccess]);
+      });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setFeedback({ type: "success", message: "Site access settings saved successfully." });
+      
+      // Clear feedback after 3 seconds
+      setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+    } catch (error) {
+      setFeedback({ type: "error", message: "Failed to save site access settings." });
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <div style={{
       width: "100%",
@@ -251,6 +319,21 @@ export default function SettingsAccessPage() {
                 border: "1px solid #e5e5e5",
                 padding: "1.5rem",
               }}>
+                {/* Feedback Message */}
+                {feedback.type && (
+                  <div style={{
+                    padding: "0.75rem 1rem",
+                    marginBottom: "1.5rem",
+                    borderRadius: "4px",
+                    backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                    color: feedback.type === "success" ? "#155724" : "#721c24",
+                    border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                    fontSize: "0.875rem",
+                  }}>
+                    {feedback.message}
+                  </div>
+                )}
+
                 <div style={{ marginBottom: "1.5rem" }}>
                   <h3 style={{
                     fontSize: "1rem",
@@ -263,6 +346,8 @@ export default function SettingsAccessPage() {
                   <div style={{ marginBottom: "1rem" }}>
                     <PkpCheckbox
                       id="allowRegistrations"
+                      checked={siteAccess.allowRegistrations}
+                      onChange={(e) => setSiteAccess({ ...siteAccess, allowRegistrations: e.target.checked })}
                       label="Allow user self-registration"
                     />
                     <p style={{
@@ -277,6 +362,8 @@ export default function SettingsAccessPage() {
                   <div style={{ marginBottom: "1rem" }}>
                     <PkpCheckbox
                       id="requireReviewerInterests"
+                      checked={siteAccess.requireReviewerInterests}
+                      onChange={(e) => setSiteAccess({ ...siteAccess, requireReviewerInterests: e.target.checked })}
                       label="Require reviewers to indicate their review interests"
                     />
                   </div>
@@ -294,18 +381,28 @@ export default function SettingsAccessPage() {
                   <div style={{ marginBottom: "1rem" }}>
                     <PkpCheckbox
                       id="allowRememberMe"
+                      checked={siteAccess.allowRememberMe}
+                      onChange={(e) => setSiteAccess({ ...siteAccess, allowRememberMe: e.target.checked })}
                       label="Allow users to enable 'Remember Me' login option"
                     />
                   </div>
                   <div style={{ marginBottom: "1rem" }}>
-                    <PkpCheckbox
-                      id="sessionLifetime"
-                      label="Session lifetime (in seconds)"
-                    />
+                    <label htmlFor="sessionLifetime" style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Session lifetime (in seconds)
+                    </label>
                     <PkpInput
+                      id="sessionLifetime"
                       type="number"
+                      value={siteAccess.sessionLifetime}
+                      onChange={(e) => setSiteAccess({ ...siteAccess, sessionLifetime: e.target.value })}
                       placeholder="3600"
-                      style={{ width: "200px", marginTop: "0.5rem" }}
+                      style={{ width: "200px" }}
                     />
                   </div>
                 </div>
@@ -322,6 +419,8 @@ export default function SettingsAccessPage() {
                   <div style={{ marginBottom: "1rem" }}>
                     <PkpCheckbox
                       id="forceSSL"
+                      checked={siteAccess.forceSSL}
+                      onChange={(e) => setSiteAccess({ ...siteAccess, forceSSL: e.target.checked })}
                       label="Force SSL connections"
                     />
                     <p style={{
@@ -335,8 +434,12 @@ export default function SettingsAccessPage() {
                   </div>
                 </div>
 
-                <PkpButton variant="primary">
-                  Save
+                <PkpButton 
+                  variant="primary" 
+                  onClick={handleSaveSiteAccess}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save"}
                 </PkpButton>
               </div>
             </div>

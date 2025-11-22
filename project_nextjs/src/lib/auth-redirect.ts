@@ -11,13 +11,15 @@ export function getRedirectPathByRole(user: User | null): string {
   
   const rolePaths = user.roles.map(r => r.role_path);
   
-  // Priority: admin > manager > editor > author > reviewer
+  // Priority: admin > manager > editor > assistant > copyeditor > proofreader > layout-editor > author > reviewer
   if (rolePaths.includes("admin")) {
     return "/admin";
   } else if (rolePaths.includes("manager")) {
     return "/manager";
   } else if (rolePaths.includes("editor") || rolePaths.includes("section_editor")) {
     return "/editor";
+  } else if (rolePaths.includes("assistant")) {
+    return "/assistant";
   } else if (rolePaths.includes("copyeditor")) {
     return "/copyeditor";
   } else if (rolePaths.includes("proofreader")) {

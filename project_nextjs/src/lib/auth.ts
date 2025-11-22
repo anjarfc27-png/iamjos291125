@@ -53,6 +53,7 @@ export function getRolePath(userGroupName: string): string {
     'Manager': 'manager',
     'Editor': 'editor',
     'Section editor': 'section_editor',
+    'Assistant': 'assistant',
     'Copyeditor': 'copyeditor',
     'Proofreader': 'proofreader',
     'Layout Editor': 'layout-editor',

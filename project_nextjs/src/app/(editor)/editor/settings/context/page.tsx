@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { PkpTabs, PkpTabsList, PkpTabsTrigger, PkpTabsContent } from "@/components/ui/pkp-tabs";
 import { PkpButton } from "@/components/ui/pkp-button";
 import { PkpInput } from "@/components/ui/pkp-input";
@@ -10,7 +11,120 @@ import { PkpCheckbox } from "@/components/ui/pkp-checkbox";
 import { DUMMY_SECTIONS, DUMMY_CATEGORIES } from "@/features/editor/settings-dummy-data";
 import { USE_DUMMY } from "@/lib/dummy";
 
+// Helper functions for localStorage
+const loadFromStorage = (key: string) => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveToStorage = (key: string, value: any) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
 export default function SettingsContextPage() {
+  // Masthead form state
+  const [masthead, setMasthead] = useState({
+    journalTitle: '',
+    journalDescription: '',
+    masthead: '',
+  });
+
+  // Contact form state
+  const [contact, setContact] = useState({
+    contactEmail: '',
+    contactName: '',
+    mailingAddress: '',
+  });
+
+  // Feedback and loading states
+  const [mastheadFeedback, setMastheadFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [contactFeedback, setContactFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingMasthead, setSavingMasthead] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+
+  // Load saved data on mount
+  useEffect(() => {
+    const savedMasthead = loadFromStorage('settings_context_masthead');
+    const savedContact = loadFromStorage('settings_context_contact');
+    if (savedMasthead) setMasthead(savedMasthead);
+    if (savedContact) setContact(savedContact);
+  }, []);
+
+  // Auto-dismiss feedback messages
+  useEffect(() => {
+    if (mastheadFeedback) {
+      const timer = setTimeout(() => setMastheadFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mastheadFeedback]);
+
+  useEffect(() => {
+    if (contactFeedback) {
+      const timer = setTimeout(() => setContactFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [contactFeedback]);
+
+  // Save handlers
+  const handleSaveMasthead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!masthead.journalTitle.trim()) {
+      setMastheadFeedback({ type: 'error', message: 'Journal title is required.' });
+      return;
+    }
+
+    setSavingMasthead(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_context_masthead', masthead);
+      setMastheadFeedback({ type: 'success', message: 'Masthead settings saved successfully.' });
+    } catch (error) {
+      setMastheadFeedback({ type: 'error', message: 'Failed to save masthead settings.' });
+    } finally {
+      setSavingMasthead(false);
+    }
+  };
+
+  const handleSaveContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!contact.contactEmail.trim()) {
+      setContactFeedback({ type: 'error', message: 'Contact email is required.' });
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contact.contactEmail)) {
+      setContactFeedback({ type: 'error', message: 'Please enter a valid email address.' });
+      return;
+    }
+
+    setSavingContact(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_context_contact', contact);
+      setContactFeedback({ type: 'success', message: 'Contact information saved successfully.' });
+    } catch (error) {
+      setContactFeedback({ type: 'error', message: 'Failed to save contact information.' });
+    } finally {
+      setSavingContact(false);
+    }
+  };
   return (
     <div style={{
       width: "100%",
@@ -88,63 +202,85 @@ export default function SettingsContextPage() {
               }}>
                 Masthead
               </h2>
-              <div style={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e5e5e5",
-                padding: "1.5rem",
-              }}>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#002C40",
-                  }}>
-                    Journal Title
-                  </label>
-                  <PkpInput
-                    type="text"
-                    placeholder="Enter journal title"
-                    style={{ width: "100%" }}
-                  />
+              {mastheadFeedback && (
+                <div style={{
+                  padding: "0.75rem 1rem",
+                  marginBottom: "1rem",
+                  borderRadius: "4px",
+                  backgroundColor: mastheadFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                  color: mastheadFeedback.type === 'success' ? '#155724' : '#721c24',
+                  border: `1px solid ${mastheadFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                  fontSize: "0.875rem",
+                }}>
+                  {mastheadFeedback.message}
                 </div>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#002C40",
-                  }}>
-                    Journal Description
-                  </label>
-                  <PkpTextarea
-                    rows={5}
-                    placeholder="Enter journal description"
-                    style={{ width: "100%" }}
-                  />
+              )}
+              <form onSubmit={handleSaveMasthead}>
+                <div style={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e5e5e5",
+                  padding: "1.5rem",
+                }}>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Journal Title <span style={{ color: "#dc3545" }}>*</span>
+                    </label>
+                    <PkpInput
+                      type="text"
+                      placeholder="Enter journal title"
+                      style={{ width: "100%" }}
+                      value={masthead.journalTitle}
+                      onChange={(e) => setMasthead({ ...masthead, journalTitle: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Journal Description
+                    </label>
+                    <PkpTextarea
+                      rows={5}
+                      placeholder="Enter journal description"
+                      style={{ width: "100%" }}
+                      value={masthead.journalDescription}
+                      onChange={(e) => setMasthead({ ...masthead, journalDescription: e.target.value })}
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Masthead
+                    </label>
+                    <PkpTextarea
+                      rows={10}
+                      placeholder="Enter masthead information (editorial team, board members, etc.)"
+                      style={{ width: "100%" }}
+                      value={masthead.masthead}
+                      onChange={(e) => setMasthead({ ...masthead, masthead: e.target.value })}
+                    />
+                  </div>
+                  <PkpButton variant="primary" type="submit" disabled={savingMasthead}>
+                    {savingMasthead ? 'Saving...' : 'Save'}
+                  </PkpButton>
                 </div>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#002C40",
-                  }}>
-                    Masthead
-                  </label>
-                  <PkpTextarea
-                    rows={10}
-                    placeholder="Enter masthead information (editorial team, board members, etc.)"
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <PkpButton variant="primary">
-                  Save
-                </PkpButton>
-              </div>
+              </form>
             </div>
           </PkpTabsContent>
 
@@ -159,63 +295,85 @@ export default function SettingsContextPage() {
               }}>
                 Contact Information
               </h2>
-              <div style={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #e5e5e5",
-                padding: "1.5rem",
-              }}>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#002C40",
-                  }}>
-                    Contact Email
-                  </label>
-                  <PkpInput
-                    type="email"
-                    placeholder="contact@journal.example"
-                    style={{ width: "100%" }}
-                  />
+              {contactFeedback && (
+                <div style={{
+                  padding: "0.75rem 1rem",
+                  marginBottom: "1rem",
+                  borderRadius: "4px",
+                  backgroundColor: contactFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                  color: contactFeedback.type === 'success' ? '#155724' : '#721c24',
+                  border: `1px solid ${contactFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                  fontSize: "0.875rem",
+                }}>
+                  {contactFeedback.message}
                 </div>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#002C40",
-                  }}>
-                    Contact Name
-                  </label>
-                  <PkpInput
-                    type="text"
-                    placeholder="Enter contact name"
-                    style={{ width: "100%" }}
-                  />
+              )}
+              <form onSubmit={handleSaveContact}>
+                <div style={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #e5e5e5",
+                  padding: "1.5rem",
+                }}>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Contact Email <span style={{ color: "#dc3545" }}>*</span>
+                    </label>
+                    <PkpInput
+                      type="email"
+                      placeholder="contact@journal.example"
+                      style={{ width: "100%" }}
+                      value={contact.contactEmail}
+                      onChange={(e) => setContact({ ...contact, contactEmail: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Contact Name
+                    </label>
+                    <PkpInput
+                      type="text"
+                      placeholder="Enter contact name"
+                      style={{ width: "100%" }}
+                      value={contact.contactName}
+                      onChange={(e) => setContact({ ...contact, contactName: e.target.value })}
+                    />
+                  </div>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Mailing Address
+                    </label>
+                    <PkpTextarea
+                      rows={5}
+                      placeholder="Enter mailing address"
+                      style={{ width: "100%" }}
+                      value={contact.mailingAddress}
+                      onChange={(e) => setContact({ ...contact, mailingAddress: e.target.value })}
+                    />
+                  </div>
+                  <PkpButton variant="primary" type="submit" disabled={savingContact}>
+                    {savingContact ? 'Saving...' : 'Save'}
+                  </PkpButton>
                 </div>
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{
-                    display: "block",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                    color: "#002C40",
-                  }}>
-                    Mailing Address
-                  </label>
-                  <PkpTextarea
-                    rows={5}
-                    placeholder="Enter mailing address"
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <PkpButton variant="primary">
-                  Save
-                </PkpButton>
-              </div>
+              </form>
             </div>
           </PkpTabsContent>
 

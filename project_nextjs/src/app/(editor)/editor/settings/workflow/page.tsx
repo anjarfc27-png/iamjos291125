@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PkpTabs, PkpTabsList, PkpTabsTrigger, PkpTabsContent } from "@/components/ui/pkp-tabs";
 import { PkpButton } from "@/components/ui/pkp-button";
 import { PkpCheckbox } from "@/components/ui/pkp-checkbox";
@@ -19,11 +19,175 @@ import {
 } from "@/features/editor/settings-dummy-data";
 import { USE_DUMMY } from "@/lib/dummy";
 
+// Helper function to load from localStorage
+const loadFromStorage = (key: string, defaultValue: any) => {
+  if (typeof window === "undefined") return defaultValue;
+  try {
+    const item = localStorage.getItem(`ojs_settings_${key}`);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+};
+
+// Helper function to save to localStorage
+const saveToStorage = (key: string, value: any) => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`ojs_settings_${key}`, JSON.stringify(value));
+  } catch (error) {
+    console.error("Failed to save to localStorage:", error);
+  }
+};
+
 export default function SettingsWorkflowPage() {
   const [activeTab, setActiveTab] = useState("submission");
   const [activeSubTab, setActiveSubTab] = useState("disableSubmissions");
   const [activeReviewSubTab, setActiveReviewSubTab] = useState("reviewSetup");
   const [activeEmailSubTab, setActiveEmailSubTab] = useState("emailsSetup");
+
+  // Form states - Review Setup
+  const [reviewSetup, setReviewSetup] = useState({
+    defaultReviewMode: loadFromStorage("reviewSetup_defaultReviewMode", "doubleAnonymous"),
+    restrictReviewerFileAccess: loadFromStorage("reviewSetup_restrictReviewerFileAccess", false),
+    reviewerAccessKeysEnabled: loadFromStorage("reviewSetup_reviewerAccessKeysEnabled", false),
+    numWeeksPerResponse: loadFromStorage("reviewSetup_numWeeksPerResponse", "2"),
+    numWeeksPerReview: loadFromStorage("reviewSetup_numWeeksPerReview", "4"),
+    numDaysBeforeInviteReminder: loadFromStorage("reviewSetup_numDaysBeforeInviteReminder", "3"),
+    numDaysBeforeSubmitReminder: loadFromStorage("reviewSetup_numDaysBeforeSubmitReminder", "7"),
+  });
+
+  // Form states - Reviewer Guidance
+  const [reviewerGuidance, setReviewerGuidance] = useState({
+    reviewGuidelines: loadFromStorage("reviewerGuidance_reviewGuidelines", ""),
+    competingInterests: loadFromStorage("reviewerGuidance_competingInterests", ""),
+    showEnsuringLink: loadFromStorage("reviewerGuidance_showEnsuringLink", false),
+  });
+
+  // Form states - Author Guidelines
+  const [authorGuidelines, setAuthorGuidelines] = useState(
+    loadFromStorage("authorGuidelines", "")
+  );
+
+  // Form states - Email Setup
+  const [emailSetup, setEmailSetup] = useState({
+    emailSignature: loadFromStorage("emailSetup_emailSignature", ""),
+    envelopeSender: loadFromStorage("emailSetup_envelopeSender", ""),
+  });
+
+  // Feedback states
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | null;
+    message: string;
+  }>({ type: null, message: "" });
+  const [saving, setSaving] = useState(false);
+
+  // Save handlers
+  const handleSaveReviewSetup = async () => {
+    setSaving(true);
+    setFeedback({ type: null, message: "" });
+    
+    try {
+      // Validate
+      if (!reviewSetup.numWeeksPerResponse || parseInt(reviewSetup.numWeeksPerResponse) < 1) {
+        setFeedback({ type: "error", message: "Review response time must be at least 1 week." });
+        setSaving(false);
+        return;
+      }
+      if (!reviewSetup.numWeeksPerReview || parseInt(reviewSetup.numWeeksPerReview) < 1) {
+        setFeedback({ type: "error", message: "Review completion time must be at least 1 week." });
+        setSaving(false);
+        return;
+      }
+
+      // Save to localStorage (temporary - ready for database integration)
+      Object.keys(reviewSetup).forEach((key) => {
+        saveToStorage(`reviewSetup_${key}`, reviewSetup[key as keyof typeof reviewSetup]);
+      });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setFeedback({ type: "success", message: "Review setup settings saved successfully." });
+      
+      // Clear feedback after 3 seconds
+      setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+    } catch (error) {
+      setFeedback({ type: "error", message: "Failed to save review setup settings." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveReviewerGuidance = async () => {
+    setSaving(true);
+    setFeedback({ type: null, message: "" });
+    
+    try {
+      // Save to localStorage
+      Object.keys(reviewerGuidance).forEach((key) => {
+        saveToStorage(`reviewerGuidance_${key}`, reviewerGuidance[key as keyof typeof reviewerGuidance]);
+      });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setFeedback({ type: "success", message: "Reviewer guidance settings saved successfully." });
+      setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+    } catch (error) {
+      setFeedback({ type: "error", message: "Failed to save reviewer guidance settings." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAuthorGuidelines = async () => {
+    setSaving(true);
+    setFeedback({ type: null, message: "" });
+    
+    try {
+      saveToStorage("authorGuidelines", authorGuidelines);
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setFeedback({ type: "success", message: "Author guidelines saved successfully." });
+      setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+    } catch (error) {
+      setFeedback({ type: "error", message: "Failed to save author guidelines." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveEmailSetup = async () => {
+    setSaving(true);
+    setFeedback({ type: null, message: "" });
+    
+    try {
+      // Validate email if provided
+      if (emailSetup.envelopeSender && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailSetup.envelopeSender)) {
+        setFeedback({ type: "error", message: "Please enter a valid email address." });
+        setSaving(false);
+        return;
+      }
+
+      // Save to localStorage
+      Object.keys(emailSetup).forEach((key) => {
+        saveToStorage(`emailSetup_${key}`, emailSetup[key as keyof typeof emailSetup]);
+      });
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setFeedback({ type: "success", message: "Email setup settings saved successfully." });
+      setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+    } catch (error) {
+      setFeedback({ type: "error", message: "Failed to save email setup settings." });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div style={{
@@ -459,6 +623,21 @@ export default function SettingsWorkflowPage() {
                         border: "1px solid #e5e5e5",
                         padding: "1.5rem",
                       }}>
+                        {/* Feedback Message */}
+                        {feedback.type && (
+                          <div style={{
+                            padding: "0.75rem 1rem",
+                            marginBottom: "1.5rem",
+                            borderRadius: "4px",
+                            backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                            color: feedback.type === "success" ? "#155724" : "#721c24",
+                            border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                            fontSize: "0.875rem",
+                          }}>
+                            {feedback.message}
+                          </div>
+                        )}
+
                         <label style={{
                           display: "block",
                           fontSize: "0.875rem",
@@ -470,6 +649,8 @@ export default function SettingsWorkflowPage() {
                         </label>
                         <PkpTextarea
                           rows={10}
+                          value={authorGuidelines}
+                          onChange={(e) => setAuthorGuidelines(e.target.value)}
                           placeholder="Enter author guidelines that will be shown to authors when they make a submission..."
                           style={{
                             width: "100%",
@@ -480,10 +661,17 @@ export default function SettingsWorkflowPage() {
                           fontSize: "0.75rem",
                           color: "rgba(0, 0, 0, 0.54)",
                           marginTop: "0.5rem",
-                          marginBottom: 0,
+                          marginBottom: "1rem",
                         }}>
                           These guidelines will be displayed to authors during the submission process.
                         </p>
+                        <PkpButton 
+                          variant="primary" 
+                          onClick={handleSaveAuthorGuidelines}
+                          disabled={saving}
+                        >
+                          {saving ? "Saving..." : "Save"}
+                        </PkpButton>
                       </div>
                     </div>
                   </div>
@@ -574,6 +762,21 @@ export default function SettingsWorkflowPage() {
                       border: "1px solid #e5e5e5",
                       padding: "1.5rem",
                     }}>
+                      {/* Feedback Message */}
+                      {feedback.type && (
+                        <div style={{
+                          padding: "0.75rem 1rem",
+                          marginBottom: "1.5rem",
+                          borderRadius: "4px",
+                          backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                          color: feedback.type === "success" ? "#155724" : "#721c24",
+                          border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                          fontSize: "0.875rem",
+                        }}>
+                          {feedback.message}
+                        </div>
+                      )}
+
                       {/* Review Mode */}
                       <div style={{ marginBottom: "1.5rem" }}>
                         <label style={{
@@ -590,18 +793,24 @@ export default function SettingsWorkflowPage() {
                             id="reviewMode-doubleAnonymous"
                             name="defaultReviewMode"
                             value="doubleAnonymous"
+                            checked={reviewSetup.defaultReviewMode === "doubleAnonymous"}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "doubleAnonymous" })}
                             label="Double Anonymous"
                           />
                           <PkpRadio
                             id="reviewMode-anonymous"
                             name="defaultReviewMode"
                             value="anonymous"
+                            checked={reviewSetup.defaultReviewMode === "anonymous"}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "anonymous" })}
                             label="Anonymous"
                           />
                           <PkpRadio
                             id="reviewMode-open"
                             name="defaultReviewMode"
                             value="open"
+                            checked={reviewSetup.defaultReviewMode === "open"}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "open" })}
                             label="Open"
                           />
                         </div>
@@ -619,6 +828,8 @@ export default function SettingsWorkflowPage() {
                       <div style={{ marginBottom: "1.5rem" }}>
                         <PkpCheckbox
                           id="restrictReviewerFileAccess"
+                          checked={reviewSetup.restrictReviewerFileAccess}
+                          onChange={(e) => setReviewSetup({ ...reviewSetup, restrictReviewerFileAccess: e.target.checked })}
                           label="Restrict reviewer file access to assigned submissions only"
                         />
                         <p style={{
@@ -635,6 +846,8 @@ export default function SettingsWorkflowPage() {
                       <div style={{ marginBottom: "1.5rem" }}>
                         <PkpCheckbox
                           id="reviewerAccessKeysEnabled"
+                          checked={reviewSetup.reviewerAccessKeysEnabled}
+                          onChange={(e) => setReviewSetup({ ...reviewSetup, reviewerAccessKeysEnabled: e.target.checked })}
                           label="Enable one-click reviewer access"
                         />
                         <p style={{
@@ -661,6 +874,8 @@ export default function SettingsWorkflowPage() {
                         <PkpInput
                           id="numWeeksPerResponse"
                           type="number"
+                          value={reviewSetup.numWeeksPerResponse}
+                          onChange={(e) => setReviewSetup({ ...reviewSetup, numWeeksPerResponse: e.target.value })}
                           placeholder="2"
                           style={{ width: "200px" }}
                         />
@@ -688,6 +903,8 @@ export default function SettingsWorkflowPage() {
                         <PkpInput
                           id="numWeeksPerReview"
                           type="number"
+                          value={reviewSetup.numWeeksPerReview}
+                          onChange={(e) => setReviewSetup({ ...reviewSetup, numWeeksPerReview: e.target.value })}
                           placeholder="4"
                           style={{ width: "200px" }}
                         />
@@ -724,6 +941,8 @@ export default function SettingsWorkflowPage() {
                           <PkpInput
                             id="numDaysBeforeInviteReminder"
                             type="number"
+                            value={reviewSetup.numDaysBeforeInviteReminder}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, numDaysBeforeInviteReminder: e.target.value })}
                             placeholder="3"
                             style={{ width: "200px" }}
                           />
@@ -741,14 +960,20 @@ export default function SettingsWorkflowPage() {
                           <PkpInput
                             id="numDaysBeforeSubmitReminder"
                             type="number"
+                            value={reviewSetup.numDaysBeforeSubmitReminder}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, numDaysBeforeSubmitReminder: e.target.value })}
                             placeholder="7"
                             style={{ width: "200px" }}
                           />
                         </div>
                       </div>
 
-                      <PkpButton variant="primary">
-                        Save
+                      <PkpButton 
+                        variant="primary" 
+                        onClick={handleSaveReviewSetup}
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save"}
                       </PkpButton>
                     </div>
                   </div>
@@ -770,6 +995,21 @@ export default function SettingsWorkflowPage() {
                       border: "1px solid #e5e5e5",
                       padding: "1.5rem",
                     }}>
+                      {/* Feedback Message */}
+                      {feedback.type && (
+                        <div style={{
+                          padding: "0.75rem 1rem",
+                          marginBottom: "1.5rem",
+                          borderRadius: "4px",
+                          backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                          color: feedback.type === "success" ? "#155724" : "#721c24",
+                          border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                          fontSize: "0.875rem",
+                        }}>
+                          {feedback.message}
+                        </div>
+                      )}
+
                       <p style={{
                         fontSize: "0.875rem",
                         color: "rgba(0, 0, 0, 0.54)",
@@ -792,6 +1032,8 @@ export default function SettingsWorkflowPage() {
                         <PkpTextarea
                           id="reviewGuidelines"
                           rows={10}
+                          value={reviewerGuidance.reviewGuidelines}
+                          onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, reviewGuidelines: e.target.value })}
                           placeholder="Enter review guidelines for reviewers..."
                           style={{ width: "100%" }}
                         />
@@ -819,6 +1061,8 @@ export default function SettingsWorkflowPage() {
                         <PkpTextarea
                           id="competingInterests"
                           rows={8}
+                          value={reviewerGuidance.competingInterests}
+                          onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, competingInterests: e.target.value })}
                           placeholder="Enter competing interests statement..."
                           style={{ width: "100%" }}
                         />
@@ -836,12 +1080,18 @@ export default function SettingsWorkflowPage() {
                       <div style={{ marginBottom: "1.5rem" }}>
                         <PkpCheckbox
                           id="showEnsuringLink"
+                          checked={reviewerGuidance.showEnsuringLink}
+                          onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, showEnsuringLink: e.target.checked })}
                           label="Show link to the anonymous review process documentation"
                         />
                       </div>
 
-                      <PkpButton variant="primary">
-                        Save
+                      <PkpButton 
+                        variant="primary" 
+                        onClick={handleSaveReviewerGuidance}
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save"}
                       </PkpButton>
                     </div>
                   </div>
@@ -1059,6 +1309,21 @@ export default function SettingsWorkflowPage() {
                       border: "1px solid #e5e5e5",
                       padding: "1.5rem",
                     }}>
+                      {/* Feedback Message */}
+                      {feedback.type && (
+                        <div style={{
+                          padding: "0.75rem 1rem",
+                          marginBottom: "1.5rem",
+                          borderRadius: "4px",
+                          backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                          color: feedback.type === "success" ? "#155724" : "#721c24",
+                          border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                          fontSize: "0.875rem",
+                        }}>
+                          {feedback.message}
+                        </div>
+                      )}
+
                       <p style={{
                         fontSize: "0.875rem",
                         color: "rgba(0, 0, 0, 0.54)",
@@ -1081,6 +1346,8 @@ export default function SettingsWorkflowPage() {
                         <PkpTextarea
                           id="emailSignature"
                           rows={8}
+                          value={emailSetup.emailSignature}
+                          onChange={(e) => setEmailSetup({ ...emailSetup, emailSignature: e.target.value })}
                           placeholder="Enter email signature that will be attached to all emails sent from the journal..."
                           style={{ width: "100%" }}
                         />
@@ -1108,6 +1375,8 @@ export default function SettingsWorkflowPage() {
                         <PkpInput
                           id="envelopeSender"
                           type="email"
+                          value={emailSetup.envelopeSender}
+                          onChange={(e) => setEmailSetup({ ...emailSetup, envelopeSender: e.target.value })}
                           placeholder="noreply@journal.example"
                           style={{ width: "100%" }}
                         />
@@ -1121,8 +1390,12 @@ export default function SettingsWorkflowPage() {
                         </p>
                       </div>
 
-                      <PkpButton variant="primary">
-                        Save
+                      <PkpButton 
+                        variant="primary" 
+                        onClick={handleSaveEmailSetup}
+                        disabled={saving}
+                      >
+                        {saving ? "Saving..." : "Save"}
                       </PkpButton>
                     </div>
                   </div>

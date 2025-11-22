@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PkpTabs, PkpTabsList, PkpTabsTrigger, PkpTabsContent } from "@/components/ui/pkp-tabs";
 import { PkpButton } from "@/components/ui/pkp-button";
 import { PkpInput } from "@/components/ui/pkp-input";
@@ -11,11 +11,370 @@ import { PkpTable, PkpTableHeader, PkpTableRow, PkpTableHead, PkpTableCell } fro
 import { DUMMY_NAVIGATION_MENUS, DUMMY_NAVIGATION_MENU_ITEMS, DUMMY_PLUGINS } from "@/features/editor/settings-dummy-data";
 import { USE_DUMMY } from "@/lib/dummy";
 
+// Helper functions for localStorage
+const loadFromStorage = (key: string) => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveToStorage = (key: string, value: any) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
 export default function WebsiteSettingsPage() {
   const [activeTab, setActiveTab] = useState("appearance");
   const [activeAppearanceSubTab, setActiveAppearanceSubTab] = useState("theme");
   const [activeSetupSubTab, setActiveSetupSubTab] = useState("information");
   const [activePluginsSubTab, setActivePluginsSubTab] = useState("installedPlugins");
+
+  // Appearance - Theme state
+  const [appearanceTheme, setAppearanceTheme] = useState({ activeTheme: 'default' });
+  const [appearanceThemeFeedback, setAppearanceThemeFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingAppearanceTheme, setSavingAppearanceTheme] = useState(false);
+
+  // Appearance - Setup state
+  const [appearanceSetup, setAppearanceSetup] = useState({ pageFooter: '' });
+  const [appearanceSetupFeedback, setAppearanceSetupFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingAppearanceSetup, setSavingAppearanceSetup] = useState(false);
+
+  // Appearance - Advanced state
+  const [appearanceAdvanced, setAppearanceAdvanced] = useState({ customCss: '' });
+  const [appearanceAdvancedFeedback, setAppearanceAdvancedFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingAppearanceAdvanced, setSavingAppearanceAdvanced] = useState(false);
+
+  // Setup - Information state
+  const [setupInformation, setSetupInformation] = useState({ 
+    journalTitle: '', 
+    journalDescription: '', 
+    aboutJournal: '' 
+  });
+  const [setupInformationFeedback, setSetupInformationFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupInformation, setSavingSetupInformation] = useState(false);
+
+  // Setup - Languages state
+  const [setupLanguages, setSetupLanguages] = useState({ primaryLocale: 'en', supportedLocales: ['en'] });
+  const [setupLanguagesFeedback, setSetupLanguagesFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupLanguages, setSavingSetupLanguages] = useState(false);
+
+  // Setup - Announcements state
+  const [setupAnnouncements, setSetupAnnouncements] = useState({ enableAnnouncements: false });
+  const [setupAnnouncementsFeedback, setSetupAnnouncementsFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupAnnouncements, setSavingSetupAnnouncements] = useState(false);
+
+  // Setup - Lists state
+  const [setupLists, setSetupLists] = useState({ itemsPerPage: 25 });
+  const [setupListsFeedback, setSetupListsFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupLists, setSavingSetupLists] = useState(false);
+
+  // Setup - Privacy state
+  const [setupPrivacy, setSetupPrivacy] = useState({ privacyStatement: '' });
+  const [setupPrivacyFeedback, setSetupPrivacyFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupPrivacy, setSavingSetupPrivacy] = useState(false);
+
+  // Setup - Date/Time state
+  const [setupDateTime, setSetupDateTime] = useState({ timeZone: 'UTC', dateFormat: 'Y-m-d' });
+  const [setupDateTimeFeedback, setSetupDateTimeFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupDateTime, setSavingSetupDateTime] = useState(false);
+
+  // Setup - Archiving state
+  const [setupArchiving, setSetupArchiving] = useState({ 
+    enableLockss: false, 
+    lockssUrl: '', 
+    enableClockss: false, 
+    clockssUrl: '' 
+  });
+  const [setupArchivingFeedback, setSetupArchivingFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [savingSetupArchiving, setSavingSetupArchiving] = useState(false);
+
+  // Load saved data on mount
+  useEffect(() => {
+    const savedTheme = loadFromStorage('settings_website_appearance_theme');
+    const savedSetup = loadFromStorage('settings_website_appearance_setup');
+    const savedAdvanced = loadFromStorage('settings_website_appearance_advanced');
+    const savedInformation = loadFromStorage('settings_website_setup_information');
+    const savedLanguages = loadFromStorage('settings_website_setup_languages');
+    const savedAnnouncements = loadFromStorage('settings_website_setup_announcements');
+    const savedLists = loadFromStorage('settings_website_setup_lists');
+    const savedPrivacy = loadFromStorage('settings_website_setup_privacy');
+    const savedDateTime = loadFromStorage('settings_website_setup_datetime');
+    const savedArchiving = loadFromStorage('settings_website_setup_archiving');
+    
+    if (savedTheme) setAppearanceTheme(savedTheme);
+    if (savedSetup) setAppearanceSetup(savedSetup);
+    if (savedAdvanced) setAppearanceAdvanced(savedAdvanced);
+    if (savedInformation) setSetupInformation(savedInformation);
+    if (savedLanguages) setSetupLanguages(savedLanguages);
+    if (savedAnnouncements) setSetupAnnouncements(savedAnnouncements);
+    if (savedLists) setSetupLists(savedLists);
+    if (savedPrivacy) setSetupPrivacy(savedPrivacy);
+    if (savedDateTime) setSetupDateTime(savedDateTime);
+    if (savedArchiving) setSetupArchiving(savedArchiving);
+  }, []);
+
+  // Auto-dismiss feedback messages
+  useEffect(() => {
+    if (appearanceThemeFeedback) {
+      const timer = setTimeout(() => setAppearanceThemeFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [appearanceThemeFeedback]);
+
+  useEffect(() => {
+    if (appearanceSetupFeedback) {
+      const timer = setTimeout(() => setAppearanceSetupFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [appearanceSetupFeedback]);
+
+  useEffect(() => {
+    if (appearanceAdvancedFeedback) {
+      const timer = setTimeout(() => setAppearanceAdvancedFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [appearanceAdvancedFeedback]);
+
+  useEffect(() => {
+    if (setupInformationFeedback) {
+      const timer = setTimeout(() => setSetupInformationFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupInformationFeedback]);
+
+  useEffect(() => {
+    if (setupLanguagesFeedback) {
+      const timer = setTimeout(() => setSetupLanguagesFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupLanguagesFeedback]);
+
+  useEffect(() => {
+    if (setupAnnouncementsFeedback) {
+      const timer = setTimeout(() => setSetupAnnouncementsFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupAnnouncementsFeedback]);
+
+  useEffect(() => {
+    if (setupListsFeedback) {
+      const timer = setTimeout(() => setSetupListsFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupListsFeedback]);
+
+  useEffect(() => {
+    if (setupPrivacyFeedback) {
+      const timer = setTimeout(() => setSetupPrivacyFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupPrivacyFeedback]);
+
+  useEffect(() => {
+    if (setupDateTimeFeedback) {
+      const timer = setTimeout(() => setSetupDateTimeFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupDateTimeFeedback]);
+
+  useEffect(() => {
+    if (setupArchivingFeedback) {
+      const timer = setTimeout(() => setSetupArchivingFeedback(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [setupArchivingFeedback]);
+
+  // Save handlers
+  const handleSaveAppearanceTheme = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingAppearanceTheme(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_appearance_theme', appearanceTheme);
+      setAppearanceThemeFeedback({ type: 'success', message: 'Theme settings saved successfully.' });
+    } catch (error) {
+      setAppearanceThemeFeedback({ type: 'error', message: 'Failed to save theme settings.' });
+    } finally {
+      setSavingAppearanceTheme(false);
+    }
+  };
+
+  const handleSaveAppearanceSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingAppearanceSetup(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_appearance_setup', appearanceSetup);
+      setAppearanceSetupFeedback({ type: 'success', message: 'Appearance setup saved successfully.' });
+    } catch (error) {
+      setAppearanceSetupFeedback({ type: 'error', message: 'Failed to save appearance setup.' });
+    } finally {
+      setSavingAppearanceSetup(false);
+    }
+  };
+
+  const handleSaveAppearanceAdvanced = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingAppearanceAdvanced(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_appearance_advanced', appearanceAdvanced);
+      setAppearanceAdvancedFeedback({ type: 'success', message: 'Advanced appearance settings saved successfully.' });
+    } catch (error) {
+      setAppearanceAdvancedFeedback({ type: 'error', message: 'Failed to save advanced appearance settings.' });
+    } finally {
+      setSavingAppearanceAdvanced(false);
+    }
+  };
+
+  const handleSaveSetupInformation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!setupInformation.journalTitle.trim()) {
+      setSetupInformationFeedback({ type: 'error', message: 'Journal title is required.' });
+      return;
+    }
+
+    setSavingSetupInformation(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_information', setupInformation);
+      setSetupInformationFeedback({ type: 'success', message: 'Information settings saved successfully.' });
+    } catch (error) {
+      setSetupInformationFeedback({ type: 'error', message: 'Failed to save information settings.' });
+    } finally {
+      setSavingSetupInformation(false);
+    }
+  };
+
+  const handleSaveSetupLanguages = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!setupLanguages.primaryLocale) {
+      setSetupLanguagesFeedback({ type: 'error', message: 'Primary locale is required.' });
+      return;
+    }
+    setSavingSetupLanguages(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_languages', setupLanguages);
+      setSetupLanguagesFeedback({ type: 'success', message: 'Language settings saved successfully.' });
+    } catch (error) {
+      setSetupLanguagesFeedback({ type: 'error', message: 'Failed to save language settings.' });
+    } finally {
+      setSavingSetupLanguages(false);
+    }
+  };
+
+  const handleSaveSetupAnnouncements = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSetupAnnouncements(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_announcements', setupAnnouncements);
+      setSetupAnnouncementsFeedback({ type: 'success', message: 'Announcements settings saved successfully.' });
+    } catch (error) {
+      setSetupAnnouncementsFeedback({ type: 'error', message: 'Failed to save announcements settings.' });
+    } finally {
+      setSavingSetupAnnouncements(false);
+    }
+  };
+
+  const handleSaveSetupLists = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (setupLists.itemsPerPage < 1) {
+      setSetupListsFeedback({ type: 'error', message: 'Items per page must be at least 1.' });
+      return;
+    }
+    setSavingSetupLists(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_lists', setupLists);
+      setSetupListsFeedback({ type: 'success', message: 'Lists settings saved successfully.' });
+    } catch (error) {
+      setSetupListsFeedback({ type: 'error', message: 'Failed to save lists settings.' });
+    } finally {
+      setSavingSetupLists(false);
+    }
+  };
+
+  const handleSaveSetupPrivacy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSetupPrivacy(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_privacy', setupPrivacy);
+      setSetupPrivacyFeedback({ type: 'success', message: 'Privacy statement saved successfully.' });
+    } catch (error) {
+      setSetupPrivacyFeedback({ type: 'error', message: 'Failed to save privacy statement.' });
+    } finally {
+      setSavingSetupPrivacy(false);
+    }
+  };
+
+  const handleSaveSetupDateTime = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSetupDateTime(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_datetime', setupDateTime);
+      setSetupDateTimeFeedback({ type: 'success', message: 'Date/Time settings saved successfully.' });
+    } catch (error) {
+      setSetupDateTimeFeedback({ type: 'error', message: 'Failed to save date/time settings.' });
+    } finally {
+      setSavingSetupDateTime(false);
+    }
+  };
+
+  const handleSaveSetupArchiving = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    if (setupArchiving.enableLockss && !setupArchiving.lockssUrl.trim()) {
+      setSetupArchivingFeedback({ type: 'error', message: 'LOCKSS URL is required when LOCKSS is enabled.' });
+      return;
+    }
+    
+    if (setupArchiving.enableLockss) {
+      const urlRegex = /^https?:\/\/.+/;
+      if (!urlRegex.test(setupArchiving.lockssUrl)) {
+        setSetupArchivingFeedback({ type: 'error', message: 'Please enter a valid URL for LOCKSS.' });
+        return;
+      }
+    }
+    
+    if (setupArchiving.enableClockss && !setupArchiving.clockssUrl.trim()) {
+      setSetupArchivingFeedback({ type: 'error', message: 'CLOCKSS URL is required when CLOCKSS is enabled.' });
+      return;
+    }
+    
+    if (setupArchiving.enableClockss) {
+      const urlRegex = /^https?:\/\/.+/;
+      if (!urlRegex.test(setupArchiving.clockssUrl)) {
+        setSetupArchivingFeedback({ type: 'error', message: 'Please enter a valid URL for CLOCKSS.' });
+        return;
+      }
+    }
+
+    setSavingSetupArchiving(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      saveToStorage('settings_website_setup_archiving', setupArchiving);
+      setSetupArchivingFeedback({ type: 'success', message: 'Archiving settings saved successfully.' });
+    } catch (error) {
+      setSetupArchivingFeedback({ type: 'error', message: 'Failed to save archiving settings.' });
+    } finally {
+      setSavingSetupArchiving(false);
+    }
+  };
 
   return (
     <div style={{
@@ -166,37 +525,56 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Theme
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <p style={{
-                        fontSize: "0.875rem",
-                        color: "rgba(0, 0, 0, 0.54)",
+                    {appearanceThemeFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
                         marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: appearanceThemeFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: appearanceThemeFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${appearanceThemeFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
                       }}>
-                        Select a theme to change the overall design of your website. The look of the website will change but the content will remain the same.
-                      </p>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Active Theme
-                        </label>
-                        <PkpSelect style={{ width: "100%" }}>
-                          <option value="default">Default Theme</option>
-                          <option value="custom">Custom Theme</option>
-                        </PkpSelect>
+                        {appearanceThemeFeedback.message}
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    )}
+                    <form onSubmit={handleSaveAppearanceTheme}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <p style={{
+                          fontSize: "0.875rem",
+                          color: "rgba(0, 0, 0, 0.54)",
+                          marginBottom: "1rem",
+                        }}>
+                          Select a theme to change the overall design of your website. The look of the website will change but the content will remain the same.
+                        </p>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Active Theme
+                          </label>
+                          <PkpSelect 
+                            style={{ width: "100%" }}
+                            value={appearanceTheme.activeTheme}
+                            onChange={(e) => setAppearanceTheme({ ...appearanceTheme, activeTheme: e.target.value })}
+                          >
+                            <option value="default">Default Theme</option>
+                            <option value="custom">Custom Theme</option>
+                          </PkpSelect>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingAppearanceTheme}>
+                          {savingAppearanceTheme ? 'Saving...' : 'Save'}
+                        </PkpButton>
+                      </div>
+                    </form>
                   </div>
                 )}
 
@@ -210,51 +588,68 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Appearance Setup
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Upload Logo
-                        </label>
-                        <PkpInput type="file" accept="image/*" style={{ width: "100%" }} />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Upload a logo image to display at the top of your journal's website.
-                        </p>
+                    {appearanceSetupFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: appearanceSetupFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: appearanceSetupFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${appearanceSetupFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {appearanceSetupFeedback.message}
                       </div>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Page Footer
-                        </label>
-                        <PkpTextarea
-                          rows={5}
-                          placeholder="Enter content to display in the page footer"
-                          style={{ width: "100%" }}
-                        />
+                    )}
+                    <form onSubmit={handleSaveAppearanceSetup}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Upload Logo
+                          </label>
+                          <PkpInput type="file" accept="image/*" style={{ width: "100%" }} />
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            Upload a logo image to display at the top of your journal's website.
+                          </p>
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Page Footer
+                          </label>
+                          <PkpTextarea
+                            rows={5}
+                            placeholder="Enter content to display in the page footer"
+                            style={{ width: "100%" }}
+                            value={appearanceSetup.pageFooter}
+                            onChange={(e) => setAppearanceSetup({ ...appearanceSetup, pageFooter: e.target.value })}
+                          />
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingAppearanceSetup}>
+                          {savingAppearanceSetup ? 'Saving...' : 'Save'}
+                        </PkpButton>
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    </form>
                   </div>
                 )}
 
@@ -268,55 +663,96 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Advanced Appearance
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Upload Custom CSS
-                        </label>
-                        <PkpInput type="file" accept=".css" style={{ width: "100%" }} />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Upload a custom CSS file to override default styles.
-                        </p>
+                    {appearanceAdvancedFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: appearanceAdvancedFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: appearanceAdvancedFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${appearanceAdvancedFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {appearanceAdvancedFeedback.message}
                       </div>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Upload Favicon
-                        </label>
-                        <PkpInput type="file" accept="image/*" style={{ width: "100%" }} />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Upload a favicon to display in browser tabs and bookmarks.
-                        </p>
+                    )}
+                    <form onSubmit={handleSaveAppearanceAdvanced}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Upload Custom CSS
+                          </label>
+                          <PkpInput type="file" accept=".css" style={{ width: "100%" }} />
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            Upload a custom CSS file to override default styles.
+                          </p>
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Custom CSS Code
+                          </label>
+                          <PkpTextarea
+                            rows={10}
+                            placeholder="Enter custom CSS code"
+                            style={{ width: "100%", fontFamily: "monospace", fontSize: "0.8125rem" }}
+                            value={appearanceAdvanced.customCss}
+                            onChange={(e) => setAppearanceAdvanced({ ...appearanceAdvanced, customCss: e.target.value })}
+                          />
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            Enter custom CSS code to override default styles.
+                          </p>
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Upload Favicon
+                          </label>
+                          <PkpInput type="file" accept="image/*" style={{ width: "100%" }} />
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            Upload a favicon to display in browser tabs and bookmarks.
+                          </p>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingAppearanceAdvanced}>
+                          {savingAppearanceAdvanced ? 'Saving...' : 'Save'}
+                        </PkpButton>
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    </form>
                   </div>
                 )}
               </div>
@@ -334,66 +770,161 @@ export default function WebsiteSettingsPage() {
               gap: 0,
               minHeight: "500px",
             }}>
-              {/* Side Tabs List */}
-              <div style={{
-                width: "20rem",
-                flexShrink: 0,
-                borderRight: "1px solid #e5e5e5",
-                backgroundColor: "#f8f9fa",
-                padding: "1rem 0",
-              }}>
-                <PkpTabsList style={{ flexDirection: "column", padding: 0, gap: 0 }}>
-                  <PkpTabsTrigger 
-                    value="information" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("information")}
-                  >
-                    Information
-                  </PkpTabsTrigger>
-                  <PkpTabsTrigger 
-                    value="languages" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("languages")}
-                  >
-                    Languages
-                  </PkpTabsTrigger>
-                  <PkpTabsTrigger 
-                    value="navigationMenus" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("navigationMenus")}
-                  >
-                    Navigation Menus
-                  </PkpTabsTrigger>
-                  <PkpTabsTrigger 
-                    value="announcements" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("announcements")}
-                  >
-                    Announcements
-                  </PkpTabsTrigger>
-                  <PkpTabsTrigger 
-                    value="lists" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("lists")}
-                  >
-                    Lists
-                  </PkpTabsTrigger>
-                  <PkpTabsTrigger 
-                    value="privacy" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("privacy")}
-                  >
-                    Privacy
-                  </PkpTabsTrigger>
-                  <PkpTabsTrigger 
-                    value="dateTime" 
-                    style={{ justifyContent: "flex-start", borderRadius: 0, width: "100%" }} 
-                    onClick={() => setActiveSetupSubTab("dateTime")}
-                  >
-                    Date/Time
-                  </PkpTabsTrigger>
-                </PkpTabsList>
-              </div>
+                {/* Side Tabs List */}
+                <div style={{
+                  width: "20rem",
+                  flexShrink: 0,
+                  borderRight: "1px solid #e5e5e5",
+                  backgroundColor: "#f8f9fa",
+                  padding: "1rem 0",
+                }}>
+                  <div style={{ display: "flex", flexDirection: "column", padding: 0, gap: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("information")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "information" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "information" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "information" ? 600 : 400,
+                      }}
+                    >
+                      Information
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("languages")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "languages" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "languages" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "languages" ? 600 : 400,
+                      }}
+                    >
+                      Languages
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("navigationMenus")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "navigationMenus" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "navigationMenus" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "navigationMenus" ? 600 : 400,
+                      }}
+                    >
+                      Navigation Menus
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("announcements")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "announcements" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "announcements" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "announcements" ? 600 : 400,
+                      }}
+                    >
+                      Announcements
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("lists")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "lists" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "lists" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "lists" ? 600 : 400,
+                      }}
+                    >
+                      Lists
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("privacy")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "privacy" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "privacy" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "privacy" ? 600 : 400,
+                      }}
+                    >
+                      Privacy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("dateTime")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "dateTime" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "dateTime" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "dateTime" ? 600 : 400,
+                      }}
+                    >
+                      Date/Time
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSetupSubTab("archiving")}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "0.75rem 1rem",
+                        textAlign: "left",
+                        backgroundColor: activeSetupSubTab === "archiving" ? "rgba(0, 103, 152, 0.1)" : "transparent",
+                        color: activeSetupSubTab === "archiving" ? "#006798" : "rgba(0, 0, 0, 0.84)",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                        fontWeight: activeSetupSubTab === "archiving" ? 600 : 400,
+                      }}
+                    >
+                      Archiving
+                    </button>
+                  </div>
+                </div>
 
               {/* Side Tabs Content Area */}
               <div style={{ flex: 1, padding: "1.5rem", backgroundColor: "#ffffff" }}>
@@ -407,54 +938,92 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Information
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <p style={{
-                        fontSize: "0.875rem",
-                        color: "rgba(0, 0, 0, 0.54)",
+                    {setupInformationFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
                         marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupInformationFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupInformationFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupInformationFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
                       }}>
-                        Add information about your journal that will appear as links on your sidebar if the Information Block is enabled under Sidebar Management.
-                      </p>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          About the Journal
-                        </label>
-                        <PkpTextarea
-                          rows={5}
-                          placeholder="Enter information about the journal"
-                          style={{ width: "100%" }}
-                        />
+                        {setupInformationFeedback.message}
                       </div>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
+                    )}
+                    <form onSubmit={handleSaveSetupInformation}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <p style={{
                           fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
+                          color: "rgba(0, 0, 0, 0.54)",
+                          marginBottom: "1rem",
                         }}>
-                          Editorial Team
-                        </label>
-                        <PkpTextarea
-                          rows={5}
-                          placeholder="Enter information about the editorial team"
-                          style={{ width: "100%" }}
-                        />
+                          Add information about your journal that will appear as links on your sidebar if the Information Block is enabled under Sidebar Management.
+                        </p>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Journal Title <span style={{ color: "#dc3545" }}>*</span>
+                          </label>
+                          <PkpInput
+                            type="text"
+                            placeholder="Enter journal title"
+                            style={{ width: "100%" }}
+                            value={setupInformation.journalTitle}
+                            onChange={(e) => setSetupInformation({ ...setupInformation, journalTitle: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Journal Description
+                          </label>
+                          <PkpTextarea
+                            rows={5}
+                            placeholder="Enter journal description"
+                            style={{ width: "100%" }}
+                            value={setupInformation.journalDescription}
+                            onChange={(e) => setSetupInformation({ ...setupInformation, journalDescription: e.target.value })}
+                          />
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            About the Journal
+                          </label>
+                          <PkpTextarea
+                            rows={5}
+                            placeholder="Enter information about the journal"
+                            style={{ width: "100%" }}
+                            value={setupInformation.aboutJournal}
+                            onChange={(e) => setSetupInformation({ ...setupInformation, aboutJournal: e.target.value })}
+                          />
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupInformation}>
+                          {savingSetupInformation ? 'Saving...' : 'Save'}
+                        </PkpButton>
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    </form>
                   </div>
                 )}
 
@@ -468,27 +1037,107 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Languages
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <p style={{
-                        fontSize: "0.875rem",
-                        color: "rgba(0, 0, 0, 0.54)",
+                    {setupLanguagesFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
                         marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupLanguagesFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupLanguagesFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupLanguagesFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
                       }}>
-                        Languages that have been installed on your site by an Administrator can be enabled for the user interface (UI), forms, and submissions.
-                      </p>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <PkpCheckbox id="lang-en-ui" label="English - UI" />
-                        <PkpCheckbox id="lang-en-forms" label="English - Forms" />
-                        <PkpCheckbox id="lang-en-submissions" label="English - Submissions" />
+                        {setupLanguagesFeedback.message}
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    )}
+                    <form onSubmit={handleSaveSetupLanguages}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <p style={{
+                          fontSize: "0.875rem",
+                          color: "rgba(0, 0, 0, 0.54)",
+                          marginBottom: "1rem",
+                        }}>
+                          Languages that have been installed on your site by an Administrator can be enabled for the user interface (UI), forms, and submissions.
+                        </p>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Primary Locale <span style={{ color: "#dc3545" }}>*</span>
+                          </label>
+                          <PkpSelect 
+                            style={{ width: "100%" }}
+                            value={setupLanguages.primaryLocale}
+                            onChange={(e) => setSetupLanguages({ ...setupLanguages, primaryLocale: e.target.value })}
+                          >
+                            <option value="en">English</option>
+                            <option value="id">Indonesian</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                          </PkpSelect>
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Supported Locales
+                          </label>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <PkpCheckbox 
+                                id="lang-en-ui" 
+                                checked={setupLanguages.supportedLocales.includes('en')}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSetupLanguages({ 
+                                      ...setupLanguages, 
+                                      supportedLocales: [...setupLanguages.supportedLocales, 'en'] 
+                                    });
+                                  } else {
+                                    setSetupLanguages({ 
+                                      ...setupLanguages, 
+                                      supportedLocales: setupLanguages.supportedLocales.filter(l => l !== 'en') 
+                                    });
+                                  }
+                                }}
+                              />
+                              <label htmlFor="lang-en-ui" style={{ fontSize: "0.875rem", cursor: "pointer" }}>English - UI</label>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <PkpCheckbox 
+                                id="lang-en-forms" 
+                                checked={setupLanguages.supportedLocales.includes('en')}
+                                readOnly
+                              />
+                              <label htmlFor="lang-en-forms" style={{ fontSize: "0.875rem" }}>English - Forms</label>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <PkpCheckbox 
+                                id="lang-en-submissions" 
+                                checked={setupLanguages.supportedLocales.includes('en')}
+                                readOnly
+                              />
+                              <label htmlFor="lang-en-submissions" style={{ fontSize: "0.875rem" }}>English - Submissions</label>
+                            </div>
+                          </div>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupLanguages}>
+                          {savingSetupLanguages ? 'Saving...' : 'Save'}
+                        </PkpButton>
+                      </div>
+                    </form>
                   </div>
                 )}
 
@@ -634,29 +1283,48 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Announcements
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <PkpCheckbox 
-                          id="enableAnnouncements" 
-                          label="Enable announcements on the journal website" 
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          When enabled, announcements can be displayed on the journal website.
-                        </p>
+                    {setupAnnouncementsFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupAnnouncementsFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupAnnouncementsFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupAnnouncementsFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {setupAnnouncementsFeedback.message}
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    )}
+                    <form onSubmit={handleSaveSetupAnnouncements}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <PkpCheckbox 
+                              id="enableAnnouncements" 
+                              checked={setupAnnouncements.enableAnnouncements}
+                              onChange={(e) => setSetupAnnouncements({ ...setupAnnouncements, enableAnnouncements: e.target.checked })}
+                            />
+                            <label htmlFor="enableAnnouncements" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable announcements on the journal website</label>
+                          </div>
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            When enabled, announcements can be displayed on the journal website.
+                          </p>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupAnnouncements}>
+                          {savingSetupAnnouncements ? 'Saving...' : 'Save'}
+                        </PkpButton>
+                      </div>
+                    </form>
                   </div>
                 )}
 
@@ -670,35 +1338,56 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Lists
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Items Per Page
-                        </label>
-                        <PkpInput type="number" defaultValue="25" style={{ width: "100%" }} />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Set the default number of items to display per page in lists.
-                        </p>
+                    {setupListsFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupListsFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupListsFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupListsFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {setupListsFeedback.message}
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    )}
+                    <form onSubmit={handleSaveSetupLists}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Items Per Page
+                          </label>
+                          <PkpInput 
+                            type="number" 
+                            min="1"
+                            value={setupLists.itemsPerPage}
+                            onChange={(e) => setSetupLists({ ...setupLists, itemsPerPage: parseInt(e.target.value) || 25 })}
+                            style={{ width: "100%" }} 
+                          />
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            Set the default number of items to display per page in lists.
+                          </p>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupLists}>
+                          {savingSetupLists ? 'Saving...' : 'Save'}
+                        </PkpButton>
+                      </div>
+                    </form>
                   </div>
                 )}
 
@@ -712,39 +1401,56 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Privacy Statement
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Privacy Statement
-                        </label>
-                        <PkpTextarea
-                          rows={10}
-                          placeholder="Enter privacy statement"
-                          style={{ width: "100%" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          This statement will be displayed on the journal website.
-                        </p>
+                    {setupPrivacyFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupPrivacyFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupPrivacyFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupPrivacyFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {setupPrivacyFeedback.message}
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    )}
+                    <form onSubmit={handleSaveSetupPrivacy}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Privacy Statement
+                          </label>
+                          <PkpTextarea
+                            rows={10}
+                            placeholder="Enter privacy statement"
+                            style={{ width: "100%" }}
+                            value={setupPrivacy.privacyStatement}
+                            onChange={(e) => setSetupPrivacy({ ...setupPrivacy, privacyStatement: e.target.value })}
+                          />
+                          <p style={{
+                            fontSize: "0.75rem",
+                            color: "rgba(0, 0, 0, 0.54)",
+                            marginTop: "0.5rem",
+                            marginBottom: 0,
+                          }}>
+                            This statement will be displayed on the journal website.
+                          </p>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupPrivacy}>
+                          {savingSetupPrivacy ? 'Saving...' : 'Save'}
+                        </PkpButton>
+                      </div>
+                    </form>
                   </div>
                 )}
 
@@ -758,48 +1464,220 @@ export default function WebsiteSettingsPage() {
                     }}>
                       Date/Time
                     </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
+                    {setupDateTimeFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupDateTimeFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupDateTimeFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupDateTimeFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {setupDateTimeFeedback.message}
+                      </div>
+                    )}
+                    <form onSubmit={handleSaveSetupDateTime}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Time Zone
+                          </label>
+                          <PkpSelect 
+                            style={{ width: "100%" }}
+                            value={setupDateTime.timeZone}
+                            onChange={(e) => setSetupDateTime({ ...setupDateTime, timeZone: e.target.value })}
+                          >
+                            <option value="UTC">UTC</option>
+                            <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
+                            <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
+                            <option value="Asia/Jayapura">Asia/Jayapura (WIT)</option>
+                          </PkpSelect>
+                        </div>
+                        <div style={{ marginBottom: "1rem" }}>
+                          <label style={{
+                            display: "block",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Date Format
+                          </label>
+                          <PkpSelect 
+                            style={{ width: "100%" }}
+                            value={setupDateTime.dateFormat}
+                            onChange={(e) => setSetupDateTime({ ...setupDateTime, dateFormat: e.target.value })}
+                          >
+                            <option value="Y-m-d">YYYY-MM-DD</option>
+                            <option value="d/m/Y">DD/MM/YYYY</option>
+                            <option value="m/d/Y">MM/DD/YYYY</option>
+                          </PkpSelect>
+                        </div>
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupDateTime}>
+                          {savingSetupDateTime ? 'Saving...' : 'Save'}
+                        </PkpButton>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {activeSetupSubTab === "archiving" && (
+                  <div>
+                    <h2 style={{
+                      fontSize: "1.125rem",
+                      fontWeight: 600,
+                      marginBottom: "1rem",
+                      color: "#002C40",
                     }}>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Time Zone
-                        </label>
-                        <PkpSelect style={{ width: "100%" }}>
-                          <option value="UTC">UTC</option>
-                          <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
-                          <option value="Asia/Makassar">Asia/Makassar (WITA)</option>
-                          <option value="Asia/Jayapura">Asia/Jayapura (WIT)</option>
-                        </PkpSelect>
+                      Archiving
+                    </h2>
+                    {setupArchivingFeedback && (
+                      <div style={{
+                        padding: "0.75rem 1rem",
+                        marginBottom: "1rem",
+                        borderRadius: "4px",
+                        backgroundColor: setupArchivingFeedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                        color: setupArchivingFeedback.type === 'success' ? '#155724' : '#721c24',
+                        border: `1px solid ${setupArchivingFeedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                        fontSize: "0.875rem",
+                      }}>
+                        {setupArchivingFeedback.message}
                       </div>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <label style={{
-                          display: "block",
+                    )}
+                    <form onSubmit={handleSaveSetupArchiving}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        <p style={{
                           fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
+                          color: "rgba(0, 0, 0, 0.54)",
+                          marginBottom: "1.5rem",
                         }}>
-                          Date Format
-                        </label>
-                        <PkpSelect style={{ width: "100%" }}>
-                          <option value="Y-m-d">YYYY-MM-DD</option>
-                          <option value="d/m/Y">DD/MM/YYYY</option>
-                          <option value="m/d/Y">MM/DD/YYYY</option>
-                        </PkpSelect>
+                          Configure archiving services to preserve your journal content.
+                        </p>
+
+                        {/* LOCKSS */}
+                        <div style={{ marginBottom: "1.5rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 600,
+                            marginBottom: "0.75rem",
+                            color: "#002C40",
+                          }}>
+                            LOCKSS
+                          </h3>
+                          <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                              <PkpCheckbox 
+                                id="enableLockss"
+                                checked={setupArchiving.enableLockss}
+                                onChange={(e) => setSetupArchiving({ ...setupArchiving, enableLockss: e.target.checked })}
+                              />
+                              <label htmlFor="enableLockss" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable LOCKSS</label>
+                            </div>
+                            {setupArchiving.enableLockss && (
+                              <div>
+                                <label htmlFor="lockssUrl" style={{
+                                  display: "block",
+                                  fontSize: "0.875rem",
+                                  fontWeight: 600,
+                                  marginBottom: "0.5rem",
+                                  color: "#002C40",
+                                }}>
+                                  LOCKSS URL <span style={{ color: "#dc3545" }}>*</span>
+                                </label>
+                                <PkpInput
+                                  id="lockssUrl"
+                                  type="url"
+                                  placeholder="https://lockss.example.com"
+                                  style={{ width: "100%" }}
+                                  value={setupArchiving.lockssUrl}
+                                  onChange={(e) => setSetupArchiving({ ...setupArchiving, lockssUrl: e.target.value })}
+                                  required
+                                />
+                                <p style={{
+                                  fontSize: "0.75rem",
+                                  color: "rgba(0, 0, 0, 0.54)",
+                                  marginTop: "0.5rem",
+                                  marginBottom: 0,
+                                }}>
+                                  Enter the LOCKSS URL for your journal.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* CLOCKSS */}
+                        <div style={{ marginBottom: "1.5rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 600,
+                            marginBottom: "0.75rem",
+                            color: "#002C40",
+                          }}>
+                            CLOCKSS
+                          </h3>
+                          <div style={{ marginBottom: "1rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                              <PkpCheckbox 
+                                id="enableClockss"
+                                checked={setupArchiving.enableClockss}
+                                onChange={(e) => setSetupArchiving({ ...setupArchiving, enableClockss: e.target.checked })}
+                              />
+                              <label htmlFor="enableClockss" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable CLOCKSS</label>
+                            </div>
+                            {setupArchiving.enableClockss && (
+                              <div>
+                                <label htmlFor="clockssUrl" style={{
+                                  display: "block",
+                                  fontSize: "0.875rem",
+                                  fontWeight: 600,
+                                  marginBottom: "0.5rem",
+                                  color: "#002C40",
+                                }}>
+                                  CLOCKSS URL <span style={{ color: "#dc3545" }}>*</span>
+                                </label>
+                                <PkpInput
+                                  id="clockssUrl"
+                                  type="url"
+                                  placeholder="https://clockss.example.com"
+                                  style={{ width: "100%" }}
+                                  value={setupArchiving.clockssUrl}
+                                  onChange={(e) => setSetupArchiving({ ...setupArchiving, clockssUrl: e.target.value })}
+                                  required
+                                />
+                                <p style={{
+                                  fontSize: "0.75rem",
+                                  color: "rgba(0, 0, 0, 0.54)",
+                                  marginTop: "0.5rem",
+                                  marginBottom: 0,
+                                }}>
+                                  Enter the CLOCKSS URL for your journal.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <PkpButton variant="primary" type="submit" disabled={savingSetupArchiving}>
+                          {savingSetupArchiving ? 'Saving...' : 'Save'}
+                        </PkpButton>
                       </div>
-                      <PkpButton variant="primary">
-                        Save
-                      </PkpButton>
-                    </div>
+                    </form>
                   </div>
                 )}
               </div>
