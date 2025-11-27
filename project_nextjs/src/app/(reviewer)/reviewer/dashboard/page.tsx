@@ -52,15 +52,32 @@ async function ReviewerDashboardPage() {
     redirect('/login')
   }
 
+  // Map Supabase Auth user ke user_accounts seperti di middleware
+  let dbUserId: string | null | undefined = session.user.user_metadata?.user_id
+
+  if (!dbUserId && session.user.email) {
+    try {
+      const { getUserByEmail } = await import('@/lib/db')
+      const userData = await getUserByEmail(session.user.email)
+      dbUserId = userData?.user_id
+    } catch (error) {
+      console.error('Error resolving reviewer dbUserId by email:', error)
+    }
+  }
+
+  if (!dbUserId) {
+    dbUserId = session.user.id
+  }
+
   // Check reviewer role (server-side, multi-role aware)
-  const roles = await getUserRoles(session.user.id)
+  const roles = await getUserRoles(dbUserId)
   const hasReviewerRole = roles.some((role) => role.role_path === 'reviewer') || USE_DUMMY
   
   if (!hasReviewerRole) {
     redirect('/dashboard')
   }
 
-  const userId = session.user.id
+  const userId = dbUserId
   const stats = await getReviewerStats(userId)
 
   return (

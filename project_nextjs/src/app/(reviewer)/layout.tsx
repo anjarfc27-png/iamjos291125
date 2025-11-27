@@ -321,7 +321,7 @@ export default function ReviewerLayout({
           className={`${sidebarOpen ? "block" : "hidden"} lg:block text-white min-h-screen shadow-xl`}
           style={{
             backgroundColor: pkpColors.sidebarBg,
-            width: "22rem",
+            width: "16rem",
             minHeight: "calc(100vh - 64px)",
             boxShadow: "4px 0 6px -1px rgba(0, 0, 0, 0.1)",
           }}
