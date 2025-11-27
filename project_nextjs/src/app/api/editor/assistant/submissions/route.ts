@@ -1,7 +1,7 @@
 "use server";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -16,24 +16,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user has assistant role
-    const hasAssistantRole = user.roles.some(
-      (role) => role.role_path === "assistant" || role.role_path === "admin"
-    );
-
-    if (!hasAssistantRole) {
-      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
-    }
-
     const supabase = getSupabaseAdminClient();
 
-    // Get journal ID from user roles
-    const journalRole = user.roles.find((r) => r.context_id);
-    if (!journalRole?.context_id) {
-      return NextResponse.json({ ok: false, message: "Journal not found" }, { status: 400 });
+    // Untuk sekarang, asumsikan assistant beroperasi dalam konteks satu jurnal yang dipilih
+    const journalId = request.nextUrl.searchParams.get("journalId");
+    if (!journalId) {
+      return NextResponse.json({ ok: false, message: "Missing journalId" }, { status: 400 });
     }
 
-    const journalId = journalRole.context_id;
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isAssistant = await hasUserJournalRole(user.id, journalId, ["copyeditor", "proofreader", "layout-editor"]);
+
+    if (!isSiteAdmin && !isAssistant) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+    }
 
     // Get submissions assigned to this assistant via stage_assignments
     const { data: submissions, error: submissionsError } = await supabase

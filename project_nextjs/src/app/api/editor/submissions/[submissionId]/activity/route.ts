@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
@@ -16,18 +16,32 @@ export async function POST(request: Request, context: RouteParams) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }
 
-  // Check permissions - only editors, section editors, and managers can add activity notes
-  const user = await getCurrentUser(request)
+  // Check permissions - only editors, section editors, and managers (or site admin) can add activity notes
+  const user = await getCurrentUser(request);
   if (!user) {
-    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
   }
 
-  const hasPermission = user.roles.some(role => 
-    ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
-  )
+  const supabase = getSupabaseAdminClient();
+  const { data: submission, error: submissionError } = await supabase
+    .from("submissions")
+    .select("journal_id")
+    .eq("id", submissionId)
+    .maybeSingle();
 
-  if (!hasPermission) {
-    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
+  if (submissionError || !submission) {
+    return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
+  }
+
+  const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+  const canEdit = await hasUserJournalRole(user.id, submission.journal_id, [
+    "manager",
+    "editor",
+    "section_editor",
+  ]);
+
+  if (!isSiteAdmin && !canEdit) {
+    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as { message?: string } | null;
@@ -37,7 +51,6 @@ export async function POST(request: Request, context: RouteParams) {
   }
 
   try {
-    const supabase = getSupabaseAdminClient();
     const { error } = await supabase.from("submission_activity_logs").insert({
       submission_id: submissionId,
       category: "note",

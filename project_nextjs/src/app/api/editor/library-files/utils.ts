@@ -2,8 +2,9 @@ import { Buffer } from "node:buffer";
 import { NextResponse } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { RolePath } from "@/lib/permissions";
 
-export const EDITOR_ROLES = ["admin", "manager", "editor", "section_editor"];
+export const EDITOR_ROLES: RolePath[] = ["admin", "manager", "editor", "section_editor"];
 export const LIBRARY_BUCKET = "library-files";
 
 export type LibraryFileRow = {

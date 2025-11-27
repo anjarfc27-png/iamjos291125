@@ -1,7 +1,7 @@
 "use server";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -16,24 +16,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user has assistant role
-    const hasAssistantRole = user.roles.some(
-      (role) => role.role_path === "assistant" || role.role_path === "admin"
-    );
-
-    if (!hasAssistantRole) {
-      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
-    }
-
     const supabase = getSupabaseAdminClient();
 
-    // Get journal ID from user roles
-    const journalRole = user.roles.find((r) => r.context_id);
-    if (!journalRole?.context_id) {
-      return NextResponse.json({ ok: false, message: "Journal not found" }, { status: 400 });
+    const journalId = request.nextUrl.searchParams.get("journalId");
+    if (!journalId) {
+      return NextResponse.json({ ok: false, message: "Missing journalId" }, { status: 400 });
     }
 
-    const journalId = journalRole.context_id;
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isAssistant = await hasUserJournalRole(user.id, journalId, ["copyeditor", "proofreader", "layout-editor"]);
+
+    if (!isSiteAdmin && !isAssistant) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+    }
 
     // Get submissions assigned to this assistant
     // In OJS, assistants are assigned to submissions via stage_assignments
@@ -102,12 +97,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    // Only managers and editors can assign tasks
-    const hasPermission = user.roles.some(
-      (role) => role.role_path === "admin" || role.role_path === "manager" || role.role_path === "editor"
-    );
+    const journalId = request.nextUrl.searchParams.get("journalId");
+    if (!journalId) {
+      return NextResponse.json({ ok: false, message: "Missing journalId" }, { status: 400 });
+    }
 
-    if (!hasPermission) {
+    // Only managers and editors (or site admin) can assign tasks in this journal
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canManage = await hasUserJournalRole(user.id, journalId, ["manager", "editor", "section_editor"]);
+
+    if (!isSiteAdmin && !canManage) {
       return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
     }
 

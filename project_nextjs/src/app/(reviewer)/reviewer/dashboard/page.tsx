@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+
 import { USE_DUMMY } from '@/lib/dummy'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getUserRoles } from '@/lib/db'
 import { Clock, CheckCircle, FileText } from 'lucide-react'
 
 async function getReviewerStats(userId: string) {
@@ -50,15 +52,9 @@ async function ReviewerDashboardPage() {
     redirect('/login')
   }
 
-  // Check reviewer role (server-side)
-  const adminClient = getSupabaseAdminClient()
-  const { data: userRoles } = await adminClient
-    .from('user_roles')
-    .select('role_path')
-    .eq('user_id', session.user.id)
-    .single()
-
-  const hasReviewerRole = userRoles?.role_path === 'reviewer' || USE_DUMMY
+  // Check reviewer role (server-side, multi-role aware)
+  const roles = await getUserRoles(session.user.id)
+  const hasReviewerRole = roles.some((role) => role.role_path === 'reviewer') || USE_DUMMY
   
   if (!hasReviewerRole) {
     redirect('/dashboard')

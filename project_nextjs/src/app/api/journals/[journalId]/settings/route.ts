@@ -46,6 +46,9 @@ export async function POST(request: NextRequest, context: RouteParams) {
   }
 
   try {
+    // Only journal managers and admins can modify settings
+    await requireJournalRole(request, journalId, ["admin", "manager"]);
+
     await saveSection(journalId, section, payload);
     const settings = await loadSettings(journalId);
     return NextResponse.json({ ok: true, settings });

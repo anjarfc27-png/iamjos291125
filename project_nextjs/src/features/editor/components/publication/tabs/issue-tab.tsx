@@ -1,7 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { FormMessage } from "@/components/ui/form-message";
 import type { SubmissionDetail } from "../../../types";
+
+type IssueOption = {
+  id: string;
+  title: string;
+  published: boolean;
+};
+
+type SectionOption = {
+  id: string;
+  title: string;
+};
 
 type Props = {
   submissionId: string;
@@ -10,7 +24,11 @@ type Props = {
 };
 
 export function IssueTab({ submissionId, detail, isPublished }: Props) {
+  const router = useRouter();
   const currentVersion = detail.versions?.[0];
+  const journalId = detail.summary.journalId;
+  const [issues, setIssues] = useState<IssueOption[]>([]);
+  const [sections, setSections] = useState<SectionOption[]>([]);
   const [issueId, setIssueId] = useState<string | null>(currentVersion?.issue?.id ?? null);
   const [sectionId, setSectionId] = useState<string | null>(null);
   const [pages, setPages] = useState<string>("");
@@ -18,12 +36,104 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
   const [datePublished, setDatePublished] = useState<string>(
     currentVersion?.publishedAt ?? new Date().toISOString().split("T")[0]
   );
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!journalId) {
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setFeedback(null);
+      try {
+        const [issuesRes, sectionsRes] = await Promise.all([
+          fetch(`/api/journals/${journalId}/issues`).then((res) => res.json()),
+          fetch(`/api/journals/${journalId}/sections`).then((res) => res.json()),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        if (issuesRes.ok) {
+          setIssues(issuesRes.issues ?? []);
+        } else {
+          setFeedback({ tone: "error", message: issuesRes.message ?? "Failed to load issues." });
+        }
+
+        if (sectionsRes.ok) {
+          setSections(sectionsRes.sections ?? []);
+        } else {
+          setFeedback({ tone: "error", message: sectionsRes.message ?? "Failed to load sections." });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setFeedback({
+            tone: "error",
+            message: error instanceof Error ? error.message : "Failed to load issue data.",
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [journalId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Save issue assignment via server action
-    console.log("Save issue assignment:", { issueId, sectionId, pages, urlPath, datePublished });
+    if (!currentVersion) {
+      setFeedback({ tone: "error", message: "Submission version tidak ditemukan." });
+      return;
+    }
+    if (!issueId) {
+      setFeedback({ tone: "error", message: "Pilih issue terlebih dahulu." });
+      return;
+    }
+
+    setIsSaving(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(
+        `/api/editor/submissions/${submissionId}/publications/${currentVersion.id}/issue`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            issueId,
+            sectionId,
+            pages: pages || null,
+            urlPath: urlPath || null,
+            datePublished,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (!json.ok) {
+        setFeedback({ tone: "error", message: json.message ?? "Failed to save issue assignment." });
+        return;
+      }
+      setFeedback({ tone: "success", message: json.message ?? "Issue assignment saved." });
+      router.refresh();
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message: error instanceof Error ? error.message : "Failed to save issue assignment.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const disabled = isPublished || loading || isSaving;
 
   return (
     <div
@@ -56,6 +166,7 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
           padding: "1.5rem",
         }}
       >
+        {feedback && <FormMessage tone={feedback.tone}>{feedback.message}</FormMessage>}
         {/* Issue Assignment */}
         <label
           style={{
@@ -76,24 +187,26 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
           <select
             value={issueId ?? ""}
             onChange={(e) => setIssueId(e.target.value || null)}
-            disabled={isPublished}
+            disabled={disabled}
             title="Select issue for publication"
             style={{
               height: "2.75rem",
               borderRadius: "0.25rem",
               border: "1px solid #e5e5e5",
-              backgroundColor: isPublished ? "#f8f9fa" : "#ffffff",
+              backgroundColor: disabled ? "#f8f9fa" : "#ffffff",
               padding: "0 0.75rem",
               fontSize: "0.875rem",
               boxShadow: "inset 0 1px 2px rgba(0,0,0,0.075)",
               outline: "none",
-              cursor: isPublished ? "not-allowed" : "pointer",
+              cursor: disabled ? "not-allowed" : "pointer",
             }}
           >
-            <option value="">Select an issue...</option>
-            {/* TODO: Load issues from server */}
-            <option value="1">Volume 1, Issue 1 (2024)</option>
-            <option value="2">Volume 1, Issue 2 (2024)</option>
+            <option value="">{loading ? "Loading issues..." : "Select an issue..."}</option>
+            {issues.map((issue) => (
+              <option key={issue.id} value={issue.id}>
+                {issue.title}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -117,24 +230,26 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
           <select
             value={sectionId ?? ""}
             onChange={(e) => setSectionId(e.target.value || null)}
-            disabled={isPublished}
+            disabled={disabled}
             title="Select section for publication"
             style={{
               height: "2.75rem",
               borderRadius: "0.25rem",
               border: "1px solid #e5e5e5",
-              backgroundColor: isPublished ? "#f8f9fa" : "#ffffff",
+              backgroundColor: disabled ? "#f8f9fa" : "#ffffff",
               padding: "0 0.75rem",
               fontSize: "0.875rem",
               boxShadow: "inset 0 1px 2px rgba(0,0,0,0.075)",
               outline: "none",
-              cursor: isPublished ? "not-allowed" : "pointer",
+              cursor: disabled ? "not-allowed" : "pointer",
             }}
           >
-            <option value="">Select a section...</option>
-            {/* TODO: Load sections from server */}
-            <option value="articles">Articles</option>
-            <option value="reviews">Reviews</option>
+            <option value="">{loading ? "Loading sections..." : "Select a section..."}</option>
+            {sections.map((section) => (
+              <option key={section.id} value={section.id}>
+                {section.title}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -159,7 +274,7 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
             type="text"
             value={pages}
             onChange={(e) => setPages(e.target.value)}
-            disabled={isPublished}
+            disabled={disabled}
             placeholder="e.g., 1-10"
             style={{
               height: "2.75rem",
@@ -196,7 +311,7 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
             type="text"
             value={urlPath}
             onChange={(e) => setUrlPath(e.target.value)}
-            disabled={isPublished}
+            disabled={disabled}
             placeholder="e.g., article-title"
             style={{
               height: "2.75rem",
@@ -233,7 +348,7 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
             type="date"
             value={datePublished}
             onChange={(e) => setDatePublished(e.target.value)}
-            disabled={isPublished}
+            disabled={disabled}
             style={{
               height: "2.75rem",
               borderRadius: "0.25rem",
@@ -259,32 +374,26 @@ export function IssueTab({ submissionId, detail, isPublished }: Props) {
           >
             <button
               type="submit"
+              disabled={disabled}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "0.25rem",
                 border: "1px solid #006798",
-                backgroundColor: "#006798",
+                backgroundColor: disabled ? "#7baac0" : "#006798",
                 color: "#ffffff",
                 height: "2rem",
                 paddingLeft: "0.75rem",
                 paddingRight: "0.75rem",
                 fontSize: "0.875rem",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: disabled ? "not-allowed" : "pointer",
                 transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#005a82";
-                e.currentTarget.style.borderColor = "#005a82";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#006798";
-                e.currentTarget.style.borderColor = "#006798";
+                opacity: disabled ? 0.8 : 1,
               }}
             >
-              Save
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         )}

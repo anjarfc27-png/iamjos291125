@@ -156,6 +156,58 @@ export function WorkflowStageActions({
     }
   };
 
+  const handleWorkflowAction = async (action: string) => {
+    if (!hasAssignment) {
+      setFeedback({
+        tone: "error",
+        message: "Anda tidak memiliki akses untuk melakukan tindakan ini.",
+      });
+      return;
+    }
+
+    if (!canDecide) {
+      setFeedback({
+        tone: "error",
+        message: "Anda hanya dapat merekomendasikan, tidak dapat membuat keputusan final.",
+      });
+      return;
+    }
+
+    setFeedback(null);
+    try {
+      const response = await fetch(`/api/editor/submissions/${submissionId}/workflow`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action,
+          stage: currentStage,
+        }),
+      });
+      const result = await response.json();
+
+      if (!result.ok) {
+        setFeedback({
+          tone: "error",
+          message: result.message ?? "Failed to run workflow action",
+        });
+        return;
+      }
+
+      setFeedback({
+        tone: "success",
+        message: result.message ?? "Workflow action completed",
+      });
+      router.refresh();
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message: error instanceof Error ? error.message : "Failed to run workflow action",
+      });
+    }
+  };
+
   const getDecisionFormName = (decision: EditorDecisionType): string => {
     switch (decision) {
       case SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW:
@@ -331,6 +383,132 @@ export function WorkflowStageActions({
           >
             {availableDecisions.map(renderDecisionButton)}
           </div>
+          {currentStage === "copyediting" && (
+            <div
+              style={{
+                marginTop: "1rem",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "0.75rem",
+              }}
+            >
+              <div
+                style={{
+                  borderRadius: "0.25rem",
+                  border: "1px solid #e5e5e5",
+                  backgroundColor: "#ffffff",
+                  padding: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                        color: "#002C40",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      Request Author Copyediting
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "rgba(0, 0, 0, 0.54)",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Kirim permintaan kepada author untuk meninjau hasil copyediting sebelum
+                      produksi.
+                    </div>
+                  </div>
+                  <PkpButton
+                    onClick={() => handleWorkflowAction("request_author_copyedit")}
+                    disabled={!hasAssignment || !canDecide}
+                    variant="onclick"
+                    size="sm"
+                    style={{
+                      whiteSpace: "nowrap",
+                      height: "2rem",
+                    }}
+                  >
+                    Request Copyediting
+                  </PkpButton>
+                </div>
+              </div>
+            </div>
+          )}
+          {currentStage === "production" && (
+            <div
+              style={{
+                marginTop: "1rem",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "0.75rem",
+              }}
+            >
+              <div
+                style={{
+                  borderRadius: "0.25rem",
+                  border: "1px solid #e5e5e5",
+                  backgroundColor: "#ffffff",
+                  padding: "0.75rem",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 500,
+                        color: "#002C40",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
+                      Mark as Scheduled (Send to Issue)
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "rgba(0, 0, 0, 0.54)",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Pastikan issue sudah dipilih di tab Publication → Issue sebelum menandai
+                      submission sebagai terjadwal.
+                    </div>
+                  </div>
+                  <PkpButton
+                    onClick={() => handleWorkflowAction("send_to_issue")}
+                    disabled={!hasAssignment || !canDecide}
+                    variant="onclick"
+                    size="sm"
+                    style={{
+                      whiteSpace: "nowrap",
+                      height: "2rem",
+                    }}
+                  >
+                    Send to Issue
+                  </PkpButton>
+                </div>
+              </div>
+            </div>
+          )}
           {availableDecisions.length === 0 && (
             <div
               style={{

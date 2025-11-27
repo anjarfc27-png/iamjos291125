@@ -1,7 +1,7 @@
 "use server";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
 import {
   loadSectionSettings,
   saveSectionSettings,
@@ -27,38 +27,31 @@ export async function GET(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    // Get journal ID from query params or user roles
+    // Get journal ID from query params
     const { searchParams } = new URL(request.url);
     const journalId = searchParams.get("journalId");
 
-    let resolvedJournalId = journalId;
-    if (!resolvedJournalId) {
-      const journalRole = user.roles.find((r) => r.context_id);
-      if (!journalRole?.context_id) {
-        return NextResponse.json(
-          { ok: false, message: "Journal ID is required" },
-          { status: 400 }
-        );
-      }
-      resolvedJournalId = journalRole.context_id;
+    if (!journalId) {
+      return NextResponse.json(
+        { ok: false, message: "Journal ID is required" },
+        { status: 400 }
+      );
     }
 
     // Check permissions - only journal managers, editors, and admins can view settings
-    const hasPermission = user.roles.some(
-      (role) =>
-        role.role_path === "admin" ||
-        role.role_path === "manager" ||
-        role.role_path === "editor" ||
-        (role.context_id === resolvedJournalId &&
-          ["manager", "editor", "section_editor"].includes(role.role_path))
-    );
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canView = await hasUserJournalRole(user.id, journalId, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
 
-    if (!hasPermission) {
+    if (!isSiteAdmin && !canView) {
       return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
     }
 
-    await ensureDummySettingsSeed(section, resolvedJournalId);
-    const settings = await loadSectionSettings(resolvedJournalId, section);
+    await ensureDummySettingsSeed(section, journalId);
+    const settings = await loadSectionSettings(journalId, section);
     return NextResponse.json({ ok: true, settings });
   } catch (error) {
     console.error("Error loading settings:", error);
@@ -110,16 +103,14 @@ export async function POST(request: NextRequest, context: RouteParams) {
     }
 
     // Check permissions - only journal managers, editors, and admins can save settings
-    const hasPermission = user.roles.some(
-      (role) =>
-        role.role_path === "admin" ||
-        role.role_path === "manager" ||
-        role.role_path === "editor" ||
-        (role.context_id === journalId &&
-          ["manager", "editor", "section_editor"].includes(role.role_path))
-    );
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canEdit = await hasUserJournalRole(user.id, journalId, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
 
-    if (!hasPermission) {
+    if (!isSiteAdmin && !canEdit) {
       return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
     }
 

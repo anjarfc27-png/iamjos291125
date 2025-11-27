@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const adminSupabase = getSupabaseAdminClient();
     const { data: submission, error: submissionError } = await adminSupabase
       .from("submissions")
-      .select("id, author_id, current_stage, journal_id")
+      .select("id, current_stage, journal_id")
       .eq("id", submissionId)
       .single();
 
@@ -36,8 +36,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check if user is the author
-    if (submission.author_id !== user.id) {
+    // Check if user is the author via submission_participants
+    const { data: participant, error: participantError } = await adminSupabase
+      .from("submission_participants")
+      .select("submission_id")
+      .eq("submission_id", submissionId)
+      .eq("user_id", user.id)
+      .eq("role", "author")
+      .maybeSingle();
+
+    if (participantError || !participant) {
       return NextResponse.json(
         { ok: false, message: "You can only upload files to your own submissions" },
         { status: 403 }

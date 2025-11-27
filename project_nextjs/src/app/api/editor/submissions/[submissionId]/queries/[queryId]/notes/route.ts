@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string; queryId: string }>;
@@ -56,13 +56,27 @@ export async function POST(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ ok: false, message: "Query tidak ditemukan." }, { status: 404 });
     }
 
-    // Check if user is a participant (or has editor permissions)
+    // Check if user is a participant (or has editor permissions for the journal)
     const isParticipant = (query.query_participants as { user_id: string }[]).some((p) => p.user_id === user.id);
-    const hasEditorPermission = user.roles.some((role) =>
-      ["admin", "manager", "editor", "section_editor"].includes(role.role_path)
-    );
 
-    if (!isParticipant && !hasEditorPermission) {
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isEditorLike = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
+
+    if (!isParticipant && !isSiteAdmin && !isEditorLike) {
       return NextResponse.json({ ok: false, message: "Anda tidak memiliki akses ke query ini." }, { status: 403 });
     }
 

@@ -4,13 +4,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ taskId: string }>;
 };
-
-const EDITOR_ROLES = ["admin", "manager", "editor", "section_editor"];
 
 export async function PATCH(request: NextRequest, context: RouteParams) {
   try {
@@ -49,10 +47,26 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ ok: false, error: "Task tidak ditemukan." }, { status: 404 });
     }
 
-    const isEditorRole = user.roles.some((role) => EDITOR_ROLES.includes(role.role_path));
+    // Resolve journal from submission
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", existingTask.submission_id)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, error: "Submission tidak ditemukan." }, { status: 404 });
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isEditorRole = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
     const isAssignee = existingTask.assignee_id === user.id;
 
-    if (!isEditorRole && !isAssignee) {
+    if (!isSiteAdmin && !isEditorRole && !isAssignee) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 

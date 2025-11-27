@@ -1,110 +1,114 @@
 "use server";
 
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { SubmissionStage, SubmissionStatus } from "@/features/editor/types";
-import { SUBMISSION_STAGES } from "@/features/editor/types";
+import type {
+  EditorDecisionType,
+  SubmissionStage,
+  SubmissionStatus,
+} from "@/features/editor/types";
+import {
+  SUBMISSION_EDITOR_DECISION_ACCEPT,
+  SUBMISSION_EDITOR_DECISION_DECLINE,
+  SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW,
+  SUBMISSION_EDITOR_DECISION_INITIAL_DECLINE,
+  SUBMISSION_EDITOR_DECISION_NEW_ROUND,
+  SUBMISSION_EDITOR_DECISION_PENDING_REVISIONS,
+  SUBMISSION_EDITOR_DECISION_RESUBMIT,
+  SUBMISSION_EDITOR_DECISION_REVERT_DECLINE,
+  SUBMISSION_EDITOR_DECISION_SEND_TO_PRODUCTION,
+  SUBMISSION_STAGES,
+} from "@/features/editor/types";
+import { saveEditorDecision } from "@/features/editor/actions/editor-decisions";
+import {
+  assertEditorAccess,
+  getSubmissionRow,
+  requestAuthorCopyeditAction,
+  logActivity,
+} from "@/features/editor/actions/workflow-helpers";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
 };
 
-// Editorial decisions mapping based on OJS workflow
-const EDITORIAL_DECISIONS = {
-  send_to_review: { nextStage: "review" as SubmissionStage, status: "in_review" as SubmissionStatus },
-  send_to_copyediting: { nextStage: "copyediting" as SubmissionStage, status: "accepted" as SubmissionStatus },
-  decline_submission: { status: "declined" as SubmissionStatus },
-  accept: { nextStage: "copyediting" as SubmissionStage, status: "accepted" as SubmissionStatus },
-  pending_revisions: { status: "in_review" as SubmissionStatus },
-  resubmit_for_review: { status: "in_review" as SubmissionStatus },
-  decline: { status: "declined" as SubmissionStatus },
-  new_review_round: { status: "in_review" as SubmissionStatus },
-  send_to_production: { nextStage: "production" as SubmissionStage, status: "accepted" as SubmissionStatus },
-  request_author_copyedit: { status: "accepted" as SubmissionStatus },
-  schedule_publication: { status: "scheduled" as SubmissionStatus },
-  publish: { status: "published" as SubmissionStatus },
-  send_to_issue: { status: "scheduled" as SubmissionStatus },
-} as const;
+const ACTION_TO_DECISION: Partial<Record<string, EditorDecisionType>> = {
+  send_to_review: SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW,
+  send_to_copyediting: SUBMISSION_EDITOR_DECISION_ACCEPT,
+  decline_submission: SUBMISSION_EDITOR_DECISION_INITIAL_DECLINE,
+  accept: SUBMISSION_EDITOR_DECISION_ACCEPT,
+  pending_revisions: SUBMISSION_EDITOR_DECISION_PENDING_REVISIONS,
+  resubmit_for_review: SUBMISSION_EDITOR_DECISION_RESUBMIT,
+  decline: SUBMISSION_EDITOR_DECISION_DECLINE,
+  new_review_round: SUBMISSION_EDITOR_DECISION_NEW_ROUND,
+  send_to_production: SUBMISSION_EDITOR_DECISION_SEND_TO_PRODUCTION,
+  revert_decline: SUBMISSION_EDITOR_DECISION_REVERT_DECLINE,
+};
 
-async function validateEditorPermissions(submissionId: string): Promise<{hasPermission: boolean; role?: string; userId?: string}> {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      return { hasPermission: false };
-    }
+const ACTION_TRANSITIONS: Record<
+  string,
+  { nextStage?: SubmissionStage; status?: SubmissionStatus }
+> = {
+  send_to_review: { nextStage: "review", status: "in_review" },
+  send_to_copyediting: { nextStage: "copyediting", status: "accepted" },
+  decline_submission: { status: "declined" },
+  accept: { nextStage: "copyediting", status: "accepted" },
+  pending_revisions: { status: "in_review" },
+  resubmit_for_review: { status: "in_review" },
+  decline: { status: "declined" },
+  new_review_round: { status: "in_review" },
+  send_to_production: { nextStage: "production", status: "accepted" },
+  request_author_copyedit: { status: "accepted" },
+  schedule_publication: { status: "scheduled" },
+  publish: { status: "published" },
+  send_to_issue: { status: "scheduled" },
+};
 
-    const userId = session.user.id;
-    
-    // Check if user is journal manager or editor
-    const { data: userRoles } = await supabase
-      .from("journal_users")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("journal_id", (await getSubmissionJournalId(submissionId)));
+const ACTION_MESSAGES: Record<string, string> = {
+  send_to_review: "Submission sent to review stage",
+  send_to_copyediting: "Submission sent to copyediting stage",
+  decline_submission: "Submission declined at initial stage",
+  accept: "Submission accepted",
+  pending_revisions: "Revisions requested from author",
+  resubmit_for_review: "Author requested to resubmit for review",
+  decline: "Submission declined after review",
+  new_review_round: "New review round initiated",
+  send_to_production: "Submission sent to production",
+  request_author_copyedit: "Author requested for copyediting",
+  schedule_publication: "Publication scheduled",
+  publish: "Submission published",
+  send_to_issue: "Submission assigned to issue",
+};
 
-    const allowedRoles = ["manager", "editor", "section_editor"];
-    const userRole = userRoles?.find(ur => allowedRoles.includes(ur.role))?.role;
-    
-    return {
-      hasPermission: !!userRole,
-      role: userRole,
-      userId
-    };
-  } catch {
-    return { hasPermission: false };
+function getDecisionMessage(action: string, targetStage?: SubmissionStage, status?: SubmissionStatus) {
+  const message = ACTION_MESSAGES[action];
+  if (message) {
+    return message;
   }
+  if (targetStage || status) {
+    return `Workflow updated${targetStage ? ` to stage ${targetStage}` : ""}${
+      status ? ` with status ${status}` : ""
+    }`;
+  }
+  return `Workflow updated: ${action}`;
 }
 
-async function getSubmissionJournalId(submissionId: string): Promise<string> {
-  try {
-    const supabase = getSupabaseAdminClient();
-    const { data } = await supabase
-      .from("submissions")
-      .select("journal_id")
-      .eq("id", submissionId)
-      .single();
-    
-    return data?.journal_id || "";
-  } catch {
-    return "";
+function getManualUpdateMessage(targetStage?: SubmissionStage, status?: SubmissionStatus, note?: string) {
+  if (note) {
+    return note;
   }
-}
-
-function getDecisionMessage(action: string, targetStage?: string, status?: string): string {
-  const actionMessages: Record<string, string> = {
-    send_to_review: "Submission sent to review stage",
-    send_to_copyediting: "Submission sent to copyediting stage",
-    decline_submission: "Submission declined at initial stage",
-    accept: "Submission accepted",
-    pending_revisions: "Revisions requested from author",
-    resubmit_for_review: "Author requested to resubmit for review",
-    decline: "Submission declined after review",
-    new_review_round: "New review round initiated",
-    send_to_production: "Submission sent to production",
-    request_author_copyedit: "Author requested for copyediting",
-    schedule_publication: "Publication scheduled",
-    publish: "Submission published",
-    send_to_issue: "Submission assigned to issue",
-  };
-  
-  return actionMessages[action] || `Workflow updated: ${action}`;
+  if (targetStage || status) {
+    return `Workflow manually updated${targetStage ? ` to stage ${targetStage}` : ""}${
+      status ? ` with status ${status}` : ""
+    }`;
+  }
+  return "Workflow updated.";
 }
 
 export async function POST(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
-  }
-
-  // Validate editor permissions
-  const permission = await validateEditorPermissions(submissionId);
-  if (!permission.hasPermission) {
-    return NextResponse.json({ ok: false, message: "Anda tidak memiliki izin untuk membuat keputusan editorial." }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as {
@@ -118,44 +122,118 @@ export async function POST(request: Request, context: RouteParams) {
     return NextResponse.json({ ok: false, message: "Permintaan tidak valid." }, { status: 400 });
   }
 
-  // Validate action if provided
-  if (body.action && !EDITORIAL_DECISIONS[body.action as keyof typeof EDITORIAL_DECISIONS]) {
-    return NextResponse.json({ ok: false, message: "Editorial decision tidak valid." }, { status: 400 });
-  }
-
   if (body.targetStage && !SUBMISSION_STAGES.includes(body.targetStage)) {
     return NextResponse.json({ ok: false, message: "Tahap workflow tidak valid." }, { status: 400 });
   }
 
+  const action = body.action;
+  const mappedDecision = action ? ACTION_TO_DECISION[action] : undefined;
+  const fallbackTransition = action ? ACTION_TRANSITIONS[action] : undefined;
+
+  // Handle editorial decision actions using the canonical server action implementation
+  if (action && mappedDecision) {
+    try {
+      const submission = await getSubmissionRow(submissionId);
+      const result = await saveEditorDecision({
+        submissionId,
+        stage: submission.current_stage,
+        decision: mappedDecision,
+      });
+      return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal menyimpan keputusan editorial.";
+      const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
+      return NextResponse.json({ ok: false, message }, { status });
+    }
+  }
+
+  if (action === "request_author_copyedit") {
+    try {
+      await requestAuthorCopyeditAction(submissionId);
+      return NextResponse.json({
+        ok: true,
+        message: "Copyediting request sent to author.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal mengirim permintaan copyediting.";
+      const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
+      return NextResponse.json({ ok: false, message }, { status });
+    }
+  }
+
+  if (action === "send_to_issue") {
+    try {
+      const { userId } = await assertEditorAccess(submissionId);
+      const supabase = getSupabaseAdminClient();
+
+      const { data: latestVersion, error: versionError } = await supabase
+        .from("submission_versions")
+        .select("id, issue_id")
+        .eq("submission_id", submissionId)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (versionError || !latestVersion) {
+        return NextResponse.json({ ok: false, message: "Versi submission tidak ditemukan." }, { status: 404 });
+      }
+
+      if (!latestVersion.issue_id) {
+        return NextResponse.json(
+          { ok: false, message: "Assign submission ke issue terlebih dahulu pada tab Publication → Issue." },
+          { status: 400 }
+        );
+      }
+
+      await supabase
+        .from("submission_versions")
+        .update({ status: "scheduled" })
+        .eq("id", latestVersion.id);
+
+      await supabase
+        .from("submissions")
+        .update({ status: "scheduled", updated_at: new Date().toISOString() })
+        .eq("id", submissionId);
+
+      await logActivity({
+        submissionId,
+        actorId: userId,
+        category: "publication",
+        message: "Submission marked as scheduled (issue assigned).",
+      });
+
+      return NextResponse.json({
+        ok: true,
+        message: "Submission telah dijadwalkan pada issue yang dipilih.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal mengirim submission ke issue.";
+      const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
+      return NextResponse.json({ ok: false, message }, { status });
+    }
+  }
+
+  if (action && !fallbackTransition) {
+    return NextResponse.json(
+      { ok: false, message: "Editorial decision belum didukung oleh workflow iamJOS." },
+      { status: 400 }
+    );
+  }
+
+  // Manual stage/status update path (legacy / fallback)
   try {
+    const { userId } = await assertEditorAccess(submissionId);
     const supabase = getSupabaseAdminClient();
     const updates: Record<string, unknown> = {};
-    
-    let actionMessage = "";
-    let targetStage = body.targetStage;
-    let targetStatus = body.status;
 
-    // Handle editorial decision action
-    if (body.action) {
-      const decision = EDITORIAL_DECISIONS[body.action as keyof typeof EDITORIAL_DECISIONS];
-      if ("nextStage" in decision && decision.nextStage) {
-        updates.current_stage = decision.nextStage;
-        targetStage = decision.nextStage;
-      }
-      if ("status" in decision && decision.status) {
-        updates.status = decision.status;
-        targetStatus = decision.status;
-      }
-      actionMessage = getDecisionMessage(body.action, targetStage, targetStatus);
-    } else {
-      // Handle manual stage/status update (backward compatibility)
-      if (body.targetStage) {
-        updates.current_stage = body.targetStage;
-      }
-      if (body.status) {
-        updates.status = body.status;
-      }
-      actionMessage = body.note || getDecisionMessage("update", targetStage, targetStatus);
+    const targetStage = body.targetStage ?? fallbackTransition?.nextStage;
+    const targetStatus = body.status ?? fallbackTransition?.status;
+
+    if (targetStage) {
+      updates.current_stage = targetStage;
+    }
+    if (targetStatus) {
+      updates.status = targetStatus;
     }
 
     if (Object.keys(updates).length > 0) {
@@ -165,26 +243,27 @@ export async function POST(request: Request, context: RouteParams) {
       }
     }
 
-    // Log the activity with actor information
-    const logMessage = body.note || actionMessage;
-    if (logMessage) {
-      await supabase.from("submission_activity_logs").insert({
-        submission_id: submissionId,
-        category: "workflow",
-        message: logMessage,
-        actor_id: permission.userId,
-        metadata: {
-          action: body.action || "manual_update",
-          targetStage: targetStage ?? null,
-          status: targetStatus ?? null,
-          role: permission.role,
-        },
-      });
-    }
+    const logMessage = action
+      ? body.note || getDecisionMessage(action, targetStage, targetStatus)
+      : getManualUpdateMessage(targetStage, targetStatus, body.note);
+
+    await supabase.from("submission_activity_logs").insert({
+      submission_id: submissionId,
+      category: "workflow",
+      message: logMessage,
+      actor_id: userId,
+      metadata: {
+        action: action || "manual_update",
+        targetStage: targetStage ?? null,
+        status: targetStatus ?? null,
+      },
+    });
 
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ ok: false, message: "Gagal memperbarui workflow." }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Gagal memperbarui workflow.";
+    const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
+    return NextResponse.json({ ok: false, message }, { status });
   }
 }
 

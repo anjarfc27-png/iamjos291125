@@ -1,18 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, Filter, Eye } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import type { SubmissionSummary } from "@/features/editor/types";
 
@@ -20,9 +9,30 @@ type Props = {
   submissions: SubmissionSummary[];
 };
 
+const stageOptions = [
+  { value: "all", label: "All Stages" },
+  { value: "submission", label: "Submission" },
+  { value: "review", label: "Review" },
+  { value: "copyediting", label: "Copyediting" },
+  { value: "production", label: "Production" },
+];
+
+const statusOptions = [
+  { value: "all", label: "All Status" },
+  { value: "submitted", label: "Submitted" },
+  { value: "in_review", label: "In Review" },
+  { value: "accepted", label: "Accepted" },
+  { value: "declined", label: "Declined" },
+  { value: "published", label: "Published" },
+];
+
 export function SubmissionsClient({ submissions: initialSubmissions }: Props) {
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "—";
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -30,143 +40,304 @@ export function SubmissionsClient({ submissions: initialSubmissions }: Props) {
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-      published: { variant: "default", label: "Published" },
-      declined: { variant: "destructive", label: "Declined" },
-      accepted: { variant: "default", label: "Accepted" },
-      submitted: { variant: "secondary", label: "Submitted" },
-      in_review: { variant: "outline", label: "In Review" },
-    };
-
-    const config = variants[status] || { variant: "secondary" as const, label: status };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  const getStageBadge = (stage: string) => {
-    const stageLabels: Record<string, string> = {
-      submission: "Submission",
-      review: "Review",
-      copyediting: "Copyediting",
-      production: "Production",
-    };
-    return <Badge variant="outline">{stageLabels[stage] || stage}</Badge>;
-  };
+  const filteredSubmissions = useMemo(() => {
+    return initialSubmissions.filter((submission) => {
+      const matchesSearch =
+        !search ||
+        submission.title?.toLowerCase().includes(search.toLowerCase()) ||
+        submission.assignees.join(", ").toLowerCase().includes(search.toLowerCase());
+      const matchesStage = stageFilter === "all" || submission.stage === stageFilter;
+      const matchesStatus = statusFilter === "all" || submission.status === statusFilter;
+      return matchesSearch && matchesStage && matchesStatus;
+    });
+  }, [initialSubmissions, search, stageFilter, statusFilter]);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Submissions</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage all journal submissions</p>
+    <div style={{ minHeight: "100%", backgroundColor: "#eaedee" }}>
+      {/* Header Bar */}
+      <div
+        style={{
+          backgroundColor: "#ffffff",
+          borderBottom: "1px solid #dfe3e6",
+          padding: "1.5rem 2rem",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: 700,
+                color: "#002C40",
+                margin: 0,
+              }}
+            >
+              Submissions
+            </h1>
+            <p style={{ margin: "0.5rem 0 0", color: "#6b7280", fontSize: "0.875rem" }}>
+              Kelola naskah dan lakukan aksi editorial sesuai peran Manager.
+            </p>
+          </div>
+          <div
+            style={{
+              fontSize: "0.875rem",
+              color: "#374151",
+            }}
+          >
+            Showing {filteredSubmissions.length} of {initialSubmissions.length} submissions
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="border border-gray-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search submissions..." className="pl-10" />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by stage" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Stages</SelectItem>
-                  <SelectItem value="submission">Submission</SelectItem>
-                  <SelectItem value="review">Review</SelectItem>
-                  <SelectItem value="copyediting">Copyediting</SelectItem>
-                  <SelectItem value="production">Production</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select defaultValue="all">
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="submitted">Submitted</SelectItem>
-                  <SelectItem value="in_review">In Review</SelectItem>
-                  <SelectItem value="accepted">Accepted</SelectItem>
-                  <SelectItem value="declined">Declined</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Content */}
+      <div
+        style={{
+          padding: "2rem",
+          maxWidth: "1200px",
+          margin: "0 auto",
+        }}
+      >
+        {/* Filter Row */}
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #dfe3e6",
+            borderRadius: "0.25rem",
+            padding: "1rem 1.5rem",
+            marginBottom: "1.5rem",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "1rem",
+            alignItems: "center",
+          }}
+        >
+          <label style={{ flex: "1 1 260px" }}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6b7280",
+                marginBottom: "0.35rem",
+              }}
+            >
+              Quick Search
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Masukkan judul atau assignment"
+              style={{
+                width: "100%",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+              }}
+            />
+          </label>
 
-      {/* Submissions List */}
-      <Card className="border border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            All Submissions ({initialSubmissions.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {initialSubmissions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No submissions found</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {initialSubmissions.map((submission) => (
-                <div
-                  key={submission.id}
-                  className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm leading-tight">
-                        {submission.title || "Untitled Submission"}
-                      </h4>
-                      {submission.journalTitle && (
-                        <p className="text-xs text-gray-500 mt-1">{submission.journalTitle}</p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        Updated: {formatDate(submission.updatedAt)}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      {getStatusBadge(submission.status)}
-                      {getStageBadge(submission.stage)}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mt-3">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-xs text-gray-500">
-                        Submitted: {formatDate(submission.submittedAt)}
-                      </span>
-                      {submission.assignees.length > 0 && (
-                        <span className="text-xs text-gray-500">
-                          Assigned to: {submission.assignees.join(", ")}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Link href={`/editor/submissions/${submission.id}`}>
-                        <Button variant="ghost" size="sm" className="h-8 px-3">
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+          <label style={{ flex: "0 0 180px" }}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6b7280",
+                marginBottom: "0.35rem",
+              }}
+            >
+              Stage
+            </span>
+            <select
+              value={stageFilter}
+              onChange={(event) => setStageFilter(event.target.value)}
+              style={{
+                width: "100%",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              {stageOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </select>
+          </label>
+
+          <label style={{ flex: "0 0 180px" }}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6b7280",
+                marginBottom: "0.35rem",
+              }}
+            >
+              Status
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              style={{
+                width: "100%",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {/* Table */}
+        <div
+          style={{
+            backgroundColor: "#ffffff",
+            border: "1px solid #dfe3e6",
+            borderRadius: "0.25rem",
+            overflowX: "auto",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}>
+            <thead>
+              <tr
+                style={{
+                  backgroundColor: "#f9fafb",
+                  textAlign: "left",
+                  color: "#4b5563",
+                  fontSize: "0.75rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                <th style={{ padding: "0.75rem 1rem", width: "22%" }}>Title & Journal</th>
+                <th style={{ padding: "0.75rem 1rem", width: "12%" }}>Stage</th>
+                <th style={{ padding: "0.75rem 1rem", width: "12%" }}>Status</th>
+                <th style={{ padding: "0.75rem 1rem", width: "18%" }}>Assigned</th>
+                <th style={{ padding: "0.75rem 1rem", width: "14%" }}>Submitted</th>
+                <th style={{ padding: "0.75rem 1rem", width: "14%" }}>Last Updated</th>
+                <th style={{ padding: "0.75rem 1rem", width: "8%" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSubmissions.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    style={{
+                      padding: "2rem",
+                      textAlign: "center",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Tidak ada submission yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredSubmissions.map((submission, index) => (
+                  <tr
+                    key={submission.id}
+                    style={{
+                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f8fafc",
+                      borderTop: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top" }}>
+                      <div style={{ fontWeight: 600, color: "#111827", fontSize: "0.875rem" }}>
+                        {submission.title || "Untitled Submission"}
+                      </div>
+                      <div style={{ color: "#6b7280", fontSize: "0.75rem", marginTop: "0.25rem" }}>
+                        {submission.journalTitle || "—"}
+                      </div>
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top" }}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          padding: "0.15rem 0.5rem",
+                          borderRadius: "0.75rem",
+                          backgroundColor: "#e0f2fe",
+                          color: "#0369a1",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        {submission.stage ? submission.stage.charAt(0).toUpperCase() + submission.stage.slice(1) : "—"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top" }}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          padding: "0.15rem 0.5rem",
+                          borderRadius: "0.75rem",
+                          backgroundColor: submission.status === "declined" ? "#fee2e2" : "#e4e4e7",
+                          color: submission.status === "declined" ? "#b91c1c" : "#1f2937",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        {submission.status ? submission.status.replace("_", " ") : "—"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top", color: "#374151", fontSize: "0.8125rem" }}>
+                      {submission.assignees.length > 0 ? submission.assignees.join(", ") : "Unassigned"}
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top", color: "#374151", fontSize: "0.8125rem" }}>
+                      {formatDate(submission.submittedAt)}
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top", color: "#374151", fontSize: "0.8125rem" }}>
+                      {formatDate(submission.updatedAt)}
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", verticalAlign: "top" }}>
+                      <Link
+                        href={`/editor/submissions/${submission.id}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "0.35rem 0.75rem",
+                          borderRadius: "0.25rem",
+                          border: "1px solid #d1d5db",
+                          fontSize: "0.75rem",
+                          color: "#006798",
+                          textDecoration: "none",
+                        }}
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

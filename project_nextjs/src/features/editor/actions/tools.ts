@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
@@ -26,23 +26,22 @@ export async function resetPermissions(journalId: string): Promise<ActionResult>
       };
     }
 
-    const hasPermission = user.roles.some((role) =>
-      ["admin", "manager"].includes(role.role_path)
-    );
-
-    if (!hasPermission) {
-      return {
-        success: false,
-        message: "Forbidden",
-        error: "Only journal managers and site administrators can reset permissions",
-      };
-    }
-
     if (!journalId) {
       return {
         success: false,
         message: "Journal ID is required",
         error: "Journal ID is required",
+      };
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isManager = await hasUserJournalRole(user.id, journalId, ["manager"]);
+
+    if (!isSiteAdmin && !isManager) {
+      return {
+        success: false,
+        message: "Forbidden",
+        error: "Only journal managers and site administrators can reset permissions",
       };
     }
 

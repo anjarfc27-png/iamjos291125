@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SUBMISSION_STAGES } from "@/features/editor/types";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
@@ -18,21 +18,37 @@ export async function GET(request: Request, context: RouteParams) {
   }
 
   try {
-    // Check permissions - editors, section editors, and managers can view participants
-    const user = await getCurrentUser(request)
+    // Check permissions - editors, section editors, and managers (or site admin) can view participants
+    const user = await getCurrentUser(request);
     if (!user) {
-      return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
-    }
-
-    const hasPermission = user.roles.some(role => 
-      ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
-    )
-
-    if (!hasPermission) {
-      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
+      return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = getSupabaseAdminClient();
+
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canView = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+      "copyeditor",
+      "layout-editor",
+      "proofreader",
+    ]);
+
+    if (!isSiteAdmin && !canView) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+    }
     const { data: rows, error } = await supabase
       .from("submission_participants")
       .select("user_id, role, stage, assigned_at")
@@ -117,18 +133,33 @@ export async function DELETE(request: Request, context: RouteParams) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });
   }
 
-  // Check permissions - only editors, section editors, and managers can delete participants
-  const user = await getCurrentUser(request)
+  // Check permissions - only editors, section editors, and managers (or site admin) can delete participants
+  const user = await getCurrentUser(request);
   if (!user) {
-    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
   }
 
-  const hasPermission = user.roles.some(role => 
-    ['admin', 'manager', 'editor', 'section_editor'].includes(role.role_path)
-  )
+  const supabase = getSupabaseAdminClient();
 
-  if (!hasPermission) {
-    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 })
+  const { data: submission, error: submissionError } = await supabase
+    .from("submissions")
+    .select("journal_id")
+    .eq("id", submissionId)
+    .maybeSingle();
+
+  if (submissionError || !submission) {
+    return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
+  }
+
+  const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+  const canDelete = await hasUserJournalRole(user.id, submission.journal_id, [
+    "manager",
+    "editor",
+    "section_editor",
+  ]);
+
+  if (!isSiteAdmin && !canDelete) {
+    return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
 
   const body = (await request.json().catch(() => null)) as { userId?: string; role?: string; stage?: string } | null;
@@ -141,7 +172,6 @@ export async function DELETE(request: Request, context: RouteParams) {
   }
 
   try {
-    const supabase = getSupabaseAdminClient();
     const { error } = await supabase
       .from("submission_participants")
       .delete()

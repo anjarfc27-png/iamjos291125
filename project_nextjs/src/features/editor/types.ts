@@ -1,14 +1,19 @@
 export const SUBMISSION_STAGES = ["submission", "review", "copyediting", "production"] as const;
 export type SubmissionStage = (typeof SUBMISSION_STAGES)[number];
 
-export type SubmissionStatus =
-  | "queued"
-  | "in_review"
-  | "accepted"
-  | "scheduled"
-  | "published"
-  | "declined"
-  | "archived";
+export const SUBMISSION_STATUSES = [
+  "queued",
+  "in_review",
+  "in_copyediting",
+  "in_production",
+  "accepted",
+  "scheduled",
+  "published",
+  "declined",
+  "archived",
+] as const;
+
+export type SubmissionStatus = (typeof SUBMISSION_STATUSES)[number];
 
 export type SubmissionSummary = {
   id: string;
@@ -132,6 +137,16 @@ export type SubmissionDetail = {
   activity: SubmissionActivityLog[];
   reviewRounds: SubmissionReviewRound[];
   queries?: Query[];
+};
+
+export type IssueRow = {
+  id: string;
+  title: string;
+  volume: number | null;
+  number: number | null;
+  year: number | null;
+  status: "published" | "scheduled" | "draft" | string;
+  publishedAt?: string | null;
 };
 
 // Editor Decision Constants (matching OJS PKP 3.3)

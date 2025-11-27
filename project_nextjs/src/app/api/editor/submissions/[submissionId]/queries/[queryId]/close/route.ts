@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string; queryId: string }>;
@@ -28,15 +28,28 @@ export async function POST(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const hasPermission = user.roles.some((role) =>
-      ["admin", "manager", "editor", "section_editor"].includes(role.role_path)
-    );
+    const supabase = getSupabaseAdminClient();
 
-    if (!hasPermission) {
-      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
     }
 
-    const supabase = getSupabaseAdminClient();
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canClose = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
+
+    if (!isSiteAdmin && !canClose) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+    }
 
     // Verify query exists
     const { data: query, error: queryError } = await supabase

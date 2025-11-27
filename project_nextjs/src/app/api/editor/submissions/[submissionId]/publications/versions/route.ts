@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
@@ -28,19 +28,32 @@ export async function POST(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const hasPermission = user.roles.some((role) =>
-      ["admin", "manager", "editor", "section_editor"].includes(role.role_path)
-    );
-
-    if (!hasPermission) {
-      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
-    }
-
     const body = (await request.json().catch(() => null)) as {
       description?: string;
     } | null;
 
     const supabase = getSupabaseAdminClient();
+
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canCreateVersion = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
+
+    if (!isSiteAdmin && !canCreateVersion) {
+      return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
+    }
 
     // Get current highest version number
     const { data: existingVersions } = await supabase
@@ -51,13 +64,6 @@ export async function POST(request: NextRequest, context: RouteParams) {
       .limit(1);
 
     const nextVersion = existingVersions && existingVersions.length > 0 ? ((existingVersions[0].version as number) || 1) + 1 : 1;
-
-    // Get submission to copy data from
-    const { data: submission } = await supabase.from("submissions").select("*").eq("id", submissionId).single();
-
-    if (!submission) {
-      return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
-    }
 
     // Create new version
     const { data: newVersion, error: createError } = await supabase

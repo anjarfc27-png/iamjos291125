@@ -12,6 +12,7 @@ import type {
   EditorDecisionType,
   EditorRecommendationType,
   SubmissionStage,
+  SubmissionStatus,
 } from "../types";
 import {
   SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW,
@@ -31,6 +32,8 @@ import {
   logActivity,
   createReviewRound,
   SubmissionRow,
+  updateActiveReviewRoundStatus,
+  recordEditorDecision,
 } from "./workflow-helpers";
 
 type DecisionData = {
@@ -55,15 +58,15 @@ type ActionResult = {
 
 const STAGE_TRANSITIONS: Record<
   EditorDecisionType,
-  { nextStage?: SubmissionStage; status?: string; archive?: boolean }
+  { nextStage?: SubmissionStage; status?: SubmissionStatus; archive?: boolean }
 > = {
   [SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW]: {
     nextStage: "review",
-    status: "queued",
+    status: "in_review",
   },
   [SUBMISSION_EDITOR_DECISION_ACCEPT]: {
     nextStage: "copyediting",
-    status: "accepted",
+    status: "in_copyediting",
   },
   [SUBMISSION_EDITOR_DECISION_DECLINE]: {
     status: "declined",
@@ -73,17 +76,19 @@ const STAGE_TRANSITIONS: Record<
     status: "declined",
     archive: true,
   },
-  [SUBMISSION_EDITOR_DECISION_PENDING_REVISIONS]: {},
+  [SUBMISSION_EDITOR_DECISION_PENDING_REVISIONS]: {
+    status: "in_review",
+  },
   [SUBMISSION_EDITOR_DECISION_RESUBMIT]: {
     nextStage: "review",
-    status: "queued",
+    status: "in_review",
   },
   [SUBMISSION_EDITOR_DECISION_SEND_TO_PRODUCTION]: {
     nextStage: "production",
     status: "in_production",
   },
   [SUBMISSION_EDITOR_DECISION_REVERT_DECLINE]: {
-    status: "queued",
+    status: "in_review",
     archive: false,
   },
   [SUBMISSION_EDITOR_DECISION_NEW_ROUND]: {},
@@ -135,13 +140,21 @@ export async function sendToExternalReview(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
+    await updateActiveReviewRoundStatus(submissionId, "review", "completed");
     await createReviewRound(submissionId, "review");
     await applyDecisionTransition({
       decision: SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW,
       submissionId,
+    });
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: SUBMISSION_EDITOR_DECISION_EXTERNAL_REVIEW,
+      actorId: userId,
+      reviewRoundId,
     });
     await logActivity({
       submissionId,
@@ -170,12 +183,20 @@ export async function acceptSubmission(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
     await applyDecisionTransition({
       decision: SUBMISSION_EDITOR_DECISION_ACCEPT,
       submissionId,
+    });
+    await updateActiveReviewRoundStatus(submissionId, "review", "completed");
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: SUBMISSION_EDITOR_DECISION_ACCEPT,
+      actorId: userId,
+      reviewRoundId,
     });
     await logActivity({
       submissionId,
@@ -204,7 +225,7 @@ export async function declineSubmission(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
     const decisionType =
@@ -215,6 +236,14 @@ export async function declineSubmission(
     await applyDecisionTransition({
       decision: decisionType,
       submissionId,
+    });
+    await updateActiveReviewRoundStatus(submissionId, "review", "completed");
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: decisionType,
+      actorId: userId,
+      reviewRoundId,
     });
     await logActivity({
       submissionId,
@@ -243,9 +272,21 @@ export async function requestRevisions(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
+    await applyDecisionTransition({
+      decision: SUBMISSION_EDITOR_DECISION_PENDING_REVISIONS,
+      submissionId,
+    });
+    await updateActiveReviewRoundStatus(submissionId, "review", "revisions_requested");
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: SUBMISSION_EDITOR_DECISION_PENDING_REVISIONS,
+      actorId: userId,
+      reviewRoundId,
+    });
     await logActivity({
       submissionId,
       actorId: userId,
@@ -273,13 +314,21 @@ export async function resubmitForReview(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
+    await updateActiveReviewRoundStatus(submissionId, "review", "resubmitted");
     await createReviewRound(submissionId, "review");
     await applyDecisionTransition({
       decision: SUBMISSION_EDITOR_DECISION_RESUBMIT,
       submissionId,
+    });
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: SUBMISSION_EDITOR_DECISION_RESUBMIT,
+      actorId: userId,
+      reviewRoundId,
     });
     await logActivity({
       submissionId,
@@ -308,12 +357,20 @@ export async function sendToProduction(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
     await applyDecisionTransition({
       decision: SUBMISSION_EDITOR_DECISION_SEND_TO_PRODUCTION,
       submissionId,
+    });
+    await updateActiveReviewRoundStatus(submissionId, "review", "completed");
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: SUBMISSION_EDITOR_DECISION_SEND_TO_PRODUCTION,
+      actorId: userId,
+      reviewRoundId,
     });
     await logActivity({
       submissionId,
@@ -342,12 +399,19 @@ export async function revertDecline(
   data: DecisionData
 ): Promise<ActionResult> {
   try {
-    const { submissionId } = data;
+    const { submissionId, stage, reviewRoundId } = data;
     const { userId } = await assertEditorAccess(submissionId);
 
     await applyDecisionTransition({
       decision: SUBMISSION_EDITOR_DECISION_REVERT_DECLINE,
       submissionId,
+    });
+    await recordEditorDecision({
+      submissionId,
+      stage,
+      decision: SUBMISSION_EDITOR_DECISION_REVERT_DECLINE,
+      actorId: userId,
+      reviewRoundId,
     });
     await logActivity({
       submissionId,
@@ -431,10 +495,18 @@ export async function saveEditorDecision(
         return await revertDecline(data);
 
       case SUBMISSION_EDITOR_DECISION_NEW_ROUND: {
-        const { submissionId, stage } = data;
+        const { submissionId, stage, reviewRoundId } = data;
         const { userId } = await assertEditorAccess(submissionId);
+        await updateActiveReviewRoundStatus(submissionId, stage, "completed");
         await getSubmissionRow(submissionId);
         await createReviewRound(submissionId, stage);
+        await recordEditorDecision({
+          submissionId,
+          stage,
+          decision: SUBMISSION_EDITOR_DECISION_NEW_ROUND,
+          actorId: userId,
+          reviewRoundId,
+        });
         await logActivity({
           submissionId,
           actorId: userId,

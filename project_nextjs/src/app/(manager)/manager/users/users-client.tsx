@@ -1,18 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Search, Plus, Edit, Trash2, Mail, UserCheck, UserX, Filter } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useMemo, useState } from "react";
 
 type User = {
   id: string;
@@ -35,260 +23,329 @@ type Props = {
   roles: Role[];
 };
 
-export function UsersManagementClient({ users: initialUsers, roles }: Props) {
-  const [users, setUsers] = useState(initialUsers);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+export function UsersManagementClient({ users, roles }: Props) {
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const uniqueRoles = useMemo(() => {
+    const list = new Set<string>();
+    roles.forEach((role) => list.add(role.role_path));
+    users.forEach((user) => user.roles.forEach((role) => list.add(role)));
+    return Array.from(list).sort();
+  }, [roles, users]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
+      const normalizedSearch = search.trim().toLowerCase();
       const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase());
-
+        !normalizedSearch ||
+        user.name?.toLowerCase().includes(normalizedSearch) ||
+        user.email.toLowerCase().includes(normalizedSearch);
       const matchesRole = roleFilter === "all" || user.roles.includes(roleFilter);
-
       const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [users, searchQuery, roleFilter, statusFilter]);
+  }, [users, search, roleFilter, statusFilter]);
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Never";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
+  const formatDate = (value: string | null) => {
+    if (!value) return "—";
+    return new Date(value).toLocaleDateString("en-US", {
       day: "numeric",
+      month: "short",
       year: "numeric",
     });
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    const roleColors: Record<string, "default" | "secondary" | "outline"> = {
-      manager: "default",
-      editor: "default",
-      section_editor: "secondary",
-      reviewer: "outline",
-      author: "outline",
-      copyeditor: "secondary",
-      layout_editor: "secondary",
-      proofreader: "secondary",
-    };
-    return roleColors[role] || "outline";
-  };
-
-  const handleAddUser = () => {
-    // TODO: Open add user modal
-    console.log("Add user");
-  };
-
-  const handleEditUser = (user: User) => {
-    // TODO: Open edit user modal
-    console.log("Edit user:", user);
-  };
-
-  const handleDeleteUser = (user: User) => {
-    if (confirm(`Are you sure you want to delete user ${user.name}?`)) {
-      // TODO: Implement delete user
-      console.log("Delete user:", user);
-    }
-  };
-
-  const handleSendEmail = (user: User) => {
-    // TODO: Open send email modal
-    console.log("Send email to:", user);
-  };
-
-  const handleToggleStatus = (user: User) => {
-    // TODO: Implement toggle status
-    setUsers(
-      users.map((u) =>
-        u.id === user.id ? { ...u, status: u.status === "active" ? "inactive" : "active" } : u
-      )
-    );
-  };
-
-  const uniqueRoles = useMemo(() => {
-    const allRoles = new Set<string>();
-    users.forEach((user) => {
-      user.roles.forEach((role) => allRoles.add(role));
-    });
-    return Array.from(allRoles).sort();
-  }, [users]);
-
   return (
-    <div className="p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users & Roles</h1>
-          <p className="text-sm text-gray-600 mt-1">Manage journal users and their roles</p>
+    <div style={{ backgroundColor: "#eaedee", minHeight: "100%" }}>
+      {/* Header */}
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderBottom: "1px solid #dfe3e6",
+          padding: "1.5rem 2rem",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: 700,
+                color: "#002C40",
+                margin: 0,
+              }}
+            >
+              Users & Roles
+            </h1>
+            <p style={{ margin: "0.35rem 0 0", color: "#6b7280", fontSize: "0.875rem" }}>
+              Daftar user jurnal dan peran yang mereka miliki.
+            </p>
+          </div>
+          <button
+            type="button"
+            style={{
+              backgroundColor: "#006798",
+              color: "#fff",
+              border: "none",
+              borderRadius: "0.25rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.875rem",
+              cursor: "pointer",
+            }}
+          >
+            + Add User
+          </button>
         </div>
-        <Button onClick={handleAddUser} className="bg-[#006798] hover:bg-[#005687]">
-          <Plus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
       </div>
 
-      {/* Filters */}
-      <Card className="border border-gray-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  {uniqueRoles.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Body */}
+      <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+        {/* Filters */}
+        <div
+          style={{
+            backgroundColor: "#fff",
+            border: "1px solid #dfe3e6",
+            borderRadius: "0.25rem",
+            padding: "1rem 1.5rem",
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "1rem",
+          }}
+        >
+          <label style={{ flex: "1 1 260px" }}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6b7280",
+                marginBottom: "0.35rem",
+              }}
+            >
+              Search
+            </span>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Nama atau email"
+              style={{
+                width: "100%",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+              }}
+            />
+          </label>
 
-      {/* Users Table */}
-      <Card className="border border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            Users ({filteredUsers.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No users found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Name</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Email</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Roles</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
-                      Registered
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
-                      Last Login
-                    </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
-                      Actions
-                    </th>
+          <label style={{ flex: "0 0 200px" }}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6b7280",
+                marginBottom: "0.35rem",
+              }}
+            >
+              Role
+            </span>
+            <select
+              value={roleFilter}
+              onChange={(event) => setRoleFilter(event.target.value)}
+              style={{
+                width: "100%",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+                backgroundColor: "#fff",
+              }}
+            >
+              <option value="all">All Roles</option>
+              {uniqueRoles.map((role) => (
+                <option key={role} value={role}>
+                  {role.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label style={{ flex: "0 0 180px" }}>
+            <span
+              style={{
+                display: "block",
+                fontSize: "0.75rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6b7280",
+                marginBottom: "0.35rem",
+              }}
+            >
+              Status
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              style={{
+                width: "100%",
+                border: "1px solid #d1d5db",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+                backgroundColor: "#fff",
+              }}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+        </div>
+
+        {/* Table */}
+        <div
+          style={{
+            backgroundColor: "#fff",
+            border: "1px solid #dfe3e6",
+            borderRadius: "0.25rem",
+            overflowX: "auto",
+          }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "900px" }}>
+            <thead>
+              <tr
+                style={{
+                  backgroundColor: "#f9fafb",
+                  color: "#4b5563",
+                  textTransform: "uppercase",
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Name</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Email</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Roles</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Status</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Registered</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Last Login</th>
+                <th style={{ padding: "0.75rem 1rem", textAlign: "left" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    style={{
+                      padding: "2rem",
+                      textAlign: "center",
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Tidak ada user yang sesuai filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredUsers.map((user, index) => (
+                  <tr
+                    key={user.id}
+                    style={{
+                      backgroundColor: index % 2 === 0 ? "#fff" : "#f8fafc",
+                      borderTop: "1px solid #e5e7eb",
+                    }}
+                  >
+                    <td style={{ padding: "0.85rem 1rem", fontWeight: 600, color: "#111827" }}>
+                      {user.name || "—"}
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", color: "#374151" }}>{user.email}</td>
+                    <td style={{ padding: "0.85rem 1rem", color: "#374151" }}>
+                      {user.roles.length > 0 ? user.roles.join(", ") : "—"}
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", color: user.status === "active" ? "#065f46" : "#92400e" }}>
+                      {user.status}
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", color: "#374151" }}>{formatDate(user.registeredAt)}</td>
+                    <td style={{ padding: "0.85rem 1rem", color: "#374151" }}>{formatDate(user.lastLogin)}</td>
+                    <td style={{ padding: "0.85rem 1rem" }}>
+                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          style={{
+                            border: "1px solid #d1d5db",
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "0.25rem",
+                            backgroundColor: "#fff",
+                            fontSize: "0.75rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            border: "1px solid #d1d5db",
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "0.25rem",
+                            backgroundColor: "#fff",
+                            fontSize: "0.75rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Email
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            border: "1px solid #d1d5db",
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "0.25rem",
+                            backgroundColor: "#fff",
+                            fontSize: "0.75rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Toggle
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            border: "1px solid #ef4444",
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "0.25rem",
+                            backgroundColor: "#fff5f5",
+                            color: "#b91c1c",
+                            fontSize: "0.75rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-gray-900">{user.name || "N/A"}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">{user.email}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.length > 0 ? (
-                            user.roles.map((role) => (
-                              <Badge key={role} variant={getRoleBadgeVariant(role)}>
-                                {role.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-xs text-gray-400">No roles</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Badge variant={user.status === "active" ? "default" : "secondary"}>
-                          {user.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">{formatDate(user.registeredAt)}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-sm text-gray-600">{formatDate(user.lastLogin)}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex justify-end items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditUser(user)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleSendEmail(user)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleToggleStatus(user)}
-                            className="h-8 w-8 p-0"
-                          >
-                            {user.status === "active" ? (
-                              <UserX className="h-4 w-4 text-red-600" />
-                            ) : (
-                              <UserCheck className="h-4 w-4 text-green-600" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteUser(user)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

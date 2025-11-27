@@ -14,12 +14,14 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { journalId } = await context.params;
-    
+
     // Check permissions - only journal managers and admins can view user roles
-    await requireJournalRole(request, journalId, ['admin', 'manager']);
-    
+    await requireJournalRole(request, journalId, ["admin", "manager"]);
+
     const rows = await listJournalUserRoles(journalId);
-    const grouped = rows.reduce<Record<string, { userId: string; roles: { role: string; assignedAt: string }[] }>>((acc, row) => {
+    const grouped = rows.reduce<
+      Record<string, { userId: string; roles: { role: string; assignedAt: string }[] }>
+    >((acc, row) => {
       if (!acc[row.user_id]) {
         acc[row.user_id] = { userId: row.user_id, roles: [] };
       }
@@ -28,8 +30,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }, {});
     return NextResponse.json({ ok: true, assignments: Object.values(grouped) });
   } catch (error: any) {
-    if (error.status === 403) {
-      return NextResponse.json({ ok: false, message: error.message }, { status: 403 });
+    if (error.status === 403 || error.status === 401) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
     return NextResponse.json({ ok: false, message: "Tidak dapat memuat pengguna jurnal." }, { status: 500 });
   }
@@ -38,6 +40,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { journalId } = await context.params;
+
+    // Only journal managers and admins can add roles
+    await requireJournalRole(request, journalId, ["admin", "manager"]);
+
     const body = await request.json();
     const userId = body?.userId;
     const role = body?.role;
@@ -52,7 +58,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error: any) {
+    if (error.status === 403 || error.status === 401) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
+    }
     return NextResponse.json({ ok: false, message: "Tidak dapat menambahkan pengguna." }, { status: 500 });
   }
 }
@@ -60,6 +69,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { journalId } = await context.params;
+
+    // Only journal managers and admins can remove roles
+    await requireJournalRole(request, journalId, ["admin", "manager"]);
+
     const body = await request.json();
     const userId = body?.userId;
     const role = body?.role;
@@ -74,7 +87,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error: any) {
+    if (error.status === 403 || error.status === 401) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
+    }
     return NextResponse.json({ ok: false, message: "Tidak dapat menghapus peran pengguna." }, { status: 500 });
   }
 }

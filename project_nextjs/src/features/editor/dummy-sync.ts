@@ -289,66 +289,35 @@ async function syncDummyData() {
 
 async function ensureJournals(supabase: SupabaseClient) {
   try {
-    const { data: existingJournals, error } = await supabase.from("journals").select("id, title, path");
+    // Di schema OJS lama, tabel "journals" tidak punya kolom "title".
+    // Untuk menghindari error 42703, hanya baca kolom yang pasti ada
+    // dan map semua dummy journal ke jurnal pertama yang tersedia.
+    const { data: existingJournals, error } = await supabase
+      .from("journals")
+      .select("id, path");
+
     if (error) {
       console.error("Error fetching journals:", error);
       throw error;
     }
 
-  const existingByTitle = new Map(existingJournals?.map((journal) => [journal.title, journal.id]));
-  const usedPaths = new Set(existingJournals?.map((journal) => journal.path));
-  const journalMap = new Map<string, string>();
-
-  const journalsToInsert: Array<{ id: string; title: string; path: string; description: string | null }> = [];
-
-  const uniqueDummyJournals = new Map<string, { title: string }>();
-  DUMMY_SUBMISSIONS.forEach((submission) => {
-    if (!uniqueDummyJournals.has(submission.journalId)) {
-      uniqueDummyJournals.set(submission.journalId, { title: submission.journalTitle ?? "" });
+    if (!existingJournals || existingJournals.length === 0) {
+      return new Map<string, string>();
     }
-  });
 
-  for (const [dummyId, { title }] of uniqueDummyJournals.entries()) {
-    const existingId = existingByTitle.get(title);
-    if (existingId) {
-      journalMap.set(dummyId, existingId);
-      continue;
-    }
-    let slug = slugify(title);
-    let suffix = 1;
-    while (usedPaths.has(slug)) {
-      slug = `${slug}-${suffix++}`;
-    }
-    usedPaths.add(slug);
+    const defaultJournalId = existingJournals[0].id as string;
+    const journalMap = new Map<string, string>();
+    const uniqueDummyIds = new Set<string>();
 
-    const newId = randomUUID();
-    journalsToInsert.push({
-      id: newId,
-      title,
-      path: slug,
-      description: null,
-    });
-    journalMap.set(dummyId, newId);
-  }
-
-  if (journalsToInsert.length > 0) {
-    const { error: insertError } = await supabase.from("journals").insert(journalsToInsert);
-    if (insertError) {
-      throw insertError;
-    }
-  }
-
-  // Re-fetch IDs for any journals that might have been inserted by other processes
-  if (journalMap.size !== uniqueDummyJournals.size) {
-    const { data: refreshed } = await supabase.from("journals").select("id, title");
-    refreshed?.forEach((journal) => {
-      for (const [dummyId, { title }] of uniqueDummyJournals.entries()) {
-        if (title === journal.title) {
-          journalMap.set(dummyId, journal.id);
-        }
+    DUMMY_SUBMISSIONS.forEach((submission) => {
+      if (!uniqueDummyIds.has(submission.journalId)) {
+        uniqueDummyIds.add(submission.journalId);
       }
     });
-  }
+
+    uniqueDummyIds.forEach((dummyId) => {
+      journalMap.set(dummyId, defaultJournalId);
+    });
 
     return journalMap;
   } catch (error) {

@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dropdown, DropdownItem, DropdownSection } from "@/components/ui/dropdown";
 import { useSupabase } from "@/providers/supabase-provider";
+import { pkpColors } from "@/lib/theme";
 
 export default function AuthorLayout({
   children,
@@ -119,9 +120,9 @@ export default function AuthorLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#eaedee]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: pkpColors.pageBg }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002C40] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: pkpColors.headerBg }}></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -134,18 +135,28 @@ export default function AuthorLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#eaedee]" style={{backgroundColor: '#eaedee'}}>
+    <div className="min-h-screen" style={{ backgroundColor: pkpColors.pageBg }}>
       {/* Header - Blue OJS Theme - Sama seperti Editor */}
-      <header className="bg-[#002C40] text-white sticky top-0 z-50 shadow-lg" style={{
-        backgroundColor: '#002C40',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-      }}>
+      <header
+        className="text-white sticky top-0 z-50 shadow-lg"
+        style={{
+          backgroundColor: pkpColors.headerBg,
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        }}
+      >
         <div className="px-6 py-5 flex items-center justify-between" style={{padding: '1.25rem 1.5rem'}}>
           {/* Left side */}
           <div className="flex items-center gap-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors"
+              className="lg:hidden p-2 rounded-md transition-colors"
+              style={{ backgroundColor: "transparent" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -237,22 +248,61 @@ export default function AuthorLayout({
               </DropdownSection>
             </Dropdown>
 
-            {/* User with Logout */}
+            {/* User with Logout + role switch (multi-role like OJS 3.3) */}
             <Dropdown
               button={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
                   <User className="h-5 w-5 text-white" />
-                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>{user.full_name || user.username || 'Author'}</span>
+                  <span
+                    className="text-white font-semibold"
+                    style={{ fontSize: "1.125rem", fontWeight: "600" }}
+                  >
+                    {user.full_name || user.username || "Author"}
+                  </span>
                   <ChevronDown className="h-5 w-5 text-white" />
                 </div>
               }
               align="right"
             >
               <DropdownSection>
-                <DropdownItem 
+                {user.roles?.some((r) => r.role_path === "admin") && (
+                  <DropdownItem href="/admin" icon={<Home className="h-4 w-4" />}>
+                    Site Admin
+                  </DropdownItem>
+                )}
+                {user.roles?.some((r) => r.role_path === "manager") && (
+                  <DropdownItem href="/manager" icon={<Home className="h-4 w-4" />}>
+                    Journal Manager
+                  </DropdownItem>
+                )}
+                {user.roles?.some(
+                  (r) => r.role_path === "editor" || r.role_path === "section_editor"
+                ) && (
+                  <DropdownItem href="/editor" icon={<Home className="h-4 w-4" />}>
+                    Editor
+                  </DropdownItem>
+                )}
+                {user.roles?.some((r) => r.role_path === "author") && (
+                  <DropdownItem href="/author" icon={<Home className="h-4 w-4" />}>
+                    Author
+                  </DropdownItem>
+                )}
+                {user.roles?.some((r) => r.role_path === "reviewer") && (
+                  <DropdownItem href="/reviewer" icon={<Home className="h-4 w-4" />}>
+                    Reviewer
+                  </DropdownItem>
+                )}
+                {user.roles?.some((r) => r.role_path === "reader") && (
+                  <DropdownItem href="/reader" icon={<Home className="h-4 w-4" />}>
+                    Reader
+                  </DropdownItem>
+                )}
+              </DropdownSection>
+              <DropdownSection>
+                <DropdownItem
                   onClick={async () => {
                     await logout();
-                    router.push('/login');
+                    router.push("/login");
                   }}
                   icon={<LogOut className="h-4 w-4" />}
                 >
@@ -266,12 +316,15 @@ export default function AuthorLayout({
 
       <div className="flex flex-1">
         {/* Sidebar - Blue OJS Theme - Sama seperti Editor */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block bg-[#002C40] text-white min-h-screen shadow-xl`} style={{
-          backgroundColor: '#002C40',
-          width: '22rem',
-          minHeight: 'calc(100vh - 80px)',
-          boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'
-        }}>
+        <aside
+          className={`${sidebarOpen ? "block" : "hidden"} lg:block text-white min-h-screen shadow-xl`}
+          style={{
+            backgroundColor: pkpColors.sidebarBg,
+            width: "22rem",
+            minHeight: "calc(100vh - 80px)",
+            boxShadow: "4px 0 6px -1px rgba(0, 0, 0, 0.1)",
+          }}
+        >
           <div className="p-6" style={{padding: '1.5rem 1.25rem'}}>
             {/* iamJOS Logo - Smaller */}
             <div className="mb-6" style={{marginBottom: '1.5rem'}}>
@@ -308,19 +361,26 @@ export default function AuthorLayout({
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
-                      item.current
-                        ? "bg-white text-[#002C40] shadow-md"
-                        : "text-white hover:bg-white hover:bg-opacity-20"
-                    }`}
+                    className="flex items-center justify-between px-4 py-3 rounded-lg transition-all"
                     style={{
                       padding: '0.875rem 1rem',
                       fontSize: '1.0625rem',
                       fontWeight: item.current ? '600' : '500',
                       borderRadius: '0.5rem',
-                      color: item.current ? '#002C40' : 'white'
+                      color: item.current ? '#002C40' : 'white',
+                      backgroundColor: item.current ? '#ffffff' : 'transparent'
                     }}
                     onClick={() => setSidebarOpen(false)}
+                    onMouseEnter={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.10)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    }}
                   >
                     <div className="flex items-center space-x-3" style={{gap: '0.75rem'}}>
                       <Icon className={item.current ? "h-5 w-5 text-[#002C40]" : "h-5 w-5 text-white"} style={{width: '1.25rem', height: '1.25rem'}} />
@@ -333,13 +393,14 @@ export default function AuthorLayout({
           </div>
         </aside>
 
-        {/* Main Content - Background lebih terang */}
+        {/* Main Content - Background lebih terang + safe area */}
         <main className="flex-1 bg-white" style={{
           padding: '2.5rem',
           backgroundColor: '#ffffff',
           color: '#1f2937',
           fontSize: '1.0625rem',
-          lineHeight: '1.6'
+          lineHeight: '1.6',
+          minHeight: 'calc(100vh - 80px)'
         }}>
           {/* Breadcrumb - Font lebih besar */}
           <div className="mb-6" style={{marginBottom: '1.5rem'}}>

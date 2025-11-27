@@ -1,7 +1,7 @@
 "use server";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -20,17 +20,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hasPermission = user.roles.some((role) =>
-      ["admin", "manager"].includes(role.role_path)
-    );
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { ok: false, message: "Forbidden. Only journal managers and site administrators can reset permissions" },
-        { status: 403 }
-      );
-    }
-
     // Get journal ID from request body
     const body = await request.json();
     const { journalId } = body;
@@ -39,6 +28,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { ok: false, message: "Journal ID is required" },
         { status: 400 }
+      );
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isManager = await hasUserJournalRole(user.id, journalId, ["manager"]);
+
+    if (!isSiteAdmin && !isManager) {
+      return NextResponse.json(
+        { ok: false, message: "Forbidden. Only journal managers and site administrators can reset permissions" },
+        { status: 403 }
       );
     }
 

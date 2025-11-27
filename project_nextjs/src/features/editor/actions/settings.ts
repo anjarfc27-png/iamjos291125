@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 import {
   loadSectionSettings,
   saveSectionSettings,
@@ -33,30 +33,24 @@ export async function loadSettings(
       };
     }
 
-    // Get journal ID from parameter or user roles
-    let currentJournalId = journalId;
+    // Journal ID must be provided explicitly for server actions
+    const currentJournalId = journalId;
     if (!currentJournalId) {
-      const journalRole = user.roles.find((r) => r.context_id);
-      if (!journalRole?.context_id) {
-        return {
-          success: false,
-          error: "Journal ID not found",
-        };
-      }
-      currentJournalId = journalRole.context_id;
+      return {
+        success: false,
+        error: "Journal ID not found",
+      };
     }
 
-    // Check permissions
-    const hasPermission = user.roles.some(
-      (role) =>
-        role.role_path === "admin" ||
-        role.role_path === "manager" ||
-        role.role_path === "editor" ||
-        (role.context_id === currentJournalId &&
-          ["manager", "editor", "section_editor"].includes(role.role_path))
-    );
+    // Check permissions: site admin or journal manager/editor/section_editor
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canManageSettings = await hasUserJournalRole(user.id, currentJournalId, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
 
-    if (!hasPermission) {
+    if (!isSiteAdmin && !canManageSettings) {
       return {
         success: false,
         error: "Forbidden",
@@ -95,31 +89,25 @@ export async function saveSettings(
       };
     }
 
-    // Get journal ID from parameter or user roles
-    let currentJournalId = journalId;
+    // Journal ID must be provided explicitly for server actions
+    const currentJournalId = journalId;
     if (!currentJournalId) {
-      const journalRole = user.roles.find((r) => r.context_id);
-      if (!journalRole?.context_id) {
-        return {
-          success: false,
-          message: "Journal ID not found",
-          error: "Journal ID is required",
-        };
-      }
-      currentJournalId = journalRole.context_id;
+      return {
+        success: false,
+        message: "Journal ID not found",
+        error: "Journal ID is required",
+      };
     }
 
-    // Check permissions
-    const hasPermission = user.roles.some(
-      (role) =>
-        role.role_path === "admin" ||
-        role.role_path === "manager" ||
-        role.role_path === "editor" ||
-        (role.context_id === currentJournalId &&
-          ["manager", "editor", "section_editor"].includes(role.role_path))
-    );
+    // Check permissions: site admin or journal manager/editor/section_editor
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canManageSettings = await hasUserJournalRole(user.id, currentJournalId, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
 
-    if (!hasPermission) {
+    if (!isSiteAdmin && !canManageSettings) {
       return {
         success: false,
         message: "Forbidden",
@@ -178,17 +166,13 @@ export async function loadSettingValue(
       };
     }
 
-    // Get journal ID from parameter or user roles
-    let currentJournalId = journalId;
+    // Journal ID must be provided explicitly for server actions
+    const currentJournalId = journalId;
     if (!currentJournalId) {
-      const journalRole = user.roles.find((r) => r.context_id);
-      if (!journalRole?.context_id) {
-        return {
-          success: false,
-          error: "Journal ID not found",
-        };
-      }
-      currentJournalId = journalRole.context_id;
+      return {
+        success: false,
+        error: "Journal ID not found",
+      };
     }
 
     const value = await loadSetting(currentJournalId, settingName, defaultValue);
@@ -224,21 +208,15 @@ export async function saveSettingValue(
       };
     }
 
-    // Get journal ID from parameter or user roles
-    let currentJournalId = journalId;
-    if (!currentJournalId) {
-      const journalRole = user.roles.find((r) => r.context_id);
-      if (!journalRole?.context_id) {
-        return {
-          success: false,
-          message: "Journal ID not found",
-          error: "Journal ID is required",
-        };
-      }
-      currentJournalId = journalRole.context_id;
+    if (!journalId) {
+      return {
+        success: false,
+        message: "Journal ID not found",
+        error: "Journal ID is required",
+      };
     }
 
-    await saveSetting(currentJournalId, settingName, value, settingType);
+    await saveSetting(journalId, settingName, value, settingType);
 
     return {
       success: true,

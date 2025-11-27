@@ -20,6 +20,7 @@ import {
 import { Dropdown, DropdownItem, DropdownSection } from "@/components/ui/dropdown";
 import { SiteSidebar } from "@/components/site/site-sidebar";
 import { useSupabase } from "@/providers/supabase-provider";
+import { pkpColors } from "@/lib/theme";
 
 type JournalRow = {
   id: string | number;
@@ -85,10 +86,8 @@ export default function ReaderLayout({
         console.error("Error fetching journals:", error);
       }
     };
-    if (user) {
-      fetchJournals();
-    }
-  }, [supabase, user]);
+    fetchJournals();
+  }, [supabase]);
 
   const navigation = [
     {
@@ -119,33 +118,42 @@ export default function ReaderLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#eaedee]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: pkpColors.pageBg }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002C40] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: pkpColors.headerBg }}></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    router.push('/login?source=' + encodeURIComponent(window.location.pathname));
-    return null;
-  }
+  const handleLoginRedirect = () => {
+    router.push(`/login?source=${encodeURIComponent(pathname)}`);
+  };
 
   return (
-    <div className="min-h-screen bg-[#eaedee]" style={{backgroundColor: '#eaedee'}}>
-      {/* Header - Blue OJS Theme - Sama seperti Editor */}
-      <header className="bg-[#002C40] text-white sticky top-0 z-50 shadow-lg" style={{
-        backgroundColor: '#002C40',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-      }}>
+    <div className="min-h-screen" style={{ backgroundColor: pkpColors.pageBg }}>
+      {/* Header */}
+      <header
+        className="text-white sticky top-0 z-50 shadow-lg"
+        style={{
+          backgroundColor: pkpColors.headerBg,
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        }}
+      >
         <div className="px-6 py-5 flex items-center justify-between" style={{padding: '1.25rem 1.5rem'}}>
           {/* Left side */}
           <div className="flex items-center gap-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-white hover:bg-opacity-20 transition-colors"
+              className="lg:hidden p-2 rounded-md transition-colors"
+              style={{ backgroundColor: "transparent" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -214,57 +222,72 @@ export default function ReaderLayout({
               </DropdownSection>
             </Dropdown>
 
-            {/* Notifications */}
-            <Dropdown
-              button={
-                <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity relative">
-                  <Bell className="h-5 w-5 text-white" />
-                </div>
-              }
-              align="right"
-            >
-              <DropdownSection>
-                <DropdownItem href="#" icon={<Bell className="h-4 w-4" />}>
-                  No new notifications
-                </DropdownItem>
-              </DropdownSection>
-            </Dropdown>
-
-            {/* User with Logout */}
-            <Dropdown
-              button={
-                <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
-                  <User className="h-5 w-5 text-white" />
-                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>{user.full_name || user.username || 'Reader'}</span>
-                  <ChevronDown className="h-5 w-5 text-white" />
-                </div>
-              }
-              align="right"
-            >
-              <DropdownSection>
-                <DropdownItem 
-                  onClick={async () => {
-                    await logout();
-                    router.push('/login');
-                  }}
-                  icon={<LogOut className="h-4 w-4" />}
+            {user ? (
+              <>
+                <Dropdown
+                  button={
+                    <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity relative">
+                      <Bell className="h-5 w-5 text-white" />
+                    </div>
+                  }
+                  align="right"
                 >
-                  Logout
-                </DropdownItem>
-              </DropdownSection>
-            </Dropdown>
+                  <DropdownSection>
+                    <DropdownItem href="#" icon={<Bell className="h-4 w-4" />}>
+                      No new notifications
+                    </DropdownItem>
+                  </DropdownSection>
+                </Dropdown>
+
+                <Dropdown
+                  button={
+                    <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
+                      <User className="h-5 w-5 text-white" />
+                      <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>
+                        {user.full_name || user.username || "Reader"}
+                      </span>
+                      <ChevronDown className="h-5 w-5 text-white" />
+                    </div>
+                  }
+                  align="right"
+                >
+                  <DropdownSection>
+                    <DropdownItem
+                      onClick={async () => {
+                        await logout();
+                        router.push("/login");
+                      }}
+                      icon={<LogOut className="h-4 w-4" />}
+                    >
+                      Logout
+                    </DropdownItem>
+                  </DropdownSection>
+                </Dropdown>
+              </>
+            ) : (
+              <button
+                onClick={handleLoginRedirect}
+                className="px-4 py-2 rounded-md border border-white text-white font-semibold hover:bg-white hover:text-[#002C40] transition-colors"
+                style={{ fontSize: "1rem" }}
+              >
+                Login
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       <div className="flex flex-1">
         {/* Sidebar - Blue OJS Theme - Sama seperti Editor, plus OJS 3.3-style blocks */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block bg-[#002C40] text-white min-h-screen shadow-xl`} style={{
-          backgroundColor: '#002C40',
-          width: '22rem',
-          minHeight: 'calc(100vh - 80px)',
-          boxShadow: '4px 0 6px -1px rgba(0, 0, 0, 0.1)'
-        }}>
+        <aside
+          className={`${sidebarOpen ? "block" : "hidden"} lg:block text-white min-h-screen shadow-xl`}
+          style={{
+            backgroundColor: pkpColors.sidebarBg,
+            width: "22rem",
+            minHeight: "calc(100vh - 80px)",
+            boxShadow: "4px 0 6px -1px rgba(0, 0, 0, 0.1)",
+          }}
+        >
           <div className="p-6" style={{padding: '1.5rem 1.25rem'}}>
             {/* iamJOS Logo - Smaller */}
             <div className="mb-6" style={{marginBottom: '1.5rem'}}>
@@ -297,19 +320,26 @@ export default function ReaderLayout({
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
-                      item.current
-                        ? "bg-white text-[#002C40] shadow-md"
-                        : "text-white hover:bg-white hover:bg-opacity-20"
-                    }`}
+                    className="flex items-center justify-between px-4 py-3 rounded-lg transition-all"
                     style={{
                       padding: '0.875rem 1rem',
                       fontSize: '1.0625rem',
                       fontWeight: item.current ? '600' : '500',
                       borderRadius: '0.5rem',
-                      color: item.current ? '#002C40' : 'white'
+                      color: item.current ? '#002C40' : 'white',
+                      backgroundColor: item.current ? '#ffffff' : 'transparent'
                     }}
                     onClick={() => setSidebarOpen(false)}
+                    onMouseEnter={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.10)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!item.current) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    }}
                   >
                     <div className="flex items-center space-x-3" style={{gap: '0.75rem'}}>
                       <Icon 

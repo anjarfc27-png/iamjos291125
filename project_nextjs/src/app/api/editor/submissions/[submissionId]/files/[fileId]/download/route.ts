@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string; fileId: string }>;
@@ -22,22 +22,40 @@ export async function GET(request: NextRequest, context: RouteParams) {
       return NextResponse.json({ ok: false, message: "Submission ID atau File ID tidak ditemukan." }, { status: 400 });
     }
 
-    // Check permissions - editors, section editors, and managers can download files
+    // Check permissions - editors, section editors, and managers (or site admin) can download files
     const user = await getCurrentUser(request);
     if (!user) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const hasPermission = user.roles.some((role) =>
-      ["admin", "manager", "editor", "section_editor"].includes(role.role_path)
-    );
+    const supabase = getSupabaseAdminClient();
 
-    if (!hasPermission) {
+    // Get submission to resolve journal/context
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 404 });
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canAccess = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+      "copyeditor",
+      "layout-editor",
+      "proofreader",
+    ]);
+
+    if (!isSiteAdmin && !canAccess) {
       return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
     }
 
     // Get file information from database
-    const supabase = getSupabaseAdminClient();
     const { data: file, error: fileError } = await supabase
       .from("submission_files")
       .select("id, label, storage_path, file_size, file_kind")

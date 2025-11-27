@@ -307,7 +307,6 @@ export default function SettingsContextPage() {
       width: "100%",
       maxWidth: "100%",
       minHeight: "100%",
-      backgroundColor: "#eaedee",
       padding: 0,
       margin: 0,
       display: "flex",
@@ -344,11 +343,12 @@ export default function SettingsContextPage() {
         </div>
       </div>
 
-      {/* Content - OJS 3.3 Style with Safe Area */}
+      {/* Content - OJS 3.3 Style with Safe Area and centered card */}
       <div style={{
-        padding: "0 1.5rem",
+        padding: "1.5rem",
         width: "100%",
-        maxWidth: "100%",
+        maxWidth: "1200px",
+        margin: "0 auto",
         overflowX: "hidden",
       }}>
         <PkpTabs defaultValue="masthead">

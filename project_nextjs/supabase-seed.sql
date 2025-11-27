@@ -88,8 +88,8 @@ BEGIN
   LIMIT 1;
   
   IF actual_user_id IS NOT NULL THEN
-    INSERT INTO user_account_roles (user_id, role_name)
-    SELECT actual_user_id, 'Site admin'
+    INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+    SELECT actual_user_id, 'Site admin', 'admin', NULL
     WHERE NOT EXISTS (
       SELECT 1 FROM user_account_roles 
       WHERE user_id = actual_user_id 
@@ -141,8 +141,8 @@ BEGIN
   LIMIT 1;
   
   IF actual_user_id IS NOT NULL THEN
-    INSERT INTO user_account_roles (user_id, role_name)
-    SELECT actual_user_id, 'Editor'
+    INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+    SELECT actual_user_id, 'Editor', 'editor', NULL
     WHERE NOT EXISTS (
       SELECT 1 FROM user_account_roles 
       WHERE user_id = actual_user_id 
@@ -194,8 +194,8 @@ BEGIN
   LIMIT 1;
   
   IF actual_user_id IS NOT NULL THEN
-    INSERT INTO user_account_roles (user_id, role_name)
-    SELECT actual_user_id, 'Author'
+    INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+    SELECT actual_user_id, 'Author', 'author', NULL
     WHERE NOT EXISTS (
       SELECT 1 FROM user_account_roles 
       WHERE user_id = actual_user_id 
@@ -247,8 +247,8 @@ BEGIN
   LIMIT 1;
   
   IF actual_user_id IS NOT NULL THEN
-    INSERT INTO user_account_roles (user_id, role_name)
-    SELECT actual_user_id, 'Reviewer'
+    INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+    SELECT actual_user_id, 'Reviewer', 'reviewer', NULL
     WHERE NOT EXISTS (
       SELECT 1 FROM user_account_roles 
       WHERE user_id = actual_user_id 
@@ -300,8 +300,8 @@ BEGIN
   LIMIT 1;
   
   IF actual_user_id IS NOT NULL THEN
-    INSERT INTO user_account_roles (user_id, role_name)
-    SELECT actual_user_id, 'Reader'
+    INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+    SELECT actual_user_id, 'Reader', 'reader', NULL
     WHERE NOT EXISTS (
       SELECT 1 FROM user_account_roles 
       WHERE user_id = actual_user_id 
@@ -353,12 +353,144 @@ BEGIN
   LIMIT 1;
   
   IF actual_user_id IS NOT NULL THEN
-    INSERT INTO user_account_roles (user_id, role_name)
-    SELECT actual_user_id, 'Manager'
+    INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+    SELECT actual_user_id, 'Manager', 'manager', NULL
     WHERE NOT EXISTS (
       SELECT 1 FROM user_account_roles 
       WHERE user_id = actual_user_id 
       AND role_name = 'Manager'
+    );
+  END IF;
+END $$;
+
+-- Sinkronkan user_accounts ke tabel OJS `users`
+INSERT INTO users (id, username, email, password, first_name, last_name)
+SELECT
+  ua.id,
+  ua.username,
+  ua.email,
+  ua.password,
+  ua.first_name,
+  ua.last_name
+FROM user_accounts ua
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM users u
+  WHERE u.id = ua.id
+     OR u.username = ua.username
+     OR u.email = ua.email
+);
+
+-- Contoh user multi-role (Author + Reviewer) di level site
+DO $$
+DECLARE
+  existing_user_id UUID;
+  target_id UUID := '00000000-0000-0000-0000-000000000010';
+BEGIN
+  SELECT id INTO existing_user_id
+  FROM user_accounts
+  WHERE username = 'multi_author_reviewer' OR email = 'multi_author_reviewer@ojs.test'
+  LIMIT 1;
+
+  IF existing_user_id IS NULL THEN
+    INSERT INTO user_accounts (id, username, email, password, first_name, last_name)
+    VALUES (target_id, 'multi_author_reviewer', 'multi_author_reviewer@ojs.test', 'password123', 'Multi', 'AuthorReviewer')
+    ON CONFLICT (id) DO UPDATE SET
+      username = EXCLUDED.username,
+      email = EXCLUDED.email,
+      password = EXCLUDED.password,
+      first_name = EXCLUDED.first_name,
+      last_name = EXCLUDED.last_name;
+    existing_user_id := target_id;
+  END IF;
+
+  INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+  SELECT existing_user_id, 'Author', 'author', NULL
+  WHERE NOT EXISTS (
+    SELECT 1 FROM user_account_roles
+    WHERE user_id = existing_user_id AND role_name = 'Author'
+  );
+
+  INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+  SELECT existing_user_id, 'Reviewer', 'reviewer', NULL
+  WHERE NOT EXISTS (
+    SELECT 1 FROM user_account_roles
+    WHERE user_id = existing_user_id AND role_name = 'Reviewer'
+  );
+END $$;
+
+-- Admin kedua (Site admin) tanpa mengubah admin yang sudah ada
+DO $$
+DECLARE
+  existing_user_id UUID;
+  target_id UUID := '00000000-0000-0000-0000-000000000021';
+BEGIN
+  SELECT id INTO existing_user_id
+  FROM user_accounts
+  WHERE username = 'admin2' OR email = 'admin2@ojs.test'
+  LIMIT 1;
+
+  IF existing_user_id IS NULL THEN
+    INSERT INTO user_accounts (id, username, email, password, first_name, last_name)
+    VALUES (target_id, 'admin2', 'admin2@ojs.test', 'password123', 'Second', 'Administrator')
+    ON CONFLICT (id) DO UPDATE SET
+      username  = EXCLUDED.username,
+      email     = EXCLUDED.email,
+      password  = EXCLUDED.password,
+      first_name = EXCLUDED.first_name,
+      last_name  = EXCLUDED.last_name;
+    existing_user_id := target_id;
+  END IF;
+
+  INSERT INTO user_account_roles (user_id, role_name, role_path, context_id)
+  SELECT existing_user_id, 'Site admin', 'admin', NULL
+  WHERE NOT EXISTS (
+    SELECT 1 FROM user_account_roles
+    WHERE user_id = existing_user_id AND role_name = 'Site admin'
+  );
+END $$;
+
+-- Seed minimal 2 jurnal hosted untuk pengujian multi-journal
+DO $$
+DECLARE
+  j1_id journals.id%TYPE;
+  j2_id journals.id%TYPE;
+BEGIN
+  -- Journal pertama
+  INSERT INTO journals (path, enabled, primary_locale, seq)
+  SELECT 'demo-journal-1', 1, 'en_US', 1
+  WHERE NOT EXISTS (SELECT 1 FROM journals WHERE path = 'demo-journal-1')
+  RETURNING id INTO j1_id;
+
+  IF j1_id IS NULL THEN
+    SELECT id INTO j1_id FROM journals WHERE path = 'demo-journal-1' LIMIT 1;
+  END IF;
+
+  IF j1_id IS NOT NULL THEN
+    INSERT INTO journal_settings (journal_id, locale, setting_name, setting_value, setting_type)
+    SELECT j1_id, 'en_US', 'name', 'Demo Journal 1', 'string'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM journal_settings
+      WHERE journal_id = j1_id AND setting_name = 'name' AND locale = 'en_US'
+    );
+  END IF;
+
+  -- Journal kedua
+  INSERT INTO journals (path, enabled, primary_locale, seq)
+  SELECT 'demo-journal-2', 1, 'en_US', 2
+  WHERE NOT EXISTS (SELECT 1 FROM journals WHERE path = 'demo-journal-2')
+  RETURNING id INTO j2_id;
+
+  IF j2_id IS NULL THEN
+    SELECT id INTO j2_id FROM journals WHERE path = 'demo-journal-2' LIMIT 1;
+  END IF;
+
+  IF j2_id IS NOT NULL THEN
+    INSERT INTO journal_settings (journal_id, locale, setting_name, setting_value, setting_type)
+    SELECT j2_id, 'en_US', 'name', 'Demo Journal 2', 'string'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM journal_settings
+      WHERE journal_id = j2_id AND setting_name = 'name' AND locale = 'en_US'
     );
   END IF;
 END $$;

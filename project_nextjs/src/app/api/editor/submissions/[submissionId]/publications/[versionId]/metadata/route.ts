@@ -4,13 +4,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type RouteParams = {
   params: Promise<{ submissionId: string; versionId: string }>;
 };
-
-const EDITOR_ROLES = ["admin", "manager", "editor", "section_editor"];
 
 export async function PATCH(request: NextRequest, context: RouteParams) {
   try {
@@ -23,36 +21,57 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     if (!user) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
-    
-    // Check if user has editor role OR is the author of this submission
+
     const supabase = getSupabaseAdminClient();
-    const hasEditorPermission = user.roles.some((role) => EDITOR_ROLES.includes(role.role_path));
-    
-    if (!hasEditorPermission) {
-      // Check if user is the author of this submission
-      const { data: submission } = await supabase
-        .from("submissions")
-        .select("id, author_id")
-        .eq("id", submissionId)
-        .single();
-      
-      if (!submission || submission.author_id !== user.id) {
+
+    // Resolve journal and primary author from submission
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("id, journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ ok: false, error: "Submission tidak ditemukan." }, { status: 404 });
+    }
+
+    // Editors / managers / section editors for this journal (or site admin) may always edit
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const isEditorLike = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
+
+    if (!isSiteAdmin && !isEditorLike) {
+      // Jika bukan editor/manager, hanya author yang boleh edit dan hanya untuk versi yang belum terpublikasi
+      const { data: participant, error: participantError } = await supabase
+        .from("submission_participants")
+        .select("submission_id")
+        .eq("submission_id", submissionId)
+        .eq("user_id", user.id)
+        .eq("role", "author")
+        .maybeSingle();
+
+      if (participantError || !participant) {
         return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
       }
-      
-      // Check if version is published - authors cannot edit published versions
+
       const { data: versionCheck } = await supabase
         .from("submission_versions")
         .select("id, status")
         .eq("id", versionId)
         .eq("submission_id", submissionId)
-        .single();
-      
+        .maybeSingle();
+
       if (versionCheck && versionCheck.status === "published") {
-        return NextResponse.json({ 
-          ok: false, 
-          error: "Published versions cannot be edited. Please create a new version." 
-        }, { status: 403 });
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Published versions cannot be edited. Please create a new version.",
+          },
+          { status: 403 },
+        );
       }
     }
 

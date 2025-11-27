@@ -35,12 +35,12 @@ CREATE INDEX IF NOT EXISTS idx_user_account_roles_user_id ON user_account_roles(
 CREATE INDEX IF NOT EXISTS idx_user_accounts_email ON user_accounts(email);
 ```
 
-## Langkah 2: Insert Data Dummy User
+## Langkah 2: Insert Data Dummy User & Jurnal Hosted
 
 1. Masih di **SQL Editor**
 2. Copy dan paste isi file `supabase-seed.sql`
 3. Klik **Run** untuk menjalankan script
-4. Script akan membuat 6 user dummy dengan berbagai role
+4. Script akan membuat 6+ user dummy dengan berbagai role dan minimal 2 jurnal hosted (`demo-journal-1`, `demo-journal-2`)
 
 ## User Dummy yang Dibuat
 

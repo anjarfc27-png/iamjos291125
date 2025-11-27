@@ -524,7 +524,7 @@ export default function EditorPage() {
               {/* Tab Contents - OJS 3.3 Exact Layout with Safe Area */}
               <PkpTabsContent value="tasks" style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}>
                 {tasksLoading ? (
-                  <p className="text-sm text-[var(--muted)]">Loading tasks…</p>
+                  <p className="text-sm text-[var(--muted)]">Loading tasksâ€¦</p>
                 ) : tasksError ? (
                   <p className="text-sm text-red-500">{tasksError}</p>
                 ) : tasks.length === 0 ? (
@@ -570,7 +570,7 @@ export default function EditorPage() {
                           Assignee: {task.assigneeId ? (task.assigneeId === currentUserId ? "You" : task.assigneeId) : "Unassigned"}
                         </div>
                         <div className="text-xs text-[var(--muted)]">
-                          Due: {task.dueDate ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(task.dueDate)) : "—"}
+                          Due: {task.dueDate ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(task.dueDate)) : "â€”"}
                         </div>
                         <div className="text-xs text-[var(--muted)]">
                           Status: {task.status}
@@ -592,7 +592,7 @@ export default function EditorPage() {
                               disabled={updatingTaskId === task.id}
                               className="text-xs font-semibold rounded border border-green-600 px-2 py-1 text-green-700 hover:bg-green-50 disabled:opacity-50"
                             >
-                              {updatingTaskId === task.id ? "Updating…" : "Mark Complete"}
+                              {updatingTaskId === task.id ? "Updatingâ€¦" : "Mark Complete"}
                             </button>
                           ) : (
                             <button
@@ -601,7 +601,7 @@ export default function EditorPage() {
                               disabled={updatingTaskId === task.id}
                               className="text-xs font-semibold rounded border border-gray-500 px-2 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                             >
-                              {updatingTaskId === task.id ? "Updating…" : "Reopen"}
+                              {updatingTaskId === task.id ? "Updatingâ€¦" : "Reopen"}
                             </button>
                           )}
                           {!task.assigneeId && currentUserId && (
@@ -611,7 +611,7 @@ export default function EditorPage() {
                               disabled={updatingTaskId === task.id}
                               className="text-xs font-semibold rounded border border-blue-600 px-2 py-1 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
                             >
-                              {updatingTaskId === task.id ? "Updating…" : "Claim Task"}
+                              {updatingTaskId === task.id ? "Updatingâ€¦" : "Claim Task"}
                             </button>
                           )}
                         </div>
@@ -623,7 +623,7 @@ export default function EditorPage() {
 
               <PkpTabsContent value="myQueue" style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}>
                 {loading && !myQueue.length ? (
-                  <p className="text-sm text-[var(--muted)]">Loading…</p>
+                  <p className="text-sm text-[var(--muted)]">Loadingâ€¦</p>
                 ) : error ? (
                   <p className="text-sm text-red-500">{error}</p>
                 ) : (
@@ -640,7 +640,7 @@ export default function EditorPage() {
                 <>
                   <PkpTabsContent value="unassigned" style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}>
                     {loading && !unassigned.length ? (
-                      <p className="text-sm text-[var(--muted)]">Loading…</p>
+                      <p className="text-sm text-[var(--muted)]">Loadingâ€¦</p>
                     ) : error ? (
                       <p className="text-sm text-red-500">{error}</p>
                     ) : (
@@ -654,7 +654,7 @@ export default function EditorPage() {
 
                   <PkpTabsContent value="active" style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}>
                     {loading && !active.length ? (
-                      <p className="text-sm text-[var(--muted)]">Loading…</p>
+                      <p className="text-sm text-[var(--muted)]">Loadingâ€¦</p>
                     ) : error ? (
                       <p className="text-sm text-red-500">{error}</p>
                     ) : (
@@ -670,7 +670,7 @@ export default function EditorPage() {
 
               <PkpTabsContent value="archive" style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}>
                 {loading && !archived.length ? (
-                  <p className="text-sm text-[var(--muted)]">Loading…</p>
+                  <p className="text-sm text-[var(--muted)]">Loadingâ€¦</p>
                 ) : error ? (
                   <p className="text-sm text-red-500">{error}</p>
                 ) : (
@@ -710,7 +710,7 @@ export default function EditorPage() {
                     <label className="flex flex-col gap-2 text-sm font-medium text-[var(--foreground)]">
                       Assignee
                       {editLoading ? (
-                        <p className="text-xs text-[var(--muted)]">Memuat daftar peserta…</p>
+                        <p className="text-xs text-[var(--muted)]">Memuat daftar pesertaâ€¦</p>
                       ) : (
                         <PkpSelect
                           value={editAssigneeId}

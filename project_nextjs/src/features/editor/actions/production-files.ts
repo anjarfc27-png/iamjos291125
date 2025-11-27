@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 
 type CreateGalleyData = {
   submissionId: string;
@@ -31,18 +31,12 @@ type ActionResult = {
   galleyId?: string;
 };
 
-const EDITOR_ROLES = ["admin", "manager", "editor", "section_editor"];
-
 export async function createGalley(data: CreateGalleyData): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
     if (!user) {
       return { ok: false, error: "Unauthorized" };
     }
-    if (!user.roles.some((role) => EDITOR_ROLES.includes(role.role_path))) {
-      return { ok: false, error: "Forbidden" };
-    }
-
     if (!data.fileId && !data.remoteUrl) {
       return { ok: false, error: "File or remote URL is required" };
     }
@@ -56,6 +50,30 @@ export async function createGalley(data: CreateGalleyData): Promise<ActionResult
 
     if (versionError || !versionRow) {
       return { ok: false, error: "Publication version not found" };
+    }
+
+    // Resolve journal from submission and check editor-like permission
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", versionRow.submission_id)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return { ok: false, error: "Submission not found" };
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canEditProduction = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+      "layout-editor",
+      "copyeditor",
+    ]);
+
+    if (!isSiteAdmin && !canEditProduction) {
+      return { ok: false, error: "Forbidden" };
     }
 
     const fileInfo = await resolveGalleySource(supabase, data.fileId, data.remoteUrl);
@@ -113,10 +131,6 @@ export async function updateGalley(data: UpdateGalleyData): Promise<ActionResult
     if (!user) {
       return { ok: false, error: "Unauthorized" };
     }
-    if (!user.roles.some((role) => EDITOR_ROLES.includes(role.role_path))) {
-      return { ok: false, error: "Forbidden" };
-    }
-
     const supabase = getSupabaseAdminClient();
     const { data: existingGalley, error: existingError } = await supabase
       .from("galleys")
@@ -128,6 +142,39 @@ export async function updateGalley(data: UpdateGalleyData): Promise<ActionResult
 
     if (existingError || !existingGalley) {
       return { ok: false, error: "Galley not found" };
+    }
+
+    // Resolve journal from submission version and check permission
+    const submissionId =
+      Array.isArray(existingGalley.submission_versions) && existingGalley.submission_versions.length > 0
+        ? (existingGalley.submission_versions[0] as { submission_id: string }).submission_id
+        : null;
+
+    if (!submissionId) {
+      return { ok: false, error: "Submission not found for galley" };
+    }
+
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return { ok: false, error: "Submission not found" };
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canEditProduction = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+      "layout-editor",
+      "copyeditor",
+    ]);
+
+    if (!isSiteAdmin && !canEditProduction) {
+      return { ok: false, error: "Forbidden" };
     }
 
     const fileInfo = await resolveGalleySource(supabase, data.fileId, data.remoteUrl, existingGalley);
@@ -150,11 +197,6 @@ export async function updateGalley(data: UpdateGalleyData): Promise<ActionResult
     if (updateError) {
       throw updateError;
     }
-
-    const submissionId =
-      Array.isArray(existingGalley.submission_versions) && existingGalley.submission_versions.length > 0
-        ? (existingGalley.submission_versions[0] as { submission_id: string }).submission_id
-        : null;
 
     await supabase.from("submission_activity_logs").insert({
       id: randomUUID(),
@@ -185,10 +227,6 @@ export async function deleteGalley(galleyId: string): Promise<ActionResult> {
     if (!user) {
       return { ok: false, error: "Unauthorized" };
     }
-    if (!user.roles.some((role) => EDITOR_ROLES.includes(role.role_path))) {
-      return { ok: false, error: "Forbidden" };
-    }
-
     const supabase = getSupabaseAdminClient();
     const { data: existingGalley, error: existingError } = await supabase
       .from("galleys")
@@ -200,15 +238,42 @@ export async function deleteGalley(galleyId: string): Promise<ActionResult> {
       return { ok: false, error: "Galley not found" };
     }
 
-    const { error: deleteError } = await supabase.from("galleys").delete().eq("id", galleyId);
-    if (deleteError) {
-      throw deleteError;
-    }
-
     const submissionId =
       Array.isArray(existingGalley.submission_versions) && existingGalley.submission_versions.length > 0
         ? (existingGalley.submission_versions[0] as { submission_id: string }).submission_id
         : null;
+
+    if (!submissionId) {
+      return { ok: false, error: "Submission not found for galley" };
+    }
+
+    const { data: submission, error: submissionError } = await supabase
+      .from("submissions")
+      .select("journal_id")
+      .eq("id", submissionId)
+      .maybeSingle();
+
+    if (submissionError || !submission) {
+      return { ok: false, error: "Submission not found" };
+    }
+
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canEditProduction = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+      "layout-editor",
+      "copyeditor",
+    ]);
+
+    if (!isSiteAdmin && !canEditProduction) {
+      return { ok: false, error: "Forbidden" };
+    }
+
+    const { error: deleteError } = await supabase.from("galleys").delete().eq("id", galleyId);
+    if (deleteError) {
+      throw deleteError;
+    }
 
     await supabase.from("submission_activity_logs").insert({
       id: randomUUID(),

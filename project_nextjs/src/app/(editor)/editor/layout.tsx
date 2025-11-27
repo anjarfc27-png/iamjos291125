@@ -13,6 +13,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { getRedirectPathByRole } from "@/lib/auth-redirect";
 import { LanguageSwitcher } from "@/components/admin/language-switcher";
 import { useI18n } from "@/contexts/I18nContext";
+import { pkpColors } from "@/lib/theme";
 
 type Props = {
   children: ReactNode;
@@ -98,30 +99,33 @@ export default function EditorLayout({ children }: Props) {
   }
 
   return (
-    <div className="pkp_structure_page" style={{
-      minHeight: '100vh', 
-      backgroundColor: '#eaedee',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div
+      className="pkp_structure_page"
+      style={{
+        minHeight: "100vh",
+        backgroundColor: pkpColors.pageBg,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Top Header Bar - OJS 3.3 Exact Layout */}
-      <header 
-        className="bg-[#002C40] text-white" 
+      <header
+        className="text-white"
         style={{
-          backgroundColor: '#002C40',
-          position: 'fixed',
+          backgroundColor: pkpColors.headerBg,
+          position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 100,
-          height: '57px',
+          height: "57px",
         }}
       >
-        <div 
-          className="flex items-center justify-between" 
+        <div
+          className="flex items-center justify-between"
           style={{
-            padding: '0.875rem 1.5rem',
-            maxWidth: '100%',
+            padding: "0.875rem 1.5rem",
+            maxWidth: "100%",
           }}
         >
           {/* Left: Open Journal Systems */}
@@ -179,33 +183,63 @@ export default function EditorLayout({ children }: Props) {
               </DropdownSection>
             </Dropdown>
 
-            {/* User with Dropdown */}
+            {/* User with Dropdown + Role switching (multi-role like OJS 3.3) */}
             <Dropdown
               button={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                  <User className="h-5 w-5 text-white" style={{width: '20px', height: '20px'}} />
+                  <User className="h-5 w-5 text-white" style={{ width: "20px", height: "20px" }} />
+                  <span className="text-sm font-medium">
+                    {user?.full_name || user?.username || "User"}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-white" />
                 </div>
               }
               align="right"
             >
               <DropdownSection>
-                <DropdownItem 
+                {/* Role home links, mirroring OJS 3.3 user menu */}
+                {user?.roles?.some((r) => r.role_path === "admin") && (
+                  <DropdownItem href="/admin" icon={<Home className="h-4 w-4" />}>
+                    Site Admin
+                  </DropdownItem>
+                )}
+                {user?.roles?.some((r) => r.role_path === "manager") && (
+                  <DropdownItem href="/manager" icon={<Home className="h-4 w-4" />}>
+                    Journal Manager
+                  </DropdownItem>
+                )}
+                {user?.roles?.some(
+                  (r) => r.role_path === "editor" || r.role_path === "section_editor"
+                ) && (
+                  <DropdownItem href="/editor" icon={<Home className="h-4 w-4" />}>
+                    Editor
+                  </DropdownItem>
+                )}
+                {user?.roles?.some((r) => r.role_path === "author") && (
+                  <DropdownItem href="/author" icon={<Home className="h-4 w-4" />}>
+                    Author
+                  </DropdownItem>
+                )}
+                {user?.roles?.some((r) => r.role_path === "reviewer") && (
+                  <DropdownItem href="/reviewer" icon={<Home className="h-4 w-4" />}>
+                    Reviewer
+                  </DropdownItem>
+                )}
+                {user?.roles?.some((r) => r.role_path === "reader") && (
+                  <DropdownItem href="/reader" icon={<Home className="h-4 w-4" />}>
+                    Reader
+                  </DropdownItem>
+                )}
+              </DropdownSection>
+              <DropdownSection>
+                <DropdownItem
                   onClick={async () => {
                     await logout();
-                    router.push('/login');
-                  }}
-                  icon={<User className="h-4 w-4" />}
-                >
-                  {user?.full_name || user?.username || 'User'}
-                </DropdownItem>
-                <DropdownItem 
-                  onClick={async () => {
-                    await logout();
-                    router.push('/login');
+                    router.push("/login");
                   }}
                   icon={<LogOut className="h-4 w-4" />}
                 >
-                  {t('editor.navigation.logout')}
+                  {t("editor.navigation.logout")}
                 </DropdownItem>
               </DropdownSection>
             </Dropdown>
@@ -223,19 +257,19 @@ export default function EditorLayout({ children }: Props) {
         }}
       >
         {/* Fixed Left Sidebar */}
-        <aside 
-          className="pkp_structure_sidebar left" 
+        <aside
+          className="pkp_structure_sidebar left"
           style={{
-            width: '280px',
-            backgroundColor: '#002C40',
-            color: 'white',
-            position: 'fixed',
+            width: "280px",
+            backgroundColor: pkpColors.sidebarBg,
+            color: pkpColors.sidebarText,
+            position: "fixed",
             left: 0,
-            top: '57px',
+            top: "57px",
             bottom: 0,
             zIndex: 90,
-            display: 'flex',
-            flexDirection: 'column',
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {/* Sidebar Header with Logo - Fixed Position */}
@@ -316,11 +350,11 @@ export default function EditorLayout({ children }: Props) {
             maxWidth: 'calc(100% - 280px)', // Prevent overflow
           }}
         >
-          {/* Content wrapper with Safe Area Padding */}
+        {/* Content wrapper with Safe Area Padding (already OJS-like) */}
           <div
             className="pkp_structure_content"
             style={{
-              padding: '0', // Padding di-handle di masing-masing page untuk kontrol lebih baik
+            padding: '2.5rem 2.5rem 2.75rem 2.5rem',
               backgroundColor: '#eaedee',
               minHeight: '100%',
               width: '100%',

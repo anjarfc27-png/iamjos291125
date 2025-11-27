@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/lib/permissions";
+import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
@@ -28,19 +28,6 @@ export async function assignTask(
       };
     }
 
-    // Only managers and editors can assign tasks
-    const hasPermission = user.roles.some(
-      (role) => role.role_path === "admin" || role.role_path === "manager" || role.role_path === "editor"
-    );
-
-    if (!hasPermission) {
-      return {
-        success: false,
-        message: "Forbidden",
-        error: "Only journal managers and editors can assign tasks",
-      };
-    }
-
     const supabase = getSupabaseAdminClient();
 
     // Get the submission to verify it exists
@@ -55,6 +42,22 @@ export async function assignTask(
         success: false,
         message: "Submission not found",
         error: "The specified submission does not exist",
+      };
+    }
+
+    // Only managers and editors of this journal (or site admin) can assign tasks
+    const isSiteAdmin = await hasUserSiteRole(user.id, "admin");
+    const canAssign = await hasUserJournalRole(user.id, submission.journal_id, [
+      "manager",
+      "editor",
+      "section_editor",
+    ]);
+
+    if (!isSiteAdmin && !canAssign) {
+      return {
+        success: false,
+        message: "Forbidden",
+        error: "Only journal managers and editors can assign tasks",
       };
     }
 

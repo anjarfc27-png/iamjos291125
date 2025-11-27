@@ -29,6 +29,7 @@ import { useSupabase } from "@/providers/supabase-provider";
 import { LanguageSwitcher } from "@/components/admin/language-switcher";
 import { useI18n } from "@/contexts/I18nContext";
 import { SiteSidebar } from "@/components/site/site-sidebar";
+import { pkpColors } from "@/lib/theme";
 
 export default function AdminLayout({
   children,
@@ -76,58 +77,78 @@ export default function AdminLayout({
     }
   }, [supabase, user]);
 
-  const navigation = [
+  const navItems = [
     {
-      name: t('admin.dashboard'),
+      label: t("admin.dashboard"),
       href: "/admin",
       icon: Home,
-      current: pathname === "/admin"
+      key: "dashboard",
     },
     {
-      name: t('admin.hostedJournals'),
+      label: t("admin.hostedJournals"),
       href: "/admin/site-management/hosted-journals",
       icon: BookOpen,
-      current: pathname.startsWith("/admin/site-management/hosted-journals")
+      key: "hosted-journals",
     },
     {
-      name: t('admin.users'),
+      label: t("admin.siteSettings"),
+      href: "/admin/site-settings/site-setup/settings",
+      icon: Settings,
+      key: "site-settings",
+    },
+    {
+      label: t("admin.users"),
       href: "/admin/users",
       icon: Users,
-      current: pathname.startsWith("/admin/users")
+      key: "users",
     },
     {
-      name: t('admin.siteSettings'),
-      href: "/admin/site-settings/site-setup",
-      icon: Settings,
-      current: pathname.startsWith("/admin/site-settings")
-    },
-    {
-      name: t('admin.administrativeFunctions'),
-      href: "/admin/system/system-information",
-      icon: Server,
-      current: pathname.startsWith("/admin/system")
-    },
-    {
-      name: t('admin.statistics'),
+      label: t("admin.statistics"),
       href: "/admin/statistics",
       icon: BarChart3,
-      current: pathname.startsWith("/admin/statistics")
-    }
+      key: "statistics",
+    },
+    {
+      label: t("admin.administrativeFunctions"),
+      href: "/admin/system/system-information",
+      icon: Server,
+      key: "admin-functions",
+    },
   ];
 
-  const siteSettingsSubmenu = [
-    { name: t('siteSettings.setup'), href: "/admin/site-settings/site-setup" },
-    { name: t('siteSettings.languages'), href: "/admin/site-settings/site-setup/languages" },
-    { name: t('siteSettings.bulkEmails'), href: "/admin/site-settings/site-setup/bulk-emails" },
-    { name: t('siteSettings.navigation'), href: "/admin/site-settings/site-setup/navigation" }
+  const siteSettingsSections = [
+    {
+      title: t("siteSettings.setup"),
+      items: [
+        { name: t("siteSettings.settings"), href: "/admin/site-settings/site-setup/settings" },
+        { name: t("siteSettings.information"), href: "/admin/site-settings/site-setup/information" },
+        { name: t("siteSettings.languages"), href: "/admin/site-settings/site-setup/languages" },
+        { name: t("siteSettings.navigation"), href: "/admin/site-settings/site-setup/navigation" },
+        { name: t("siteSettings.bulkEmails"), href: "/admin/site-settings/site-setup/bulk-emails" },
+      ],
+    },
+    {
+      title: t("siteSettings.appearance"),
+      items: [
+        { name: t("siteSettings.theme"), href: "/admin/site-settings/appearance/theme" },
+        { name: t("siteSettings.appearance"), href: "/admin/site-settings/appearance/setup" },
+      ],
+    },
+    {
+      title: t("siteSettings.plugins"),
+      items: [
+        { name: t("siteSettings.installedPlugins"), href: "/admin/site-settings/plugins" },
+        { name: t("siteSettings.pluginGallery"), href: "/admin/site-settings/plugins/gallery" },
+      ],
+    },
   ];
 
   const administrativeFunctionsSubmenu = [
-    { name: t('admin.systemInformation'), href: "/admin/system/system-information" },
-    { name: t('admin.expireUserSessions'), href: "/admin/system/expire-sessions" },
-    { name: t('admin.clearDataCaches'), href: "/admin/system/clear-data-caches" },
-    { name: t('admin.clearTemplateCache'), href: "/admin/system/clear-template-cache" },
-    { name: t('admin.clearScheduledTaskExecutionLogs'), href: "/admin/system/clear-scheduled-tasks" }
+    { name: t("admin.systemInformation"), href: "/admin/system/system-information" },
+    { name: t("admin.expireUserSessions"), href: "/admin/system/expire-sessions" },
+    { name: t("admin.clearDataCaches"), href: "/admin/system/clear-data-caches" },
+    { name: t("admin.clearTemplateCache"), href: "/admin/system/clear-template-cache" },
+    { name: t("admin.clearScheduledTaskExecutionLogs"), href: "/admin/system/clear-scheduled-tasks" },
   ];
 
   // Proteksi role - hanya admin yang bisa akses area ini
@@ -164,9 +185,15 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Top Bar - Dark Blue */}
-      <header className="bg-[#002C40] text-white" style={{backgroundColor: '#002C40'}}>
-        <div className="px-6 py-4 flex items-center justify-between" style={{padding: '1rem 1.5rem'}}>
+      {/* Top Bar - PKP header */}
+      <header
+        className="text-white"
+        style={{ backgroundColor: pkpColors.headerBg }}
+      >
+        <div
+          className="px-6 py-4 flex items-center justify-between"
+          style={{ padding: "1rem 1.5rem" }}
+        >
           {/* Left: Open Journal Systems and Tasks */}
           <div className="flex items-center gap-6">
             <div className="relative">
@@ -249,40 +276,56 @@ export default function AdminLayout({
       </header>
 
       <div className="flex flex-1">
-        {/* Sidebar - Dark Blue - Reduced Size */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block bg-[#002C40]`} style={{
-          backgroundColor: '#002C40',
-          minHeight: 'calc(100vh - 64px)',
-          width: '16rem',
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
-          <div style={{padding: '1.5rem 1.25rem', flexShrink: 0}}>
+        {/* Sidebar */}
+        <aside
+          className={`${sidebarOpen ? "block" : "hidden"} lg:block`}
+          style={{
+            backgroundColor: pkpColors.sidebarBg,
+            minHeight: "calc(100vh - 64px)",
+            width: "16rem",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div style={{ padding: "1.5rem 1.25rem", flexShrink: 0 }}>
             {/* Mobile menu button */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden mb-4 p-2 rounded-md hover:bg-white hover:bg-opacity-10 text-white"
+              className="lg:hidden mb-4 p-2 rounded-md text-white transition-colors"
+              style={{ backgroundColor: "transparent" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
             {/* iamJOS Logo - Horizontal Layout - Reduced */}
-            <div className="mb-8" style={{marginBottom: '2rem'}}>
+            <div className="mb-8" style={{ marginBottom: "2rem" }}>
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-white font-bold" style={{
-                  fontSize: '2.5rem',
-                  lineHeight: '1',
-                  fontWeight: 'bold',
-                  letterSpacing: '-0.02em'
-                }}>
+                <span
+                  className="text-white font-bold"
+                  style={{
+                    fontSize: "2.5rem",
+                    lineHeight: "1",
+                    fontWeight: "bold",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   iam
                 </span>
-                <span className="text-white font-bold" style={{
-                  fontSize: '3rem',
-                  lineHeight: '1',
-                  fontWeight: 'bold',
-                  letterSpacing: '-0.02em'
-                }}>
+                <span
+                  className="text-white font-bold"
+                  style={{
+                    fontSize: "3rem",
+                    lineHeight: "1",
+                    fontWeight: "bold",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   JOS
                 </span>
               </div>
@@ -326,74 +369,92 @@ export default function AdminLayout({
             </div>
             
             <nav className="space-y-1">
-              {navigation.map((item) => {
+              {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = item.current;
+                const isActive = pathname?.startsWith(item.href);
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-white'
-                        : 'hover:bg-white hover:bg-opacity-10'
-                    }`}
-                    style={{
-                      color: isActive ? '#002C40' : 'rgba(255,255,255,0.85)',
-                    }}
-                  >
-                    <Icon
-                      className="h-5 w-5"
-                      style={{ color: isActive ? '#002C40' : 'rgba(255,255,255,0.85)' }}
-                    />
-                    <span>{item.name}</span>
-                  </Link>
+                  <div key={item.key}>
+                    <Link
+                      href={item.href}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                      style={{
+                        color: isActive ? "#002C40" : "rgba(255,255,255,0.85)",
+                        backgroundColor: isActive ? "#ffffff" : "transparent",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.10)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }
+                      }}
+                    >
+                      <Icon
+                        className="h-5 w-5"
+                        style={{ color: isActive ? "#002C40" : "rgba(255,255,255,0.85)" }}
+                      />
+                      <span>{item.label}</span>
+                    </Link>
+
+                    {item.key === "site-settings" && pathname?.startsWith("/admin/site-settings") && (
+                      <div className="ml-8 mt-2 space-y-3">
+                        {siteSettingsSections.map((section) => (
+                          <div key={section.title}>
+                            <p
+                              className="text-xs uppercase tracking-wide mb-1"
+                              style={{ color: "rgba(255,255,255,0.65)" }}
+                            >
+                              {section.title}
+                            </p>
+                            <div className="space-y-1">
+                              {section.items.map((subItem) => {
+                                const active = pathname === subItem.href;
+                                return (
+                                  <Link
+                                    key={subItem.href}
+                                    href={subItem.href}
+                                    className="block px-3 py-2 rounded-md text-sm transition-colors"
+                                    style={{
+                                      backgroundColor: active ? "#ffffff" : "transparent",
+                                      color: active ? "#002C40" : "rgba(255,255,255,0.85)",
+                                    }}
+                                  >
+                                    {subItem.name}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {item.key === "admin-functions" && pathname?.startsWith("/admin/system") && (
+                      <div className="ml-8 mt-2 space-y-1">
+                        {administrativeFunctionsSubmenu.map((subItem) => {
+                          const active = pathname === subItem.href;
+                          return (
+                            <Link
+                              key={subItem.href}
+                              href={subItem.href}
+                              className="block px-3 py-2 rounded-md text-sm transition-colors"
+                              style={{
+                                backgroundColor: active ? "#ffffff" : "transparent",
+                                color: active ? "#002C40" : "rgba(255,255,255,0.85)",
+                              }}
+                            >
+                              {subItem.name}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-              
-              {/* Site Settings Submenu */}
-              {pathname.startsWith("/admin/site-settings") && (
-                <div className="ml-8 mt-2 space-y-1">
-                  {siteSettingsSubmenu.map((subItem) => {
-                    const isActive = pathname === subItem.href;
-                    return (
-                      <Link
-                        key={subItem.name}
-                        href={subItem.href}
-                        className="block px-3 py-2 rounded-md text-sm transition-colors"
-                        style={{
-                          backgroundColor: isActive ? '#ffffff' : 'transparent',
-                          color: isActive ? '#002C40' : 'rgba(255,255,255,0.85)',
-                        }}
-                      >
-                        {subItem.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-              
-              {/* Administrative Functions Submenu */}
-              {pathname.startsWith("/admin/system") && (
-                <div className="ml-8 mt-2 space-y-1">
-                  {administrativeFunctionsSubmenu.map((subItem) => {
-                    const isActive = pathname === subItem.href;
-                    return (
-                      <Link
-                        key={subItem.name}
-                        href={subItem.href}
-                        className="block px-3 py-2 rounded-md text-sm transition-colors"
-                        style={{
-                          backgroundColor: isActive ? '#ffffff' : 'transparent',
-                          color: isActive ? '#002C40' : 'rgba(255,255,255,0.85)',
-                        }}
-                      >
-                        {subItem.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
             </nav>
 
             {/* OJS 3.3-style Administration block controlled by Sidebar settings */}
@@ -401,8 +462,14 @@ export default function AdminLayout({
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 bg-white min-h-screen">
+        {/* Main Content with safe padding like OJS 3.3 */}
+        <main
+          className="flex-1 bg-white min-h-screen"
+          style={{
+            padding: "2.5rem",
+            backgroundColor: "#ffffff",
+          }}
+        >
           {children}
         </main>
       </div>
