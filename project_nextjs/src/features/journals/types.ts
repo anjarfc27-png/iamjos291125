@@ -4,6 +4,8 @@ export type HostedJournal = {
   path: string;
   isPublic: boolean;
   description?: string;
+  initials?: string;
+  abbreviation?: string;
 };
 
 export type JournalSettings = {

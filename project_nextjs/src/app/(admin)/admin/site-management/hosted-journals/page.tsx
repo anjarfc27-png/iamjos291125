@@ -23,20 +23,37 @@ export default async function HostedJournalsPage() {
         description: anyItem.description ?? anyItem.desc ?? undefined,
         isPublic: anyItem.is_public ?? anyItem.public ?? true,
       } as HostedJournal;
+
+
     });
 
-  const missingNameIds = journals.filter((j) => !j.name || j.name.trim().length === 0).map((j) => j.id);
-  if (missingNameIds.length) {
+  const journalIds = journals.map(j => j.id);
+  if (journalIds.length > 0) {
     const { data: js } = await supabase
       .from("journal_settings")
-      .select("journal_id, setting_value")
-      .eq("setting_name", "name")
-      .in("journal_id", missingNameIds);
-    const nameMap = new Map<string, string>();
+      .select("journal_id, setting_name, setting_value")
+      .in("journal_id", journalIds)
+      .in("setting_name", ["name", "initials", "abbreviation"]);
+
+    const settingsMap = new Map<string, Record<string, string>>();
     (js ?? []).forEach((row: any) => {
-      if (row.setting_value) nameMap.set(row.journal_id, row.setting_value as string);
+      if (!settingsMap.has(row.journal_id)) {
+        settingsMap.set(row.journal_id, {});
+      }
+      if (row.setting_value) {
+        settingsMap.get(row.journal_id)![row.setting_name] = row.setting_value as string;
+      }
     });
-    journals = journals.map((j) => ({ ...j, name: j.name || nameMap.get(j.id) || j.path }));
+
+    journals = journals.map((j) => {
+      const settings = settingsMap.get(j.id) || {};
+      return {
+        ...j,
+        name: j.name || settings.name || j.path,
+        initials: settings.initials,
+        abbreviation: settings.abbreviation
+      };
+    });
   }
 
   const loadError = error && typeof error === 'object' && 'message' in error ? String(error.message) : null;
@@ -50,23 +67,23 @@ export default async function HostedJournalsPage() {
       }}>
         {/* Breadcrumb */}
         <div className="mb-2" style={{ marginBottom: '0.5rem' }}>
-          <Link 
-            href="/admin" 
+          <Link
+            href="/admin"
             style={{
               color: '#006798',
-              textDecoration: 'underline',
+              textDecoration: 'none',
               fontSize: '1rem'
             }}
-            className="hover:no-underline"
+            className="hover:underline"
           >
             Site Administration
           </Link>
-          <span style={{ 
-            color: '#6B7280', 
+          <span style={{
+            color: '#6B7280',
             margin: '0 0.5rem',
             fontSize: '1rem'
           }}>»</span>
-          <span style={{ 
+          <span style={{
             color: '#111827',
             fontSize: '1rem'
           }}>Hosted Journals</span>

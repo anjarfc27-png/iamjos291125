@@ -1,6 +1,8 @@
 'use client'
 
 import { withAuth } from "@/lib/auth-client";
+import { useI18n } from "@/contexts/I18nContext";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
 
 const statsData = [
   {
@@ -9,7 +11,7 @@ const statsData = [
     trend: "+1 this month"
   },
   {
-    label: "Total Users", 
+    label: "Total Users",
     value: 127,
     trend: "+12 this month"
   },
@@ -33,7 +35,7 @@ const recentActivities = [
     time: "2 hours ago"
   },
   {
-    user: "Editor Team", 
+    user: "Editor Team",
     action: "reviewed",
     target: "Sentiment Analysis of Government Policies",
     time: "5 hours ago"
@@ -47,10 +49,18 @@ const recentActivities = [
 ];
 
 function AdminStatisticsPage() {
+  const { t } = useI18n();
+
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
+      {/* Breadcrumb */}
+      <AdminBreadcrumb items={[
+        { label: t('admin.siteAdministration'), href: '/admin' },
+        { label: t('admin.statistics') }
+      ]} />
+
       {/* OJS PKP 3.3 Style Header */}
-      <div style={{ 
+      <div style={{
         borderBottom: '2px solid #e5e5e5',
         paddingBottom: '1rem',
         marginBottom: '1.5rem'

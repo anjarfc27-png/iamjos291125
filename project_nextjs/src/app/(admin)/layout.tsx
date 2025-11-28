@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getRedirectPathByRole } from "@/lib/auth-redirect";
-import { 
-  ChevronDown, 
-  Menu, 
-  X, 
-  Settings, 
-  Users, 
-  BookOpen, 
+import {
+  ChevronDown,
+  Menu,
+  X,
+  Settings,
+  Users,
+  BookOpen,
   BarChart3,
   Globe,
   Mail,
@@ -154,7 +154,7 @@ export default function AdminLayout({
   // Proteksi role - hanya admin yang bisa akses area ini
   useEffect(() => {
     if (loading) return;
-    
+
     if (!user) {
       router.push('/login?source=' + encodeURIComponent(window.location.pathname));
       return;
@@ -172,8 +172,8 @@ export default function AdminLayout({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#006798] mx-auto"></div>
-                  <p className="mt-4 text-gray-600">{t('common.loading')}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#006798] mx-auto"></div>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -188,11 +188,17 @@ export default function AdminLayout({
       {/* Top Bar - PKP header */}
       <header
         className="text-white"
-        style={{ backgroundColor: pkpColors.headerBg }}
+        style={{
+          backgroundColor: pkpColors.headerBg,
+          height: "60px"
+        }}
       >
         <div
           className="px-6 py-4 flex items-center justify-between"
-          style={{ padding: "1rem 1.5rem" }}
+          style={{
+            padding: "0 1.5rem",
+            height: "100%"
+          }}
         >
           {/* Left: Open Journal Systems and Tasks */}
           <div className="flex items-center gap-6">
@@ -200,15 +206,15 @@ export default function AdminLayout({
               <Dropdown
                 button={
                   <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                    <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>{t('admin.openJournalSystems')}</span>
+                    <span className="text-white text-base font-medium" style={{ fontSize: '1rem' }}>{t('admin.openJournalSystems')}</span>
                     <ChevronDown className="h-4 w-4 text-white" />
                   </div>
                 }
                 align="left"
               >
                 <div className="bg-white rounded-md border border-gray-200 shadow-lg min-w-[250px] py-1">
-                  <Link 
-                    href="/admin" 
+                  <Link
+                    href="/admin"
                     className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
                   >
                     <Home className="h-4 w-4" />
@@ -233,7 +239,7 @@ export default function AdminLayout({
             </div>
             {/* Tasks */}
             <div className="flex items-center gap-2">
-              <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>{t('admin.tasks')}</span>
+              <span className="text-white text-base font-medium" style={{ fontSize: '1rem' }}>{t('admin.tasks')}</span>
               <span className="bg-gray-600 text-white rounded-full px-2 py-0.5 text-sm" style={{
                 backgroundColor: '#4B5563',
                 padding: '0.125rem 0.5rem',
@@ -253,14 +259,14 @@ export default function AdminLayout({
               button={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                   <User className="h-4 w-4 text-white" />
-                  <span className="text-white text-base font-medium" style={{fontSize: '1rem'}}>{user.username || 'admin'}</span>
+                  <span className="text-white text-base font-medium" style={{ fontSize: '1rem' }}>{user.username || 'admin'}</span>
                   <ChevronDown className="h-4 w-4 text-white" />
                 </div>
               }
               align="right"
             >
               <DropdownSection>
-                <DropdownItem 
+                <DropdownItem
                   onClick={async () => {
                     await logout();
                     router.push('/login');
@@ -275,204 +281,120 @@ export default function AdminLayout({
         </div>
       </header>
 
-      <div className="flex flex-1">
-        {/* Sidebar */}
-        <aside
-          className={`${sidebarOpen ? "block" : "hidden"} lg:block`}
-          style={{
-            backgroundColor: pkpColors.sidebarBg,
-            minHeight: "calc(100vh - 64px)",
-            width: "16rem",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div style={{ padding: "1.5rem 1.25rem", flexShrink: 0 }}>
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden mb-4 p-2 rounded-md text-white transition-colors"
-              style={{ backgroundColor: "transparent" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
-            >
-              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-
-            {/* iamJOS Logo - Horizontal Layout - Reduced */}
-            <div className="mb-8" style={{ marginBottom: "2rem" }}>
-              <div className="flex items-baseline gap-2 mb-3">
-                <span
-                  className="text-white font-bold"
-                  style={{
-                    fontSize: "2.5rem",
-                    lineHeight: "1",
-                    fontWeight: "bold",
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  iam
-                </span>
-                <span
-                  className="text-white font-bold"
-                  style={{
-                    fontSize: "3rem",
-                    lineHeight: "1",
-                    fontWeight: "bold",
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  JOS
-                </span>
-              </div>
-              <div className="text-white uppercase tracking-wider opacity-85" style={{
-                fontSize: '0.65rem',
-                letterSpacing: '0.2em',
-                lineHeight: '1.5',
-                fontWeight: '500',
-                marginTop: '0.5rem'
-              }}>
-                INTEGRATED ACADEMIC MANAGEMENT
-              </div>
-              <div className="text-white uppercase tracking-wider opacity-85" style={{
-                fontSize: '0.65rem',
-                letterSpacing: '0.2em',
-                lineHeight: '1.5',
-                fontWeight: '500'
-              }}>
-                JOURNAL OPERATION SYSTEM
-              </div>
-            </div>
-          </div>
-          
-          {/* Navigation - Scrollable Area */}
-          <div 
-            className="sidebar-scrollable"
+      {/* Conditional Layout: Sidebar only on /admin page */}
+      {pathname === '/admin' ? (
+        // Dashboard layout with sidebar
+        <div className="flex flex-1">
+          {/* Sidebar - Only on dashboard */}
+          <aside
+            className={`${sidebarOpen ? "block" : "hidden"} lg:block`}
             style={{
-              flex: 1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              minHeight: 0,
-              padding: '0 1.5rem 1.5rem 1.5rem',
+              backgroundColor: pkpColors.sidebarBg,
+              minHeight: "calc(100vh - 60px)",
+              width: "250px",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
-            {/* Administration Heading - Reduced */}
-            <div className="mt-6 mb-4">
+            <div style={{ padding: "1.5rem 1rem", flexShrink: 0 }}>
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden mb-4 p-2 rounded-md text-white transition-colors"
+                style={{ backgroundColor: "transparent" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+
+              {/* iamJOS Logo */}
+              <div className="mb-8" style={{ marginBottom: "1.5rem" }}>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span
+                    className="text-white font-bold"
+                    style={{
+                      fontSize: "2.5rem",
+                      lineHeight: "1",
+                      fontWeight: "bold",
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    iam
+                  </span>
+                  <span
+                    className="text-white font-bold"
+                    style={{
+                      fontSize: "3rem",
+                      lineHeight: "1",
+                      fontWeight: "bold",
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    JOS
+                  </span>
+                </div>
+                <div className="text-white uppercase tracking-wider opacity-85" style={{
+                  fontSize: '0.65rem',
+                  letterSpacing: '0.2em',
+                  lineHeight: '1.5',
+                  fontWeight: '500',
+                  marginTop: '0.5rem'
+                }}>
+                  INTEGRATED ACADEMIC MANAGEMENT
+                </div>
+                <div className="text-white uppercase tracking-wider opacity-85" style={{
+                  fontSize: '0.65rem',
+                  letterSpacing: '0.2em',
+                  lineHeight: '1.5',
+                  fontWeight: '500'
+                }}>
+                  JOURNAL OPERATION SYSTEM
+                </div>
+              </div>
+            </div>
+
+            {/* Site Administration heading */}
+            <div style={{ padding: '0 1.5rem' }}>
               <h2 className="text-white font-bold" style={{
                 fontSize: '1.25rem',
                 fontWeight: 'bold'
               }}>{t('admin.administration')}</h2>
             </div>
-            
-            <nav className="space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname?.startsWith(item.href);
-                return (
-                  <div key={item.key}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                      style={{
-                        color: isActive ? "#002C40" : "rgba(255,255,255,0.85)",
-                        backgroundColor: isActive ? "#ffffff" : "transparent",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.10)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = "transparent";
-                        }
-                      }}
-                    >
-                      <Icon
-                        className="h-5 w-5"
-                        style={{ color: isActive ? "#002C40" : "rgba(255,255,255,0.85)" }}
-                      />
-                      <span>{item.label}</span>
-                    </Link>
+          </aside>
 
-                    {item.key === "site-settings" && pathname?.startsWith("/admin/site-settings") && (
-                      <div className="ml-8 mt-2 space-y-3">
-                        {siteSettingsSections.map((section) => (
-                          <div key={section.title}>
-                            <p
-                              className="text-xs uppercase tracking-wide mb-1"
-                              style={{ color: "rgba(255,255,255,0.65)" }}
-                            >
-                              {section.title}
-                            </p>
-                            <div className="space-y-1">
-                              {section.items.map((subItem) => {
-                                const active = pathname === subItem.href;
-                                return (
-                                  <Link
-                                    key={subItem.href}
-                                    href={subItem.href}
-                                    className="block px-3 py-2 rounded-md text-sm transition-colors"
-                                    style={{
-                                      backgroundColor: active ? "#ffffff" : "transparent",
-                                      color: active ? "#002C40" : "rgba(255,255,255,0.85)",
-                                    }}
-                                  >
-                                    {subItem.name}
-                                  </Link>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {item.key === "admin-functions" && pathname?.startsWith("/admin/system") && (
-                      <div className="ml-8 mt-2 space-y-1">
-                        {administrativeFunctionsSubmenu.map((subItem) => {
-                          const active = pathname === subItem.href;
-                          return (
-                            <Link
-                              key={subItem.href}
-                              href={subItem.href}
-                              className="block px-3 py-2 rounded-md text-sm transition-colors"
-                              style={{
-                                backgroundColor: active ? "#ffffff" : "transparent",
-                                color: active ? "#002C40" : "rgba(255,255,255,0.85)",
-                              }}
-                            >
-                              {subItem.name}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </nav>
-
-            {/* OJS 3.3-style Administration block controlled by Sidebar settings */}
-            <SiteSidebar />
-          </div>
-        </aside>
-
-        {/* Main Content with safe padding like OJS 3.3 */}
+          {/* Main Content with sidebar */}
+          <main
+            className="flex-1 bg-white min-h-screen"
+            style={{
+              padding: "2rem 1.5rem",
+              backgroundColor: "#ffffff",
+              minHeight: "calc(100vh - 60px)"
+            }}
+          >
+            {children}
+          </main>
+        </div>
+      ) : (
+        // Sub-pages layout without sidebar (full width)
         <main
           className="flex-1 bg-white min-h-screen"
           style={{
-            padding: "2.5rem",
+            padding: "2rem 1.5rem",
             backgroundColor: "#ffffff",
+            minHeight: "calc(100vh - 60px)",
+            maxWidth: "1400px",
+            margin: "0 auto",
+            width: "100%"
           }}
         >
           {children}
         </main>
-      </div>
+      )}
     </div>
   );
 }

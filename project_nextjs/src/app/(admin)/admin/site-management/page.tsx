@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { BookOpen, Users, Settings, Plus, Eye } from "lucide-react";
 import { withAuth } from "@/lib/auth-client";
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb";
+import { useI18n } from "@/contexts/I18nContext";
+import { pkpColors, pkpTypography } from "@/lib/theme";
 
 // Mock data for journals
 const mockJournals = [
@@ -38,35 +41,42 @@ const mockJournals = [
   }
 ];
 
-function SiteManagementPage() {
+export function SiteManagementPage() {
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif' }}>
-      {/* OJS PKP 3.3 Style Header */}
-      <div style={{ 
-        borderBottom: '2px solid #e5e5e5',
-        paddingBottom: '1rem',
+    <div style={{ fontFamily: pkpTypography.fontFamily, width: '100%' }}>
+      <div style={{ paddingBottom: '0.5rem' }}>
+        <AdminBreadcrumb items={[
+          { label: 'Site Administration', href: '/admin' },
+          { label: 'Site Management' }
+        ]} />
+      </div>
+
+      <div style={{
+        backgroundColor: pkpColors.pageHeaderBg,
+        padding: '1rem 0',
         marginBottom: '1.5rem'
       }}>
         <h1 style={{
-          fontSize: '1.75rem',
-          fontWeight: 700,
-          color: '#002C40',
+          fontSize: pkpTypography.sectionTitle,
+          fontWeight: pkpTypography.bold,
+          color: pkpColors.textDark,
           margin: 0,
-          marginBottom: '0.25rem'
+          fontFamily: pkpTypography.fontFamily
         }}>
-          Hosted Journals
+          Site Management
         </h1>
         <p style={{
-          fontSize: '0.875rem',
-          color: '#666',
-          margin: 0
+          fontSize: pkpTypography.bodyRegular,
+          color: pkpColors.textGray,
+          margin: 0,
+          fontFamily: pkpTypography.fontFamily
         }}>
           Manage journals hosted on this site
-        </p>
-      </div>
+        </p >
+      </div >
 
       {/* Journal Statistics */}
-      <div style={{
+      < div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '1rem',
@@ -219,10 +229,10 @@ function SiteManagementPage() {
             Across all journals
           </p>
         </div>
-      </div>
+      </div >
 
       {/* Create New Journal Button */}
-      <div style={{
+      < div style={{
         display: 'flex',
         justifyContent: 'flex-end',
         marginBottom: '1.5rem'
@@ -244,281 +254,255 @@ function SiteManagementPage() {
             gap: '0.5rem'
           }}
         >
-          <Plus style={{ width: '1rem', height: '1rem' }} />
+          <Plus size={16} />
           Create Journal
         </Link>
       </div>
 
-      {/* Journals Table */}
       <div style={{
         backgroundColor: '#fff',
         border: '1px solid #dee2e6',
         borderRadius: '4px',
         overflow: 'hidden'
       }}>
-        <div style={{
-          padding: '1rem 1.5rem',
-          borderBottom: '1px solid #e5e5e5',
-          backgroundColor: '#f8f9fa'
-        }}>
-          <h2 style={{
-            fontSize: '1.125rem',
-            fontWeight: 700,
-            color: '#002C40',
-            margin: '0 0 0.25rem 0'
-          }}>
-            Journal Management
-          </h2>
-          <p style={{
-            fontSize: '0.875rem',
-            color: '#666',
-            margin: 0
-          }}>
-            Manage journals hosted on this site
-          </p>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}>
-            <thead>
-              <tr style={{
-                backgroundColor: '#f8f9fa',
-                borderBottom: '1px solid #e5e5e5'
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{
+              backgroundColor: '#f8f9fa',
+              borderBottom: '1px solid #e5e5e5'
+            }}>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40',
+                borderRight: '1px solid #e5e5e5'
               }}>
-                <th style={{
+                Journal
+              </th>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40',
+                borderRight: '1px solid #e5e5e5'
+              }}>
+                Path
+              </th>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40',
+                borderRight: '1px solid #e5e5e5'
+              }}>
+                Status
+              </th>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40',
+                borderRight: '1px solid #e5e5e5'
+              }}>
+                Submissions
+              </th>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40',
+                borderRight: '1px solid #e5e5e5'
+              }}>
+                Users
+              </th>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40',
+                borderRight: '1px solid #e5e5e5'
+              }}>
+                Created Date
+              </th>
+              <th style={{
+                padding: '0.75rem 1rem',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#002C40'
+              }}>
+                Actions
+              </th>
+            </tr>
+          </ thead>
+          <tbody>
+            {mockJournals.map((journal) => (
+              <tr key={journal.id} style={{
+                borderBottom: '1px solid #e5e5e5',
+                backgroundColor: '#fff'
+              }}>
+                <td style={{
                   padding: '0.75rem 1rem',
-                  textAlign: 'left',
                   fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40',
                   borderRight: '1px solid #e5e5e5'
                 }}>
-                  Journal
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40',
-                  borderRight: '1px solid #e5e5e5'
-                }}>
-                  Path
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40',
-                  borderRight: '1px solid #e5e5e5'
-                }}>
-                  Status
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40',
-                  borderRight: '1px solid #e5e5e5'
-                }}>
-                  Submissions
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40',
-                  borderRight: '1px solid #e5e5e5'
-                }}>
-                  Users
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40',
-                  borderRight: '1px solid #e5e5e5'
-                }}>
-                  Created Date
-                </th>
-                <th style={{
-                  padding: '0.75rem 1rem',
-                  textAlign: 'left',
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  color: '#002C40'
-                }}>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockJournals.map((journal) => (
-                <tr key={journal.id} style={{
-                  borderBottom: '1px solid #e5e5e5',
-                  backgroundColor: '#fff'
-                }}>
-                  <td style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.875rem',
-                    borderRight: '1px solid #e5e5e5'
-                  }}>
-                    <div>
-                      <div style={{
-                        fontWeight: 500,
-                        color: '#002C40',
-                        marginBottom: '0.25rem'
-                      }}>
-                        {journal.title}
-                      </div>
-                      <div style={{
-                        fontSize: '0.875rem',
-                        color: '#666',
-                        maxWidth: '300px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {journal.description}
-                      </div>
+                  <div>
+                    <div style={{
+                      fontWeight: 500,
+                      color: '#002C40',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {journal.title}
                     </div>
-                  </td>
-                  <td style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.875rem',
-                    borderRight: '1px solid #e5e5e5'
-                  }}>
-                    <code style={{
+                    <div style={{
                       fontSize: '0.875rem',
-                      backgroundColor: '#f8f9fa',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '4px',
-                      fontFamily: 'monospace'
+                      color: '#666',
+                      maxWidth: '300px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
                     }}>
-                      {journal.path}
-                    </code>
-                  </td>
-                  <td style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.875rem',
-                    borderRight: '1px solid #e5e5e5'
-                  }}>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      padding: '0.125rem 0.5rem',
-                      borderRadius: '4px',
-                      backgroundColor: journal.status === "Enabled" ? '#d4edda' : '#e2e3e5',
-                      color: journal.status === "Enabled" ? '#155724' : '#383d41',
-                      fontWeight: 600
-                    }}>
-                      {journal.status}
-                    </span>
-                  </td>
-                  <td style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.875rem',
-                    borderRight: '1px solid #e5e5e5'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
-                    }}>
-                      <BookOpen style={{
-                        width: '0.75rem',
-                        height: '0.75rem',
-                        color: '#666'
-                      }} />
-                      <span>{journal.submissions}</span>
+                      {journal.description}
                     </div>
-                  </td>
-                  <td style={{
-                    padding: '0.75rem 1rem',
+                  </div>
+                </td>
+                <td style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  borderRight: '1px solid #e5e5e5'
+                }}>
+                  <code style={{
                     fontSize: '0.875rem',
-                    borderRight: '1px solid #e5e5e5'
+                    backgroundColor: '#f8f9fa',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontFamily: 'monospace'
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
-                    }}>
-                      <Users style={{
-                        width: '0.75rem',
-                        height: '0.75rem',
-                        color: '#666'
-                      }} />
-                      <span>{journal.users}</span>
-                    </div>
-                  </td>
-                  <td style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.875rem',
-                    color: '#333',
-                    borderRight: '1px solid #e5e5e5'
+                    {journal.path}
+                  </code>
+                </td>
+                <td style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  borderRight: '1px solid #e5e5e5'
+                }}>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '4px',
+                    backgroundColor: journal.status === "Enabled" ? '#d4edda' : '#e2e3e5',
+                    color: journal.status === "Enabled" ? '#155724' : '#383d41',
+                    fontWeight: 600
                   }}>
-                    {journal.created_date}
-                  </td>
-                  <td style={{
-                    padding: '0.75rem 1rem',
-                    fontSize: '0.875rem'
+                    {journal.status}
+                  </span>
+                </td>
+                <td style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  borderRight: '1px solid #e5e5e5'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
                   }}>
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem'
-                    }}>
-                      <Link
-                        href={`/admin/site-management/hosted-journals/${journal.id}`}
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: 'transparent',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          color: '#006798',
-                          textDecoration: 'none',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}
-                      >
-                        <Eye style={{ width: '0.75rem', height: '0.75rem' }} />
-                        View
-                      </Link>
-                      <Link
-                        href={`/admin/site-management/hosted-journals/${journal.id}/settings`}
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: 'transparent',
-                          border: '1px solid #dee2e6',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          color: '#006798',
-                          textDecoration: 'none',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.25rem'
-                        }}
-                      >
-                        <Settings style={{ width: '0.75rem', height: '0.75rem' }} />
-                        Settings
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                    <BookOpen style={{
+                      width: '0.75rem',
+                      height: '0.75rem',
+                      color: '#666'
+                    }} />
+                    <span>{journal.submissions}</span>
+                  </div>
+                </td>
+                <td style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  borderRight: '1px solid #e5e5e5'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}>
+                    <Users style={{
+                      width: '0.75rem',
+                      height: '0.75rem',
+                      color: '#666'
+                    }} />
+                    <span>{journal.users}</span>
+                  </div>
+                </td>
+                <td style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem',
+                  color: '#333',
+                  borderRight: '1px solid #e5e5e5'
+                }}>
+                  {journal.created_date}
+                </td>
+                <td style={{
+                  padding: '0.75rem 1rem',
+                  fontSize: '0.875rem'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.5rem'
+                  }}>
+                    <Link
+                      href={`/admin/site-management/hosted-journals/${journal.id}`}
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: 'transparent',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        color: '#006798',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      <Eye style={{ width: '0.75rem', height: '0.75rem' }} />
+                      View
+                    </Link>
+                    <Link
+                      href={`/admin/site-management/hosted-journals/${journal.id}/settings`}
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: 'transparent',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        color: '#006798',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                      }}
+                    >
+                      <Settings style={{ width: '0.75rem', height: '0.75rem' }} />
+                      Settings
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div >
+    </div >
+
   );
 }
 

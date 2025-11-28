@@ -75,37 +75,37 @@ export function HostedJournalsTable({ journals }: Props) {
   const renderOverlay = (content: ReactNode) =>
     typeof document !== "undefined"
       ? createPortal(
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.45)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+          onClick={closeAll}
+        >
           <div
             style={{
-              position: "fixed",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.45)",
-              zIndex: 1000,
+              width: "100%",
+              maxWidth: modalState?.type === "settings" ? "70rem" : "48rem",
+              maxHeight: "90vh",
+              backgroundColor: "#fff",
+              borderRadius: "4px",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.35)",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "1rem",
+              flexDirection: "column",
             }}
-            onClick={closeAll}
+            onClick={(event) => event.stopPropagation()}
           >
-            <div
-              style={{
-                width: "100%",
-                maxWidth: modalState?.type === "settings" ? "70rem" : "48rem",
-                maxHeight: "90vh",
-                backgroundColor: "#fff",
-                borderRadius: "4px",
-                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.35)",
-                display: "flex",
-                flexDirection: "column",
-              }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              {content}
-            </div>
-          </div>,
-          document.body,
-        )
+            {content}
+          </div>
+        </div>,
+        document.body,
+      )
       : null;
 
   return (
@@ -225,20 +225,13 @@ export function HostedJournalsTable({ journals }: Props) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setModalState({ type: "settings", journal })}
-                        style={actionButtonStyle()}
-                      >
-                        Settings
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setModalState({ type: "users", journal })}
                         style={actionButtonStyle()}
                       >
                         Users
                       </button>
-                      <Link href={`/admin/wizard/${journal.id}`} style={actionButtonStyle(true)}>
-                        Wizard
+                      <Link href={`/journals/${journal.id}/settings/wizard`} style={actionButtonStyle(true)}>
+                        Settings Wizard
                       </Link>
                       <button
                         type="button"
@@ -264,7 +257,7 @@ export function HostedJournalsTable({ journals }: Props) {
               title={modalState.mode === "create" ? "Create Journal" : "Edit Journal"}
               description={
                 modalState.mode === "create"
-                  ? "Tambahkan jurnal baru ke instalasi OJS."
+                  ? null
                   : "Perbarui informasi dasar jurnal."
               }
               onClose={closeAll}
@@ -363,33 +356,33 @@ export function HostedJournalsTable({ journals }: Props) {
 function actionButtonStyle(outlined = false): React.CSSProperties {
   return outlined
     ? {
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0.35rem 0.75rem",
-        borderRadius: "3px",
-        border: "1px solid #d1d5db",
-        color: "#006798",
-        textDecoration: "none",
-        fontSize: "0.8rem",
-        fontWeight: 600,
-        backgroundColor: "#fff",
-        cursor: "pointer",
-      }
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0.35rem 0.75rem",
+      borderRadius: "3px",
+      border: "1px solid #d1d5db",
+      color: "#006798",
+      textDecoration: "none",
+      fontSize: "0.8rem",
+      fontWeight: 600,
+      backgroundColor: "#fff",
+      cursor: "pointer",
+    }
     : {
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0.35rem 0.75rem",
-        borderRadius: "3px",
-        border: "1px solid transparent",
-        backgroundColor: "#f5f6f7",
-        color: "#006798",
-        textDecoration: "none",
-        fontSize: "0.8rem",
-        fontWeight: 600,
-        cursor: "pointer",
-      };
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "0.35rem 0.75rem",
+      borderRadius: "3px",
+      border: "1px solid transparent",
+      backgroundColor: "#f5f6f7",
+      color: "#006798",
+      textDecoration: "none",
+      fontSize: "0.8rem",
+      fontWeight: 600,
+      cursor: "pointer",
+    };
 }
 
 type HeaderProps = {

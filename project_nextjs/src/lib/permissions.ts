@@ -62,13 +62,73 @@ export async function getCurrentUser(request?: Request | NextRequest): Promise<U
 export async function hasUserSiteRole(userId: string, rolePath: RolePath): Promise<boolean> {
   const supabase = getSupabaseAdminClient();
 
-  // Site roles are stored in user_account_roles with context_id = null
-  const { data } = await supabase
+  console.log('[hasUserSiteRole] Checking role:', { userId, rolePath });
+
+  // First check: Site roles in user_account_roles with context_id = null
+  const { data: accountRoles, error: accountError } = await supabase
     .from("user_account_roles")
     .select("role_path, context_id")
     .eq("user_id", userId);
 
-  return (data ?? []).some((r: any) => r.role_path === rolePath && (r.context_id == null));
+  console.log('[hasUserSiteRole] user_account_roles query result:', { accountRoles, accountError });
+
+  const hasAccountRole = (accountRoles ?? []).some((r: any) => r.role_path === rolePath && (r.context_id == null));
+
+  if (hasAccountRole) {
+    console.log('[hasUserSiteRole] Found in user_account_roles!');
+    return true;
+  }
+
+  // Fallback check: Check user_user_groups with context_id = 0 or NULL (site-wide) for backward compatibility
+  if (rolePath === 'admin') {
+    const roleId = ROLE_TO_ROLE_ID[rolePath];
+    console.log('[hasUserSiteRole] Fallback check for admin, roleId:', roleId);
+
+    // Try with context_id = 0
+    const { data: userGroups0, error: error0 } = await supabase
+      .from("user_user_groups")
+      .select(`
+        user_groups!inner(
+          id,
+          role_id,
+          context_id
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("user_groups.role_id", roleId)
+      .eq("user_groups.context_id", 0);
+
+    console.log('[hasUserSiteRole] user_user_groups with context_id=0:', { userGroups0, error0 });
+
+    if ((userGroups0 ?? []).length > 0) {
+      console.log('[hasUserSiteRole] Found admin role with context_id=0!');
+      return true;
+    }
+
+    // Try with context_id IS NULL for site-wide admin
+    const { data: userGroupsNull, error: errorNull } = await supabase
+      .from("user_user_groups")
+      .select(`
+        user_groups!inner(
+          id,
+          role_id,
+          context_id
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("user_groups.role_id", roleId)
+      .is("user_groups.context_id", null);
+
+    console.log('[hasUserSiteRole] user_user_groups with context_id IS NULL:', { userGroupsNull, errorNull });
+
+    if ((userGroupsNull ?? []).length > 0) {
+      console.log('[hasUserSiteRole] Found admin role with context_id IS NULL!');
+      return true;
+    }
+  }
+
+  console.log('[hasUserSiteRole] No admin role found anywhere!');
+  return false;
 }
 
 export async function requireSiteAdmin(): Promise<void> {
@@ -138,8 +198,8 @@ export async function requireJournalRole(
     roles = Array.isArray(journalIdOrRoles)
       ? (journalIdOrRoles as RolePath[])
       : journalIdOrRoles
-      ? [journalIdOrRoles as RolePath]
-      : [];
+        ? [journalIdOrRoles as RolePath]
+        : [];
   } else {
     // API route signature: requireJournalRole(request, journalId, roles)
     const user = await getCurrentUser(requestOrJournalId);
