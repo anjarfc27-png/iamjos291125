@@ -32,9 +32,9 @@ export default async function SiteSetupLanguagesPage() {
           Languages
         </h2>
       </header>
-      
-      <LanguagesPageClient 
-        initial={initial} 
+
+      <LanguagesPageClient
+        initial={initial}
         installedLocales={installedLocales}
         updateAction={updateSiteLanguagesAction}
         installAction={installLocaleActionWrapper}

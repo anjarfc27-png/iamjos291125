@@ -7,19 +7,21 @@ import { SubmissionTable } from "@/features/editor/components/submission-table";
 import { useAuth } from "@/contexts/AuthContext";
 import type { EditorDashboardStats, SubmissionSummary } from "@/features/editor/types";
 
-type FetchResult<T> = { ok: boolean; error?: string; [key: string]: any } & T;
+type FetchResult<T> = { ok: boolean; error?: string;[key: string]: any } & T;
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, { credentials: "include" });
   const json = (await res.json()) as FetchResult<T>;
   if (!res.ok || !json?.ok) {
     const errorMessage = typeof json?.error === "string" ? json.error : `Request failed ${res.status}`;
+    console.error(`Fetch failed for ${url}:`, errorMessage);
     throw new Error(errorMessage);
   }
   return json as unknown as T;
 }
 
-export function ManagerDashboardSubmissionsClient() {
+export function ManagerDashboardSubmissionsClient({ journalId }: { journalId?: string }) {
+  // Force rebuild: Added journalId support
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -42,12 +44,16 @@ export function ManagerDashboardSubmissionsClient() {
       try {
         setLoading(true);
         setError(null);
+
+        const queryParams = journalId ? `&journalId=${journalId}` : "";
+        const dashboardParams = journalId ? `?journalId=${journalId}` : "";
+
         const [statsRes, myRes, unassignedRes, allRes, archivedRes] = await Promise.all([
-          fetchJson<{ stats: EditorDashboardStats }>("/api/editor/dashboard"),
-          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=my"),
-          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=unassigned"),
-          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=all"),
-          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=archived"),
+          fetchJson<{ stats: EditorDashboardStats }>(`/api/editor/dashboard${dashboardParams}`),
+          fetchJson<{ submissions: SubmissionSummary[] }>(`/api/editor/submissions?queue=my${queryParams}`),
+          fetchJson<{ submissions: SubmissionSummary[] }>(`/api/editor/submissions?queue=unassigned${queryParams}`),
+          fetchJson<{ submissions: SubmissionSummary[] }>(`/api/editor/submissions?queue=all${queryParams}`),
+          fetchJson<{ submissions: SubmissionSummary[] }>(`/api/editor/submissions?queue=archived${queryParams}`),
         ]);
 
         if (!activeRequest) return;
@@ -58,6 +64,7 @@ export function ManagerDashboardSubmissionsClient() {
         setArchived(archivedRes.submissions);
       } catch (err) {
         if (!activeRequest) return;
+        console.error("Dashboard data load error:", err);
         setError(err instanceof Error ? err.message : "Failed to load submissions");
       } finally {
         if (activeRequest) {
@@ -69,7 +76,7 @@ export function ManagerDashboardSubmissionsClient() {
     return () => {
       activeRequest = false;
     };
-  }, []);
+  }, [journalId]);
 
   // Styling active/inactive tabs (same logic as editor page)
   const tabsContainerRef = useRef<HTMLDivElement>(null);

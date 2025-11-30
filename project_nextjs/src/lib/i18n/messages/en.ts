@@ -27,6 +27,11 @@ export const en = {
     details: 'Details',
   },
 
+  // Navigation
+  navigation: {
+    admin: 'Administration',
+  },
+
   // Site Administration
   admin: {
     siteAdministration: 'Site Administration',
@@ -61,7 +66,7 @@ export const en = {
     languages: 'Languages',
     navigation: 'Navigation',
     bulkEmails: 'Bulk Emails',
-    
+
     // Setup Sub-tabs
     siteName: 'Site Name',
     siteLogoUrl: 'Site Logo URL',
@@ -71,12 +76,12 @@ export const en = {
     saveSettings: 'Save Settings',
     minimumPasswordLength: 'Minimum password length (characters)',
     required: 'Required',
-    
+
     // Information
     supportName: 'Support name',
     supportEmail: 'Support email',
     supportPhone: 'Support phone',
-    
+
     // Appearance
     theme: 'Theme',
     selectTheme: 'Select Theme',
@@ -201,7 +206,7 @@ export const en = {
       saving: 'Saving...',
       saved: 'Settings saved successfully',
       saveError: 'Failed to save settings',
-      
+
       // Context Settings
       context: {
         title: 'Context',
@@ -222,7 +227,7 @@ export const en = {
         delete: 'Delete',
         enabled: 'Enabled',
       },
-      
+
       // Website Settings
       website: {
         title: 'Website',
@@ -257,7 +262,7 @@ export const en = {
         disable: 'Disable',
         install: 'Install',
       },
-      
+
       // Workflow Settings
       workflow: {
         title: 'Workflow',
@@ -283,7 +288,7 @@ export const en = {
         emailSignature: 'Email Signature',
         emailFooter: 'Email Footer',
       },
-      
+
       // Distribution Settings
       distribution: {
         title: 'Distribution',
@@ -301,7 +306,7 @@ export const en = {
         currency: 'Currency',
         searchEngineIndexing: 'Search Engine Indexing',
       },
-      
+
       // Access Settings
       access: {
         title: 'Access',

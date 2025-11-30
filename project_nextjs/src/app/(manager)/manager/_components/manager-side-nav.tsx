@@ -25,17 +25,17 @@ const getManagerNavItems = (t: (key: string) => string): NavItem[] => [
   // Announcements
   { label: t("editor.navigation.announcements"), labelKey: "editor.navigation.announcements", href: "/manager/announcements" },
 
-  // Settings group – urutan persis seperti backend.tpl, tapi pakai key editor.navigation.* agar konsisten lintas role
+  // Settings group – urutan persis seperti OJS 3.3
   {
     label: t("editor.navigation.settings"),
     labelKey: "editor.navigation.settings",
-    href: "/manager/settings/workflow",
+    href: "/manager/settings/context",
     submenu: [
+      { label: t("editor.navigation.context"), labelKey: "editor.navigation.context", href: "/manager/settings/context" },
+      { label: t("editor.navigation.website"), labelKey: "editor.navigation.website", href: "/manager/settings/website" },
       { label: t("editor.navigation.workflow"), labelKey: "editor.navigation.workflow", href: "/manager/settings/workflow" },
       { label: t("editor.navigation.distribution"), labelKey: "editor.navigation.distribution", href: "/manager/settings/distribution" },
-      { label: t("editor.navigation.website"), labelKey: "editor.navigation.website", href: "/manager/settings/website" },
       { label: t("editor.navigation.access"), labelKey: "editor.navigation.access", href: "/manager/settings/access" },
-      { label: t("editor.navigation.context"), labelKey: "editor.navigation.context", href: "/manager/settings/context" },
     ],
   },
 
@@ -59,6 +59,7 @@ const getManagerNavItems = (t: (key: string) => string): NavItem[] => [
 ];
 
 export function ManagerSideNav() {
+  // Force rebuild: Updated hierarchy to match OJS 3.3
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();

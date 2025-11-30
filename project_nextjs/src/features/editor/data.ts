@@ -31,6 +31,7 @@ type ListSubmissionsParams = {
   limit?: number;
   offset?: number;
   editorId?: string | null;
+  journalId?: string;
 };
 
 const FALLBACK_STATS: EditorDashboardStats = {
@@ -57,19 +58,19 @@ export const getSessionUserId = cache(async () => {
   }
 });
 
-export async function getEditorDashboardStats(editorId?: string | null): Promise<EditorDashboardStats> {
+export async function getEditorDashboardStats(editorId?: string | null, journalId?: string): Promise<EditorDashboardStats> {
   const supabase = getSupabaseAdminClient();
 
   const [myQueue, unassigned, submission, inReview, copyediting, production, allActive, archived, tasks] = await Promise.all([
-    countSubmissions({ supabase, filter: { queue: "my", editorId } }),
-    countSubmissions({ supabase, filter: { queue: "unassigned" } }),
-    countSubmissions({ supabase, filter: { stage: "submission" } }),
-    countSubmissions({ supabase, filter: { stage: "review" } }),
-    countSubmissions({ supabase, filter: { stage: "copyediting" } }),
-    countSubmissions({ supabase, filter: { stage: "production" } }),
-    countSubmissions({ supabase, filter: {} }),
-    countSubmissions({ supabase, filter: { queue: "archived" } }),
-    countTasks({ supabase, editorId }),
+    countSubmissions({ supabase, filter: { queue: "my", editorId, journalId } }),
+    countSubmissions({ supabase, filter: { queue: "unassigned", journalId } }),
+    countSubmissions({ supabase, filter: { stage: "submission", journalId } }),
+    countSubmissions({ supabase, filter: { stage: "review", journalId } }),
+    countSubmissions({ supabase, filter: { stage: "copyediting", journalId } }),
+    countSubmissions({ supabase, filter: { stage: "production", journalId } }),
+    countSubmissions({ supabase, filter: { journalId } }),
+    countSubmissions({ supabase, filter: { queue: "archived", journalId } }),
+    countTasks({ supabase, editorId, journalId }),
   ]);
 
   return {
@@ -86,25 +87,20 @@ export async function getEditorDashboardStats(editorId?: string | null): Promise
 }
 
 export async function listSubmissions(params: ListSubmissionsParams = {}): Promise<SubmissionSummary[]> {
-  const { queue = "all", stage, search, limit = 20, offset = 0, editorId } = params;
+  const { queue = "all", stage, search, limit = 20, offset = 0, editorId, journalId } = params;
   const supabase = getSupabaseAdminClient();
   let query = supabase
     .from("submissions")
     .select(
       `
-        id,
-        title,
-        status,
-        current_stage,
-        is_archived,
-        submitted_at,
-        updated_at,
-        journal_id,
-        metadata,
-        journals:journal_id (title)`
+        id`
     )
     .order("updated_at", { ascending: false })
     .range(offset, offset + limit - 1);
+
+  if (journalId) {
+    query = query.eq("journal_id", journalId);
+  }
 
   if (queue === "archived") {
     query = query.eq("is_archived", true);
@@ -152,7 +148,7 @@ export async function listSubmissions(params: ListSubmissionsParams = {}): Promi
     id: row.id,
     title: row.title,
     journalId: row.journal_id,
-    journalTitle: (row.journals as { title?: string } | null)?.title,
+    journalTitle: (row.journal_info as { title?: string } | null)?.title,
     stage: row.current_stage as SubmissionStage,
     current_stage: row.current_stage as SubmissionStage,
     status: row.status as SubmissionStatus,
@@ -192,7 +188,7 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
             updated_at,
             journal_id,
             metadata,
-            journals:journal_id (title)`
+            journal_info:journals!submissions_journal_id_fkey (title)`
         )
         .eq("id", id)
         .maybeSingle(),
@@ -312,7 +308,7 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
       id: submission.id,
       title: submission.title,
       journalId: submission.journal_id,
-      journalTitle: (submission.journals as { title?: string } | null)?.title,
+      journalTitle: (submission.journal_info as { title?: string } | null)?.title,
       stage: submission.current_stage as SubmissionStage,
       current_stage: submission.current_stage as SubmissionStage,
       status: submission.status as SubmissionStatus,
@@ -625,10 +621,14 @@ async function countSubmissions({
   filter,
 }: {
   supabase: ReturnType<typeof getSupabaseAdminClient>;
-  filter: { queue?: "my" | "unassigned" | "archived"; stage?: SubmissionStage; editorId?: string | null };
+  filter: { queue?: "my" | "unassigned" | "archived"; stage?: SubmissionStage; editorId?: string | null; journalId?: string };
 }) {
   await ensureDummyEditorData();
   let query = supabase.from("submissions").select("*", { head: true, count: "exact" });
+
+  if (filter.journalId) {
+    query = query.eq("journal_id", filter.journalId);
+  }
 
   if (filter.queue === "archived") {
     query = query.eq("is_archived", true);
@@ -660,14 +660,34 @@ async function countSubmissions({
 async function countTasks({
   supabase,
   editorId,
+  journalId,
 }: {
   supabase: ReturnType<typeof getSupabaseAdminClient>;
   editorId?: string | null;
+  journalId?: string;
 }) {
   let query = supabase.from("submission_tasks").select("*", { head: true, count: "exact" }).eq("status", "open");
+
   if (editorId) {
     query = query.eq("assignee_id", editorId);
   }
+
+  // Note: submission_tasks doesn't have journal_id directly. 
+  // We would need to join with submissions table to filter by journalId.
+  // For now, we'll skip strict journal filtering on tasks count or assume tasks are filtered by user context.
+  // If strict filtering is needed, we'd need a more complex query or a join.
+  // However, since we are using Supabase client, we can't easily do a join in a count query without a view or RPC.
+  // Let's check if we can filter by submission_id if we fetch submission IDs for the journal first.
+  if (journalId) {
+    // Fetch submission IDs for this journal first (optimization needed for large datasets)
+    const { data: submissions } = await supabase.from("submissions").select("id").eq("journal_id", journalId);
+    if (submissions && submissions.length > 0) {
+      query = query.in("submission_id", submissions.map(s => s.id));
+    } else {
+      return 0; // No submissions in this journal, so no tasks
+    }
+  }
+
   const { count } = await query;
   return count ?? 0;
 }

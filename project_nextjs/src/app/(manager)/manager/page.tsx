@@ -5,8 +5,13 @@ import { ManagerDashboardSubmissionsClient } from "./dashboard-submissions-clien
 
 export const dynamic = "force-dynamic";
 
-export default async function ManagerDashboardPage() {
+export default async function ManagerDashboardPage({
+  searchParams,
+}: {
+  searchParams: { journal?: string };
+}) {
   const user = await getCurrentUserServer();
+  const journalId = searchParams.journal;
 
   if (!user) {
     redirect("/login");
@@ -24,5 +29,5 @@ export default async function ManagerDashboardPage() {
   // Parity dengan OJS 3.3 dashboard/index.tpl: halaman utama Manager menampilkan
   // tab Submissions (My Queue, Unassigned, Active, Archives) dengan tema IAMJOS
   // yang sudah disediakan layout manager.
-  return <ManagerDashboardSubmissionsClient />;
+  return <ManagerDashboardSubmissionsClient journalId={journalId} />;
 }
