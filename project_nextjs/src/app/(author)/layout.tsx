@@ -4,13 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { 
-  ChevronDown, 
-  Menu, 
-  X, 
-  Home, 
-  FileText, 
-  Plus, 
+import {
+  ChevronDown,
+  Menu,
+  X,
+  Home,
+  FileText,
+  Plus,
   BarChart3,
   Settings,
   BookOpen,
@@ -45,8 +45,8 @@ export default function AuthorLayout({
       try {
         const { data } = await supabase
           .from("journals")
-          .select("*")
-          .order("created_at", { ascending: true });
+          .select("id, path")
+          .eq("enabled", true);
         let rows = ((data ?? []) as Record<string, any>[]).map((r) => ({
           id: r.id as string,
           title: (r.title ?? r.name ?? r.journal_title ?? "") as string,
@@ -67,9 +67,9 @@ export default function AuthorLayout({
         console.error("Error fetching journals:", error);
       }
     };
-    if (user) {
-      fetchJournals();
-    }
+    // if (user) {
+    //   fetchJournals();
+    // }
   }, [supabase, user]);
 
   const navigation = [
@@ -144,7 +144,7 @@ export default function AuthorLayout({
           boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <div className="px-6 py-5 flex items-center justify-between" style={{padding: '1.25rem 1.5rem'}}>
+        <div className="px-6 py-5 flex items-center justify-between" style={{ padding: '1.25rem 1.5rem' }}>
           {/* Left side */}
           <div className="flex items-center gap-6">
             <button
@@ -160,19 +160,19 @@ export default function AuthorLayout({
             >
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
-            
+
             <Dropdown
               button={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
-                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>Open Journal Systems</span>
+                  <span className="text-white font-semibold" style={{ fontSize: '1.125rem', fontWeight: '600' }}>Open Journal Systems</span>
                   <ChevronDown className="h-5 w-5 text-white" />
                 </div>
               }
               align="left"
             >
               <div className="bg-white rounded-md border border-gray-200 shadow-lg min-w-[250px] py-1">
-                <Link 
-                  href="/author/dashboard" 
+                <Link
+                  href="/author/dashboard"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors"
                 >
                   <Home className="h-4 w-4" />
@@ -203,7 +203,7 @@ export default function AuthorLayout({
               button={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
                   <Globe className="h-5 w-5 text-white" />
-                  <span className="text-white font-semibold" style={{fontSize: '1.125rem', fontWeight: '600'}}>English</span>
+                  <span className="text-white font-semibold" style={{ fontSize: '1.125rem', fontWeight: '600' }}>English</span>
                   <ChevronDown className="h-5 w-5 text-white" />
                 </div>
               }
@@ -278,10 +278,10 @@ export default function AuthorLayout({
                 {user.roles?.some(
                   (r) => r.role_path === "editor" || r.role_path === "section_editor"
                 ) && (
-                  <DropdownItem href="/editor" icon={<Home className="h-4 w-4" />}>
-                    Editor
-                  </DropdownItem>
-                )}
+                    <DropdownItem href="/editor" icon={<Home className="h-4 w-4" />}>
+                      Editor
+                    </DropdownItem>
+                  )}
                 {user.roles?.some((r) => r.role_path === "author") && (
                   <DropdownItem href="/author" icon={<Home className="h-4 w-4" />}>
                     Author
@@ -325,9 +325,9 @@ export default function AuthorLayout({
             boxShadow: "4px 0 6px -1px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <div className="p-6" style={{padding: '1.5rem 1.25rem'}}>
+          <div className="p-6" style={{ padding: '1.5rem 1.25rem' }}>
             {/* iamJOS Logo - Smaller */}
-            <div className="mb-6" style={{marginBottom: '1.5rem'}}>
+            <div className="mb-6" style={{ marginBottom: '1.5rem' }}>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-white font-bold" style={{
                   fontSize: '1.75rem',
@@ -349,14 +349,14 @@ export default function AuthorLayout({
             </div>
 
             {/* Navigation - Font lebih besar */}
-            <nav className="space-y-3" style={{gap: '0.75rem'}}>
+            <nav className="space-y-3" style={{ gap: '0.75rem' }}>
               {navigation.map((item) => {
                 const Icon = item.icon;
                 // Skip reviewer menu if user doesn't have reviewer role
                 if (item.role === 'reviewer' && !user.roles.some(r => r.role_path === 'reviewer')) {
                   return null;
                 }
-                
+
                 return (
                   <Link
                     key={item.name}
@@ -382,9 +382,9 @@ export default function AuthorLayout({
                       }
                     }}
                   >
-                    <div className="flex items-center space-x-3" style={{gap: '0.75rem'}}>
-                      <Icon className={item.current ? "h-5 w-5 text-[#002C40]" : "h-5 w-5 text-white"} style={{width: '1.25rem', height: '1.25rem'}} />
-                      <span style={{color: item.current ? '#002C40' : 'white'}}>{item.name}</span>
+                    <div className="flex items-center space-x-3" style={{ gap: '0.75rem' }}>
+                      <Icon className={item.current ? "h-5 w-5 text-[#002C40]" : "h-5 w-5 text-white"} style={{ width: '1.25rem', height: '1.25rem' }} />
+                      <span style={{ color: item.current ? '#002C40' : 'white' }}>{item.name}</span>
                     </div>
                   </Link>
                 );
@@ -403,26 +403,26 @@ export default function AuthorLayout({
           minHeight: 'calc(100vh - 80px)'
         }}>
           {/* Breadcrumb - Font lebih besar */}
-          <div className="mb-6" style={{marginBottom: '1.5rem'}}>
+          <div className="mb-6" style={{ marginBottom: '1.5rem' }}>
             <nav className="flex" aria-label="Breadcrumb">
-              <ol className="inline-flex items-center space-x-2" style={{gap: '0.5rem'}}>
+              <ol className="inline-flex items-center space-x-2" style={{ gap: '0.5rem' }}>
                 <li className="inline-flex items-center">
                   <Link href="/author" className="text-gray-700 hover:text-[#002C40] inline-flex items-center font-medium" style={{
                     fontSize: '1rem',
                     fontWeight: '500'
                   }}>
-                    <Home className="w-5 h-5 mr-2" style={{width: '1.25rem', height: '1.25rem'}} />
+                    <Home className="w-5 h-5 mr-2" style={{ width: '1.25rem', height: '1.25rem' }} />
                     Author
                   </Link>
                 </li>
                 {pathname.split('/').slice(2).map((segment, index, array) => {
                   const href = '/author/' + array.slice(0, index + 1).join('/');
                   const isLast = index === array.length - 1;
-                  
+
                   return (
                     <li key={index}>
                       <div className="flex items-center">
-                        <span className="text-gray-400 mx-2" style={{margin: '0 0.5rem'}}>/</span>
+                        <span className="text-gray-400 mx-2" style={{ margin: '0 0.5rem' }}>/</span>
                         {isLast ? (
                           <span className="text-gray-900 capitalize font-semibold" style={{
                             fontSize: '1rem',
@@ -431,8 +431,8 @@ export default function AuthorLayout({
                             {segment.replace('-', ' ')}
                           </span>
                         ) : (
-                          <Link 
-                            href={href} 
+                          <Link
+                            href={href}
                             className="text-gray-700 hover:text-[#002C40] capitalize font-medium" style={{
                               fontSize: '1rem',
                               fontWeight: '500'

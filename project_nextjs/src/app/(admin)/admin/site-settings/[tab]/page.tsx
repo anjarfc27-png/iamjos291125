@@ -17,6 +17,8 @@ import {
   getBulkEmailPermissions,
   updateBulkEmailPermissionsAction,
 } from "../actions";
+
+export const dynamic = 'force-dynamic';
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import BulkEmailsTabClient from "../tabs/BulkEmailsTabClient";
 

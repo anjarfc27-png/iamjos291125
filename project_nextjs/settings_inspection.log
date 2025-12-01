@@ -1,0 +1,74 @@
+Starting settings inspection...
+Inspecting journal_settings...
+Settings sample: [
+  {
+    "journal_id": "8c5b5a02-4f25-472d-8dcd-eb822d63c034",
+    "setting_name": "name",
+    "setting_value": "Jurnal Ilmu dan Aplikasi Multidisiplin",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "8c5b5a02-4f25-472d-8dcd-eb822d63c034",
+    "setting_name": "initials",
+    "setting_value": "JIAM",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "8c5b5a02-4f25-472d-8dcd-eb822d63c034",
+    "setting_name": "abbreviation",
+    "setting_value": "J. Ilmu Apl. Multidisiplin",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "8c5b5a02-4f25-472d-8dcd-eb822d63c034",
+    "setting_name": "publisher",
+    "setting_value": "anjar abidin",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "8c5b5a02-4f25-472d-8dcd-eb822d63c034",
+    "setting_name": "description",
+    "setting_value": "Jurnal ini memuat artikel ilmiah hasil penelitian dan kajian teoritis dalam berbagai bidang ilmu multidisiplin. Fokus jurnal mencakup teknologi, informatika, pendidikan, sosial, dan topik multidisiplin lainnya.",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "00234efa-a5c0-4ec4-aa39-ef20fe633cdb",
+    "setting_name": "name",
+    "setting_value": "jurnal ilmu pelayaran",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "00234efa-a5c0-4ec4-aa39-ef20fe633cdb",
+    "setting_name": "initials",
+    "setting_value": "PIP",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "00234efa-a5c0-4ec4-aa39-ef20fe633cdb",
+    "setting_name": "abbreviation",
+    "setting_value": "J dok PIP",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "00234efa-a5c0-4ec4-aa39-ef20fe633cdb",
+    "setting_name": "publisher",
+    "setting_value": "anjar abidin",
+    "setting_type": "string",
+    "locale": ""
+  },
+  {
+    "journal_id": "00234efa-a5c0-4ec4-aa39-ef20fe633cdb",
+    "setting_name": "description",
+    "setting_value": "ini adalah jurnal test ke 2",
+    "setting_type": "string",
+    "locale": ""
+  }
+]

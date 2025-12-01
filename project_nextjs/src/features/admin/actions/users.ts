@@ -170,21 +170,23 @@ export async function updateUserProfile(formData: FormData) {
         { name: 'biography', value: data.biography },
     ];
 
-    for (const setting of settingsToUpdate) {
-        if (setting.value !== undefined && setting.value !== null) {
-            // Upsert setting
-            const { error: settingError } = await supabaseAdmin
-                .from('user_settings')
-                .upsert({
-                    user_id: userId,
-                    setting_name: setting.name,
-                    setting_value: setting.value,
-                    // locale: 'en_US' // Optional: handle locale if needed
-                }, { onConflict: 'user_id, setting_name' }); // Ensure unique constraint exists or handle duplicates
+    const settingsPayload = settingsToUpdate
+        .filter(s => s.value !== undefined && s.value !== null)
+        .map(s => ({
+            user_id: userId,
+            setting_name: s.name,
+            setting_value: s.value,
+            // locale: 'en_US' // Optional: handle locale if needed
+        }));
 
-            if (settingError) {
-                console.error(`Failed to save setting ${setting.name}:`, settingError);
-            }
+    if (settingsPayload.length > 0) {
+        const { error: settingsError } = await supabaseAdmin
+            .from('user_settings')
+            .upsert(settingsPayload, { onConflict: 'user_id, setting_name' });
+
+        if (settingsError) {
+            console.error("Failed to save user settings:", settingsError);
+            return { success: false, message: `Settings Update Failed: ${settingsError.message}` };
         }
     }
 

@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/site/site-header";
 
+export const dynamic = 'force-dynamic';
+
 type Props = {
     children: ReactNode;
 };

@@ -36,9 +36,43 @@ export function StatisticsClient({ statistics }: Props) {
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Statistics & Reports</h1>
-        <p className="text-sm text-gray-600 mt-1">View detailed statistics about your journal</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Statistics & Reports</h1>
+          <p className="text-sm text-gray-600 mt-1">View detailed statistics about your journal</p>
+        </div>
+        <button
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            color: "#006798",
+            backgroundColor: "transparent",
+            border: "none",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            padding: "0.25rem 0.5rem",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "14px",
+              height: "14px",
+              borderRadius: "50%",
+              backgroundColor: "#006798",
+              color: "#ffffff",
+              fontSize: "10px",
+              fontWeight: "bold",
+            }}
+          >
+            i
+          </span>
+          Help
+        </button>
       </div>
 
       {/* Overview Cards */}
@@ -184,11 +218,10 @@ export function StatisticsClient({ statistics }: Props) {
                       <div
                         className="bg-[#006798] h-2 rounded-full"
                         style={{
-                          width: `${
-                            statistics.totalUsers > 0
+                          width: `${statistics.totalUsers > 0
                               ? Math.round((count / statistics.totalUsers) * 100)
                               : 0
-                          }%`,
+                            }%`,
                         }}
                       />
                     </div>

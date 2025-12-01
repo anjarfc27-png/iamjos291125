@@ -1,230 +1,163 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronRight } from "lucide-react";
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/contexts/I18nContext";
 
 type NavItem = {
   label: string;
-  labelKey: string;
-  href: string;
-  submenu?: NavItem[];
+  href?: string;
+  isHeader?: boolean;
+  children?: NavItem[];
 };
 
 const getManagerNavItems = (t: (key: string) => string): NavItem[] => [
-  // Submissions – landing utama Manager (/manager) dengan tab My Queue/Unassigned/Active/Archives
-  { label: t("editor.navigation.submissions"), labelKey: "editor.navigation.submissions", href: "/manager" },
-
-  // Issues
-  { label: t("editor.navigation.issues"), labelKey: "editor.navigation.issues", href: "/manager/issues" },
-
-  // Announcements
-  { label: t("editor.navigation.announcements"), labelKey: "editor.navigation.announcements", href: "/manager/announcements" },
-
-  // Settings group – urutan persis seperti OJS 3.3
+  { label: t("editor.navigation.submissions") || "Submissions", href: "/manager" },
+  { label: t("editor.navigation.issues") || "Issues", href: "/manager/issues" },
   {
-    label: t("editor.navigation.settings"),
-    labelKey: "editor.navigation.settings",
-    href: "/manager/settings/context",
-    submenu: [
-      { label: t("editor.navigation.context"), labelKey: "editor.navigation.context", href: "/manager/settings/context" },
-      { label: t("editor.navigation.website"), labelKey: "editor.navigation.website", href: "/manager/settings/website" },
-      { label: t("editor.navigation.workflow"), labelKey: "editor.navigation.workflow", href: "/manager/settings/workflow" },
-      { label: t("editor.navigation.distribution"), labelKey: "editor.navigation.distribution", href: "/manager/settings/distribution" },
-      { label: t("editor.navigation.access"), labelKey: "editor.navigation.access", href: "/manager/settings/access" },
+    label: t("editor.navigation.settings") || "Settings",
+    isHeader: true,
+    children: [
+      { label: t("editor.navigation.journal") !== "editor.navigation.journal" ? t("editor.navigation.journal") : "Journal", href: "/manager/settings/context" },
+      { label: t("editor.navigation.website") || "Website", href: "/manager/settings/website" },
+      { label: t("editor.navigation.workflow") || "Workflow", href: "/manager/settings/workflow" },
+      { label: t("editor.navigation.distribution") || "Distribution", href: "/manager/settings/distribution" },
+      { label: t("editor.navigation.usersRoles") || "Users & Roles", href: "/manager/users-roles" },
     ],
   },
-
-  // People (Users & Roles)
-  { label: t("editor.navigation.usersRoles"), labelKey: "editor.navigation.usersRoles", href: "/manager/users-roles" },
-
-  // Tools
-  { label: t("editor.navigation.tools"), labelKey: "editor.navigation.tools", href: "/manager/tools" },
-
-  // Statistics group
   {
-    label: t("editor.navigation.statistics"),
-    labelKey: "editor.navigation.statistics",
-    href: "/manager/statistics/editorial",
-    submenu: [
-      { label: t("editor.navigation.editorial"), labelKey: "editor.navigation.editorial", href: "/manager/statistics/editorial" },
-      { label: t("editor.navigation.publications"), labelKey: "editor.navigation.publications", href: "/manager/statistics/publications" },
-      { label: t("editor.navigation.users"), labelKey: "editor.navigation.users", href: "/manager/statistics/users" },
+    label: t("editor.navigation.statistics") || "Statistics",
+    isHeader: true,
+    children: [
+      { label: t("editor.navigation.articles") !== "editor.navigation.articles" ? t("editor.navigation.articles") : "Articles", href: "/manager/statistics/publications" },
+      { label: t("editor.navigation.editorialActivity") !== "editor.navigation.editorialActivity" ? t("editor.navigation.editorialActivity") : "Editorial Activity", href: "/manager/statistics/editorial" },
+      { label: t("editor.navigation.users") || "Users", href: "/manager/statistics/users" },
+      { label: t("editor.navigation.reports") !== "editor.navigation.reports" ? t("editor.navigation.reports") : "Reports", href: "/manager/statistics/reports" },
     ],
   },
 ];
 
 export function ManagerSideNav() {
-  // Force rebuild: Updated hierarchy to match OJS 3.3
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { t, locale } = useI18n();
-  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set());
+  const { t } = useI18n();
 
-  const navItems = useMemo(() => getManagerNavItems(t), [t, locale]);
+  const navItems = useMemo(() => getManagerNavItems(t), [t]);
   const hasAdminRole = user?.roles?.some((role) => role.role_path === "admin");
 
-  const shouldExpandSubmenu = (item: NavItem) => {
-    if (!item.submenu) return false;
-    return item.submenu.some((subItem) => isActive(pathname, searchParams?.toString() ?? "", subItem.href));
-  };
-
-  const autoOpenLabels = useMemo(() => {
-    const detected = new Set<string>();
-    navItems.forEach((item) => {
-      if (item.submenu && shouldExpandSubmenu(item)) {
-        detected.add(item.labelKey);
-      }
-      if (item.labelKey === "editor.navigation.settings" && pathname?.startsWith("/manager/settings")) {
-        detected.add(item.labelKey);
-      }
-      if (item.labelKey === "editor.navigation.statistics" && pathname?.startsWith("/manager/statistics")) {
-        detected.add(item.labelKey);
-      }
-    });
-    return detected;
-  }, [navItems, pathname, searchParams]);
-
-  const toggleSubmenu = (labelKey: string) => {
-    setOpenSubmenus((prev) => {
-      const next = new Set(prev);
-      if (next.has(labelKey)) {
-        next.delete(labelKey);
-      } else {
-        next.add(labelKey);
-      }
-      return next;
-    });
-  };
-
-  const renderNavItem = (item: NavItem) => {
-    const active = isActive(pathname, searchParams?.toString() ?? "", item.href);
-    const isSubmenuOpen = item.submenu ? autoOpenLabels.has(item.labelKey) || openSubmenus.has(item.labelKey) : false;
-    const hasActiveSubmenu = item.submenu ? shouldExpandSubmenu(item) : false;
-
-    return (
-      <li key={item.label} style={{ margin: 0 }}>
-        {item.submenu ? (
-          <>
-            <button
-              onClick={() => toggleSubmenu(item.labelKey)}
-              className="pkp_nav_link"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                padding: "0.875rem 1rem",
-                marginBottom: "0.25rem",
-                borderRadius: "0.25rem",
-                color: hasActiveSubmenu ? "#ffffff" : "rgba(255,255,255,0.9)",
-                textDecoration: "none",
-                fontSize: "1rem",
-                fontWeight: hasActiveSubmenu ? "600" : "400",
-                backgroundColor: hasActiveSubmenu ? "rgba(255,255,255,0.15)" : "transparent",
-                transition: "all 0.15s ease",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              <span>{item.label}</span>
-              <ChevronRight
-                className="h-4 w-4"
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  transition: "transform 0.2s ease",
-                  transform: isSubmenuOpen ? "rotate(90deg)" : "rotate(0deg)",
-                }}
-              />
-            </button>
-            {isSubmenuOpen && (
-              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-                {item.submenu.map((subItem) => {
-                  const subActive = isActive(pathname, searchParams?.toString() ?? "", subItem.href);
-                  return (
-                    <li key={subItem.href} style={{ margin: 0 }}>
-                      <Link
-                        href={subItem.href}
-                        style={{
-                          display: "block",
-                          padding: "0.75rem 1rem 0.75rem 2rem",
-                          marginLeft: "0.5rem",
-                          marginBottom: "0.125rem",
-                          borderRadius: "0.25rem",
-                          color: subActive ? "#ffffff" : "rgba(255,255,255,0.85)",
-                          textDecoration: "none",
-                          fontSize: "0.9375rem",
-                          fontWeight: subActive ? "600" : "400",
-                          backgroundColor: subActive ? "rgba(255,255,255,0.15)" : "transparent",
-                          transition: "all 0.15s ease",
-                        }}
-                      >
-                        {subItem.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </>
-        ) : (
-          <Link
-            href={item.href}
-            className="pkp_nav_link"
-            style={{
-              display: "block",
-              padding: "0.875rem 1rem",
-              marginBottom: "0.25rem",
-              borderRadius: "0.25rem",
-              color: active ? "#ffffff" : "rgba(255,255,255,0.9)",
-              textDecoration: "none",
-              fontSize: "1rem",
-              fontWeight: active ? "600" : "400",
-              backgroundColor: active ? "rgba(255,255,255,0.15)" : "transparent",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {item.label}
-          </Link>
-        )}
-      </li>
-    );
+  const isActive = (itemHref?: string) => {
+    if (!itemHref) return false;
+    if (itemHref === "/manager" && pathname === "/manager") return true;
+    return pathname?.startsWith(itemHref) && itemHref !== "/manager";
   };
 
   return (
-    <nav className="pkp_nav" style={{ padding: "0.5rem 0", width: "100%" }}>
-      <ul
-        className="pkp_nav_list"
-        style={{
-          listStyle: "none",
-          margin: 0,
-          padding: "0 0.5rem",
-          width: "100%",
-        }}
-      >
-        {navItems.map((item) => renderNavItem(item))}
+    <nav className="pkp_nav" style={{ padding: "0.5rem 0", width: "100%", overflowX: "hidden" }}>
+      <ul style={{ listStyle: "none", margin: 0, padding: "0 1rem", width: "100%" }}>
+        {navItems.map((item, index) => (
+          <li key={index} style={{ marginBottom: "0.25rem" }}>
+            {item.isHeader ? (
+              <div
+                style={{
+                  color: "#ffffff",
+                  fontWeight: "bold",
+                  fontSize: "1rem",
+                  padding: "0.75rem 0 0.25rem 0",
+                  marginTop: "0.5rem",
+                  textTransform: "none",
+                  fontFamily: "Noto Sans, sans-serif"
+                }}
+              >
+                {item.label}
+              </div>
+            ) : (
+              <Link
+                href={item.href || "#"}
+                style={{
+                  display: "block",
+                  padding: "0.4rem 0.75rem",
+                  color: isActive(item.href) ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                  backgroundColor: isActive(item.href) ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                  textDecoration: "none",
+                  fontSize: "0.9rem",
+                  borderRadius: "4px",
+                  fontWeight: isActive(item.href) ? "600" : "400",
+                  lineHeight: "1.4",
+                  fontFamily: "Noto Sans, sans-serif"
+                }}
+              >
+                {item.label}
+              </Link>
+            )}
+
+            {item.children && (
+              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                {item.children.map((child, childIndex) => (
+                  <li key={childIndex} style={{ marginBottom: "0.125rem" }}>
+                    <Link
+                      href={child.href || "#"}
+                      style={{
+                        display: "block",
+                        padding: "0.4rem 0.75rem",
+                        color: isActive(child.href) ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                        backgroundColor: isActive(child.href) ? "rgba(255, 255, 255, 0.1)" : "transparent",
+                        textDecoration: "none",
+                        fontSize: "0.9rem",
+                        borderRadius: "4px",
+                        fontWeight: isActive(child.href) ? "600" : "400",
+                        lineHeight: "1.4",
+                        fontFamily: "Noto Sans, sans-serif"
+                      }}
+                    >
+                      {child.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+
+        {/* Tools - Separated Group */}
+        <li style={{ marginTop: "1.5rem", marginBottom: "0.25rem" }}>
+          <Link
+            href="/manager/tools"
+            style={{
+              display: "block",
+              padding: "0.4rem 0.75rem",
+              color: isActive("/manager/tools") ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+              backgroundColor: isActive("/manager/tools") ? "rgba(255, 255, 255, 0.1)" : "transparent",
+              textDecoration: "none",
+              fontSize: "0.9rem",
+              borderRadius: "4px",
+              fontWeight: isActive("/manager/tools") ? "600" : "400",
+              lineHeight: "1.4",
+              fontFamily: "Noto Sans, sans-serif"
+            }}
+          >
+            {t("editor.navigation.tools") || "Tools"}
+          </Link>
+        </li>
+
+        {/* Administration - Grouped with Tools (No Separator) */}
         {hasAdminRole && (
-          <li style={{ margin: "0.5rem 0 0 0" }}>
+          <li style={{ marginBottom: "0.25rem" }}>
             <Link
               href="/admin"
               style={{
                 display: "block",
-                padding: "0.875rem 1rem",
-                borderRadius: "0.25rem",
-                color: pathname?.startsWith("/admin") ? "#ffffff" : "rgba(255,255,255,0.9)",
+                padding: "0.4rem 0.75rem",
+                color: "rgba(255, 255, 255, 0.7)",
                 textDecoration: "none",
-                fontSize: "1rem",
-                fontWeight: pathname?.startsWith("/admin") ? "600" : "400",
-                backgroundColor: pathname?.startsWith("/admin") ? "rgba(255,255,255,0.15)" : "transparent",
+                fontSize: "0.9rem",
+                borderRadius: "4px",
+                fontFamily: "Noto Sans, sans-serif"
               }}
             >
-              {t("navigation.admin")}
+              {t("navigation.admin") !== "navigation.admin" ? t("navigation.admin") : "Administration"}
             </Link>
           </li>
         )}
@@ -232,27 +165,3 @@ export function ManagerSideNav() {
     </nav>
   );
 }
-
-function isActive(pathname: string, queryString: string, targetHref: string) {
-  const [targetPath, targetQuery] = targetHref.split("?");
-
-  if (targetPath === "/manager" && pathname === "/manager") {
-    return true;
-  }
-
-  if (pathname !== targetPath) {
-    return false;
-  }
-  if (!targetQuery) {
-    return true;
-  }
-  const current = new URLSearchParams(queryString);
-  const target = new URLSearchParams(targetQuery);
-  for (const [key, value] of target.entries()) {
-    if (current.get(key) !== value) {
-      return false;
-    }
-  }
-  return true;
-}
-

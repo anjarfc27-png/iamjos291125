@@ -13,8 +13,8 @@ export default function AdminPage() {
       {/* Page Title - Light gray background */}
       <div style={{
         backgroundColor: pkpColors.pageHeaderBg,
-        padding: '1rem 0',
-        marginBottom: '2rem'
+        padding: '1rem 2rem',
+        marginBottom: '0'
       }}>
         <h1 style={{
           fontSize: pkpTypography.pageTitle,
@@ -30,7 +30,7 @@ export default function AdminPage() {
       {/* Content Panel - Pure white background */}
       <div style={{
         backgroundColor: pkpColors.contentBg,
-        padding: 0
+        padding: '2rem'
       }}>
         {/* Version Check Warning */}
         {/* <VersionWarning /> */}

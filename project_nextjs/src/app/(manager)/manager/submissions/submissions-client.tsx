@@ -86,13 +86,47 @@ export function SubmissionsClient({ submissions: initialSubmissions }: Props) {
               Kelola naskah dan lakukan aksi editorial sesuai peran Manager.
             </p>
           </div>
-          <div
-            style={{
-              fontSize: "0.875rem",
-              color: "#374151",
-            }}
-          >
-            Showing {filteredSubmissions.length} of {initialSubmissions.length} submissions
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                color: "#006798",
+                backgroundColor: "transparent",
+                border: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "0.25rem 0.5rem",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "14px",
+                  height: "14px",
+                  borderRadius: "50%",
+                  backgroundColor: "#006798",
+                  color: "#ffffff",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                }}
+              >
+                i
+              </span>
+              Help
+            </button>
+            <div
+              style={{
+                fontSize: "0.875rem",
+                color: "#374151",
+              }}
+            >
+              Showing {filteredSubmissions.length} of {initialSubmissions.length} submissions
+            </div>
           </div>
         </div>
       </div>

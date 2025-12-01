@@ -91,20 +91,55 @@ export function UsersManagementClient({ users, roles }: Props) {
               Daftar user jurnal dan peran yang mereka miliki.
             </p>
           </div>
-          <button
-            type="button"
-            style={{
-              backgroundColor: "#006798",
-              color: "#fff",
-              border: "none",
-              borderRadius: "0.25rem",
-              padding: "0.5rem 1rem",
-              fontSize: "0.875rem",
-              cursor: "pointer",
-            }}
-          >
-            + Add User
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <button
+              type="button"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                color: "#006798",
+                backgroundColor: "transparent",
+                border: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "0.25rem 0.5rem",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "14px",
+                  height: "14px",
+                  borderRadius: "50%",
+                  backgroundColor: "#006798",
+                  color: "#ffffff",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                }}
+              >
+                i
+              </span>
+              Help
+            </button>
+            <button
+              type="button"
+              style={{
+                backgroundColor: "#006798",
+                color: "#fff",
+                border: "none",
+                borderRadius: "0.25rem",
+                padding: "0.5rem 1rem",
+                fontSize: "0.875rem",
+                cursor: "pointer",
+              }}
+            >
+              + Add User
+            </button>
+          </div>
         </div>
       </div>
 

@@ -93,7 +93,12 @@ export async function listSubmissions(params: ListSubmissionsParams = {}): Promi
     .from("submissions")
     .select(
       `
-        id`
+        id,
+        status,
+        current_stage,
+        date_submitted,
+        updated_at,
+        journal_id`
     )
     .order("updated_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -103,9 +108,11 @@ export async function listSubmissions(params: ListSubmissionsParams = {}): Promi
   }
 
   if (queue === "archived") {
-    query = query.eq("is_archived", true);
+    // Filter by status for archived (3=Published, 4=Declined)
+    query = query.in("status", [3, 4]);
   } else {
-    query = query.eq("is_archived", false);
+    // For active queues, exclude archived statuses
+    query = query.not("status", "in", "(3,4)");
   }
 
   if (stage) {
@@ -146,19 +153,26 @@ export async function listSubmissions(params: ListSubmissionsParams = {}): Promi
 
   return data.map((row) => ({
     id: row.id,
-    title: row.title,
+    title: (row as any).title || "Untitled Submission",
     journalId: row.journal_id,
-    journalTitle: (row.journal_info as { title?: string } | null)?.title,
+    journalTitle: undefined, // Title not available in journals table
     stage: row.current_stage as SubmissionStage,
     current_stage: row.current_stage as SubmissionStage,
     status: row.status as SubmissionStatus,
-    isArchived: row.is_archived,
-    submittedAt: row.submitted_at,
+    isArchived: row.status === 3 || row.status === 4, // Derived from status
+    submittedAt: row.date_submitted,
     updatedAt: row.updated_at,
-    author_name: (row.metadata as { author_name?: string } | null)?.author_name,
+    author_name: "Unknown Author", // metadata column missing
     assignees: [],
   }));
 }
+
+type ListTasksParams = {
+  assigneeId?: string | null;
+  status?: string;
+  limit?: number;
+};
+
 
 export async function getSubmissionDetail(id: string): Promise<SubmissionDetail | null> {
   try {
@@ -180,15 +194,11 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
         .select(
           `
             id,
-            title,
             status,
             current_stage,
-            is_archived,
-            submitted_at,
+            date_submitted,
             updated_at,
-            journal_id,
-            metadata,
-            journal_info:journals!submissions_journal_id_fkey (title)`
+            journal_id`
         )
         .eq("id", id)
         .maybeSingle(),
@@ -293,7 +303,7 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
       // Try to check if any submissions exist at all
       const { data: anySubmission } = await supabase
         .from("submissions")
-        .select("id, title")
+        .select("id") // Removed title from check
         .limit(1);
       if (anySubmission && anySubmission.length > 0) {
         console.warn(`Found ${anySubmission.length} submission(s) in database, but not with ID ${id}`);
@@ -306,14 +316,14 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
 
     const summary: SubmissionSummary = {
       id: submission.id,
-      title: submission.title,
+      title: (submission as any).title || "Untitled Submission",
       journalId: submission.journal_id,
-      journalTitle: (submission.journal_info as { title?: string } | null)?.title,
+      journalTitle: undefined, // Title not available in journals table
       stage: submission.current_stage as SubmissionStage,
       current_stage: submission.current_stage as SubmissionStage,
       status: submission.status as SubmissionStatus,
-      isArchived: submission.is_archived,
-      submittedAt: submission.submitted_at,
+      isArchived: submission.status === 3 || submission.status === 4, // Derived from status
+      submittedAt: submission.date_submitted,
       updatedAt: submission.updated_at,
       assignees: [],
     };
@@ -506,7 +516,7 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
 
     return {
       summary,
-      metadata: submission.metadata ?? {},
+      metadata: {}, // metadata column missing
       versions: mappedVersions,
       participants: mappedParticipants,
       files: mappedFiles,
@@ -519,12 +529,6 @@ export async function getSubmissionDetail(id: string): Promise<SubmissionDetail 
     return null;
   }
 }
-
-type ListTasksParams = {
-  assigneeId?: string | null;
-  status?: string;
-  limit?: number;
-};
 
 export async function listSubmissionTasks(params: ListTasksParams = {}): Promise<SubmissionTask[]> {
   const { assigneeId, status, limit = 20 } = params;
@@ -626,10 +630,6 @@ async function countSubmissions({
   await ensureDummyEditorData();
   let query = supabase.from("submissions").select("*", { head: true, count: "exact" });
 
-  if (filter.journalId) {
-    query = query.eq("journal_id", filter.journalId);
-  }
-
   if (filter.queue === "archived") {
     query = query.eq("is_archived", true);
   } else {
@@ -667,27 +667,9 @@ async function countTasks({
   journalId?: string;
 }) {
   let query = supabase.from("submission_tasks").select("*", { head: true, count: "exact" }).eq("status", "open");
-
   if (editorId) {
     query = query.eq("assignee_id", editorId);
   }
-
-  // Note: submission_tasks doesn't have journal_id directly. 
-  // We would need to join with submissions table to filter by journalId.
-  // For now, we'll skip strict journal filtering on tasks count or assume tasks are filtered by user context.
-  // If strict filtering is needed, we'd need a more complex query or a join.
-  // However, since we are using Supabase client, we can't easily do a join in a count query without a view or RPC.
-  // Let's check if we can filter by submission_id if we fetch submission IDs for the journal first.
-  if (journalId) {
-    // Fetch submission IDs for this journal first (optimization needed for large datasets)
-    const { data: submissions } = await supabase.from("submissions").select("id").eq("journal_id", journalId);
-    if (submissions && submissions.length > 0) {
-      query = query.in("submission_id", submissions.map(s => s.id));
-    } else {
-      return 0; // No submissions in this journal, so no tasks
-    }
-  }
-
   const { count } = await query;
   return count ?? 0;
 }

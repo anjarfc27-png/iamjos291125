@@ -85,13 +85,8 @@ export default function PluginsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-md text-sm text-blue-800">
-                <p>
-                    <strong>Note:</strong> This page lists the installed plugins. You can enable/disable them here.
-                    Settings for enabled plugins will be stored in the <code>plugin_settings</code> table.
-                </p>
-            </div>
+        <div className="space-y-6 px-6 pb-8">
+
 
             <div className="grid gap-4">
                 {plugins.map((plugin) => {

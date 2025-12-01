@@ -60,14 +60,34 @@ function NewSubmissionPage() {
   const supabase = getSupabaseBrowserClient();
 
   // Fetch Journals on mount
+  // Fetch Journals on mount
   useEffect(() => {
     const fetchJournals = async () => {
-      const { data, error } = await supabase
+      // 1. Fetch journals (without name, as it doesn't exist)
+      const { data: journalsData, error } = await supabase
         .from('journals')
-        .select('id, name, path')
+        .select('id, path')
         .eq('enabled', true);
 
-      if (data) setJournals(data);
+      if (journalsData) {
+        // 2. Fetch journal names from settings
+        const journalIds = journalsData.map(j => j.id);
+        const { data: settingsData } = await supabase
+          .from('journal_settings')
+          .select('journal_id, setting_value')
+          .in('journal_id', journalIds)
+          .eq('setting_name', 'name'); // Assuming 'name' is the setting key for journal title
+
+        // 3. Map names to journals
+        const nameMap = new Map(settingsData?.map(s => [s.journal_id, s.setting_value]) || []);
+
+        const mappedJournals = journalsData.map(j => ({
+          ...j,
+          name: nameMap.get(j.id) || j.path || `Journal ${j.id}`
+        }));
+
+        setJournals(mappedJournals);
+      }
     };
     fetchJournals();
   }, []);
@@ -80,21 +100,33 @@ function NewSubmissionPage() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('sections')
-        .select('id, title') // Note: 'title' is in section_settings usually, but let's check if we have a view or need to join. 
-      // Wait, the previous analysis showed 'sections' table has 'id', 'journal_id'. 'title' is in 'section_settings'.
-      // We need to fetch sections and then their settings, or use the API we saw earlier?
-      // Let's use the API we found: /api/journals/[journalId]/sections
-      // Or better, just do it client side properly like we did in SettingsContextPage.
-      // Actually, for simplicity and performance, let's just fetch from the API we verified exists: /api/journals/[journalId]/sections
-
       try {
-        const res = await fetch(`/api/journals/${formData.journal}/sections`);
-        const json = await res.json();
-        if (json.ok) {
-          // The API returns { id, title, seq, isInactive }
-          setSections(json.sections.filter((s: any) => !s.isInactive));
+        // 1. Fetch sections (without title)
+        const { data: sectionsData, error } = await supabase
+          .from('sections')
+          .select('id, seq, is_inactive')
+          .eq('journal_id', formData.journal);
+
+        if (sectionsData) {
+          // 2. Fetch section titles from settings
+          const sectionIds = sectionsData.map(s => s.id);
+          const { data: settingsData } = await supabase
+            .from('section_settings')
+            .select('section_id, setting_value')
+            .in('section_id', sectionIds)
+            .eq('setting_name', 'title');
+
+          // 3. Map titles to sections
+          const titleMap = new Map(settingsData?.map(s => [s.section_id, s.setting_value]) || []);
+
+          const mappedSections = sectionsData
+            .filter((s: any) => !s.is_inactive)
+            .map((s: any) => ({
+              ...s,
+              title: titleMap.get(s.id) || `Section ${s.id}`
+            }));
+
+          setSections(mappedSections);
         }
       } catch (e) {
         console.error("Failed to fetch sections", e);

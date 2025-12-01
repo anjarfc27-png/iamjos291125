@@ -313,32 +313,18 @@ export default function SettingsWorkflowPage() {
     }}>
       {/* Page Header - OJS 3.3 Style with Safe Area */}
       <div style={{
-        backgroundColor: "#ffffff",
-        borderBottom: "2px solid #e5e5e5",
-        padding: "1.5rem 0",
+        padding: "1.5rem 1.5rem 0 1.5rem",
       }}>
-        <div style={{
-          padding: "0 1.5rem",
+        <h1 className="text-2xl font-bold text-[#002C40] mb-2">
+          {t('editor.settings.settingsTitle')} • {t('editor.settings.workflow.title')}
+        </h1>
+        <p style={{
+          fontSize: "0.875rem",
+          color: "rgba(0, 0, 0, 0.54)",
+          marginBottom: "1.5rem",
         }}>
-          <h1 style={{
-            fontSize: "1.75rem",
-            fontWeight: 700,
-            margin: 0,
-            padding: "0.5rem 0",
-            lineHeight: "2.25rem",
-            color: "#002C40",
-          }}>
-            {t('editor.settings.settingsTitle')} • {t('editor.settings.workflow.title')}
-          </h1>
-          <p style={{
-            fontSize: "0.875rem",
-            color: "rgba(0, 0, 0, 0.54)",
-            marginTop: "0.5rem",
-            marginBottom: 0,
-          }}>
-            Configure all aspects of the editorial workflow, including file management, submission guidelines, peer review, and email notifications.
-          </p>
-        </div>
+          Configure all aspects of the editorial workflow, including file management, submission guidelines, peer review, and email notifications.
+        </p>
       </div>
 
       {/* Content - OJS 3.3 Style with Safe Area */}
@@ -355,6 +341,8 @@ export default function SettingsWorkflowPage() {
             background: "#ffffff",
             padding: "0",
             display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
             marginBottom: "1.5rem",
           }}>
             <PkpTabsList style={{ flex: 1, padding: "0 1.5rem" }}>
@@ -363,6 +351,42 @@ export default function SettingsWorkflowPage() {
               <PkpTabsTrigger value="library">{t('editor.settings.workflow.library')}</PkpTabsTrigger>
               <PkpTabsTrigger value="emails">{t('editor.settings.workflow.emails')}</PkpTabsTrigger>
             </PkpTabsList>
+
+            {/* Help Button */}
+            <div style={{ marginBottom: "0.5rem", paddingRight: "1.5rem" }}>
+              <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  color: "#006798",
+                  backgroundColor: "#ffffff",
+                  border: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: "0.25rem 0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "14px",
+                    height: "14px",
+                    borderRadius: "50%",
+                    backgroundColor: "#006798",
+                    color: "#ffffff",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  i
+                </span>
+                Help
+              </button>
+            </div>
           </div>
 
           {/* Submission Tab */}
@@ -465,9 +489,9 @@ export default function SettingsWorkflowPage() {
 
               {/* Content Area */}
               <div style={{ flex: 1, padding: "1.5rem", backgroundColor: "#ffffff" }}>
-                  {/* Disable Submissions */}
-                  {activeSubTab === "disableSubmissions" && (
-                    <div>
+                {/* Disable Submissions */}
+                {activeSubTab === "disableSubmissions" && (
+                  <div>
                     <div style={{ marginBottom: "1.5rem" }}>
                       <h2 style={{
                         fontSize: "1.125rem",
@@ -497,11 +521,11 @@ export default function SettingsWorkflowPage() {
                       </div>
                     </div>
                   </div>
-                  )}
+                )}
 
-                  {/* Metadata */}
-                  {activeSubTab === "metadata" && (
-                    <div>
+                {/* Metadata */}
+                {activeSubTab === "metadata" && (
+                  <div>
                     <div style={{ marginBottom: "1.5rem" }}>
                       <h2 style={{
                         fontSize: "1.125rem",
@@ -573,11 +597,11 @@ export default function SettingsWorkflowPage() {
                       </div>
                     </div>
                   </div>
-                  )}
+                )}
 
-                  {/* Components */}
-                  {activeSubTab === "components" && (
-                    <div>
+                {/* Components */}
+                {activeSubTab === "components" && (
+                  <div>
                     <div style={{ marginBottom: "1.5rem" }}>
                       <h2 style={{
                         fontSize: "1.125rem",
@@ -649,11 +673,11 @@ export default function SettingsWorkflowPage() {
                       </div>
                     </div>
                   </div>
-                  )}
+                )}
 
-                  {/* Submission Checklist */}
-                  {activeSubTab === "submissionChecklist" && (
-                    <div>
+                {/* Submission Checklist */}
+                {activeSubTab === "submissionChecklist" && (
+                  <div>
                     <div style={{ marginBottom: "1.5rem" }}>
                       <h2 style={{
                         fontSize: "1.125rem",
@@ -714,11 +738,11 @@ export default function SettingsWorkflowPage() {
                       </div>
                     </div>
                   </div>
-                  )}
+                )}
 
-                  {/* Author Guidelines */}
-                  {activeSubTab === "authorGuidelines" && (
-                    <div>
+                {/* Author Guidelines */}
+                {activeSubTab === "authorGuidelines" && (
+                  <div>
                     <div style={{ marginBottom: "1.5rem" }}>
                       <h2 style={{
                         fontSize: "1.125rem",
@@ -775,8 +799,8 @@ export default function SettingsWorkflowPage() {
                         }}>
                           These guidelines will be displayed to authors during the submission process.
                         </p>
-                        <PkpButton 
-                          variant="primary" 
+                        <PkpButton
+                          variant="primary"
                           onClick={handleSaveAuthorGuidelines}
                           disabled={authorGuidelinesSettings.loading}
                           loading={authorGuidelinesSettings.loading}
@@ -786,9 +810,9 @@ export default function SettingsWorkflowPage() {
                       </div>
                     </div>
                   </div>
-                  )}
-                </div>
+                )}
               </div>
+            </div>
           </PkpTabsContent>
 
           {/* Review Tab */}
@@ -1083,8 +1107,8 @@ export default function SettingsWorkflowPage() {
                         </div>
                       </div>
 
-                      <PkpButton 
-                        variant="primary" 
+                      <PkpButton
+                        variant="primary"
                         onClick={handleSaveReviewSetup}
                         disabled={reviewSetupSettings.loading}
                         loading={reviewSetupSettings.loading}
@@ -1204,8 +1228,8 @@ export default function SettingsWorkflowPage() {
                         </label>
                       </div>
 
-                      <PkpButton 
-                        variant="primary" 
+                      <PkpButton
+                        variant="primary"
                         onClick={handleSaveReviewerGuidance}
                         disabled={reviewerGuidanceSettings.loading}
                         loading={reviewerGuidanceSettings.loading}
@@ -1419,8 +1443,8 @@ export default function SettingsWorkflowPage() {
                         </p>
                       </div>
 
-                      <PkpButton 
-                        variant="primary" 
+                      <PkpButton
+                        variant="primary"
                         onClick={handleSaveEmailSetup}
                         disabled={emailSetupSettings.loading}
                         loading={emailSetupSettings.loading}

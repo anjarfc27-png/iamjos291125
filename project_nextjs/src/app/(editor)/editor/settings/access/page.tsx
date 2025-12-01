@@ -114,32 +114,18 @@ export default function SettingsAccessPage() {
     }}>
       {/* Page Header - OJS 3.3 Style with Safe Area */}
       <div style={{
-        backgroundColor: "#ffffff",
-        borderBottom: "2px solid #e5e5e5",
-        padding: "1.5rem 0",
+        padding: "1.5rem 1.5rem 0 1.5rem",
       }}>
-        <div style={{
-          padding: "0 1.5rem",
+        <h1 className="text-2xl font-bold text-[#002C40] mb-2">
+          {t('editor.settings.settingsTitle')} • {t('editor.settings.access.title')}
+        </h1>
+        <p style={{
+          fontSize: "0.875rem",
+          color: "rgba(0, 0, 0, 0.54)",
+          marginBottom: "1.5rem",
         }}>
-          <h1 style={{
-            fontSize: "1.75rem",
-            fontWeight: 700,
-            margin: 0,
-            padding: "0.5rem 0",
-            lineHeight: "2.25rem",
-            color: "#002C40",
-          }}>
-            {t('editor.settings.settingsTitle')} • {t('editor.settings.access.title')}
-          </h1>
-          <p style={{
-            fontSize: "0.875rem",
-            color: "rgba(0, 0, 0, 0.54)",
-            marginTop: "0.5rem",
-            marginBottom: 0,
-          }}>
-            Manage users, roles, and site access options for the journal.
-          </p>
-        </div>
+          Manage users, roles, and site access options for the journal.
+        </p>
       </div>
 
       {/* Content - OJS 3.3 Style with Safe Area */}
@@ -156,6 +142,8 @@ export default function SettingsAccessPage() {
             background: "#ffffff",
             padding: "0",
             display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
             marginBottom: "1.5rem",
           }}>
             <PkpTabsList style={{ flex: 1, padding: "0 1.5rem" }}>
@@ -163,6 +151,42 @@ export default function SettingsAccessPage() {
               <PkpTabsTrigger value="roles">Roles</PkpTabsTrigger>
               <PkpTabsTrigger value="siteAccess">Site Access</PkpTabsTrigger>
             </PkpTabsList>
+
+            {/* Help Button */}
+            <div style={{ marginBottom: "0.5rem", paddingRight: "1.5rem" }}>
+              <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  color: "#006798",
+                  backgroundColor: "#ffffff",
+                  border: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: "0.25rem 0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "14px",
+                    height: "14px",
+                    borderRadius: "50%",
+                    backgroundColor: "#006798",
+                    color: "#ffffff",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  i
+                </span>
+                Help
+              </button>
+            </div>
           </div>
 
           {/* Users Tab */}
@@ -465,8 +489,8 @@ export default function SettingsAccessPage() {
                   </div>
                 </div>
 
-                <PkpButton 
-                  variant="primary" 
+                <PkpButton
+                  variant="primary"
                   onClick={handleSaveSiteAccess}
                   disabled={accessSettings.loading}
                   loading={accessSettings.loading}

@@ -58,18 +58,53 @@ export default async function ManagerAnnouncementsPage() {
               Ketahui pengumuman terbaru dan kelola status publikasinya.
             </p>
           </div>
-          <Link
-            href="/manager/announcements/create"
-            style={{
-              backgroundColor: "#006798",
-              color: "#fff",
-              padding: "0.45rem 1rem",
-              borderRadius: "3px",
-              fontSize: "0.875rem",
-            }}
-          >
-            Create Announcement
-          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                color: "#006798",
+                backgroundColor: "transparent",
+                border: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "0.25rem 0.5rem",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "14px",
+                  height: "14px",
+                  borderRadius: "50%",
+                  backgroundColor: "#006798",
+                  color: "#ffffff",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                }}
+              >
+                i
+              </span>
+              Help
+            </button>
+            <Link
+              href="/manager/announcements/create"
+              style={{
+                backgroundColor: "#006798",
+                color: "#fff",
+                padding: "0.45rem 1rem",
+                borderRadius: "3px",
+                fontSize: "0.875rem",
+                textDecoration: "none",
+              }}
+            >
+              Create Announcement
+            </Link>
+          </div>
         </div>
       </div>
 

@@ -1,19 +1,20 @@
-"use server";
-
 import { NextRequest, NextResponse } from "next/server";
-
 import { getCurrentUser } from "@/lib/permissions";
 import { listSubmissions } from "@/features/editor/data";
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const user = await getCurrentUser(request);
-    const url = new URL(request.url);
-    const queueParam = (url.searchParams.get("queue") ?? "all") as "my" | "unassigned" | "all" | "archived";
-    const stageParam = (url.searchParams.get("stage") ?? undefined) as | undefined | "submission" | "review" | "copyediting" | "production";
-    const search = url.searchParams.get("search") ?? undefined;
-    const limit = url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 20;
-    const offset = url.searchParams.get("offset") ? Number(url.searchParams.get("offset")) : 0;
+    const user = await getCurrentUser(req);
+    if (!user) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const queue = (url.searchParams.get("queue") as any) || "all";
+    const stage = (url.searchParams.get("stage") as any) || undefined;
+    const search = url.searchParams.get("search") || undefined;
+    const limit = parseInt(url.searchParams.get("limit") || "20");
+    const offset = parseInt(url.searchParams.get("offset") || "0");
     let journalId = url.searchParams.get("journalId") ?? undefined;
 
     // Validate journalId is a valid UUID
@@ -21,17 +22,13 @@ export async function GET(request: NextRequest) {
       journalId = undefined;
     }
 
-    if (queueParam === "my" && !user) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
     const submissions = await listSubmissions({
-      queue: queueParam,
-      stage: stageParam,
-      search: search ?? undefined,
+      queue,
+      stage,
+      search,
       limit,
       offset,
-      editorId: queueParam === "my" ? user?.id ?? null : undefined,
+      editorId: user.id,
       journalId,
     });
 
@@ -51,7 +48,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
-
-

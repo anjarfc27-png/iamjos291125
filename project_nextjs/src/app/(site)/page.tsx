@@ -2,6 +2,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { getSiteInformation } from "@/app/(admin)/admin/site-settings/actions";
 
+export const dynamic = 'force-dynamic';
+
 export default async function SiteIndex() {
     const supabase = await createSupabaseServerClient();
     const [journalsResult, siteInfo] = await Promise.all([

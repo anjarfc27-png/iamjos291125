@@ -1,8 +1,10 @@
 import { getSiteInformation, updateSiteInformationAction } from "../../actions";
 
+export const dynamic = 'force-dynamic';
+
 export default async function SiteSetupInformationPage() {
   const initial = await getSiteInformation();
-  
+
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
       <header style={{
@@ -20,11 +22,12 @@ export default async function SiteSetupInformationPage() {
           Information
         </h2>
       </header>
-      
+
       <form action={updateSiteInformationAction} style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.5rem'
+        gap: '1.5rem',
+        padding: '0 1.5rem 2rem 1.5rem'
       }}>
         {/* About */}
         <div style={{

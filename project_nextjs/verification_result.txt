@@ -1,0 +1,2 @@
+Step 3 Success: Mapped results sample: [{"id":"8c5b5a02-4f25-472d-8dcd-eb822d63c034","name":"Jurnal Ilmu dan Aplikasi Multidisiplin"},{"id":"00234efa-a5c0-4ec4-aa39-ef20fe633cdb","name":"jurnal ilmu pelayaran"}]
+VERIFICATION PASSED

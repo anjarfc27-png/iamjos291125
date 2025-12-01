@@ -111,7 +111,7 @@ export async function updateJournalAction(input: {
     return { success: false, message: parsed.error.issues[0]?.message ?? "Validasi gagal." };
   }
 
-  await requireJournalRole(input.id, ["manager", "editor"]);
+  await requireJournalRole(input.id, ["manager"]);
 
   const supabase = getSupabaseAdminClient();
 
@@ -145,13 +145,15 @@ export async function updateJournalAction(input: {
     settingsUpdates.push({ setting_name: "description", setting_value: parsed.data.description ?? "" });
   }
 
-  for (const setting of settingsUpdates) {
-    await supabase.from("journal_settings").upsert({
-      journal_id: input.id,
-      locale: '',
-      setting_name: setting.setting_name,
-      setting_value: setting.setting_value,
-    }, { onConflict: 'journal_id,setting_name,locale' });
+  const settingsPayload = settingsUpdates.map(setting => ({
+    journal_id: input.id,
+    locale: '',
+    setting_name: setting.setting_name,
+    setting_value: setting.setting_value,
+  }));
+
+  if (settingsPayload.length > 0) {
+    await supabase.from("journal_settings").upsert(settingsPayload, { onConflict: 'journal_id,setting_name,locale' });
   }
 
   revalidateHostedJournals();
@@ -160,7 +162,7 @@ export async function updateJournalAction(input: {
 
 // DELETE JOURNAL ACTION
 export async function deleteJournalAction(id: string): Promise<Result> {
-  await requireJournalRole(id, ["manager"]);
+  await requireSiteAdmin();
 
   const supabase = getSupabaseAdminClient();
   const { error } = await supabase.from("journals").delete().eq("id", id);
@@ -234,5 +236,83 @@ export async function removeJournalUserRole(journalId: string, userId: string, r
   }
 
   revalidatePath(`/journals/${journalId}/users`);
+  return { success: true };
+}
+
+// SETUP JOURNAL ACTION (Wizard Completion)
+export async function setupJournalAction(input: {
+  journalId: string;
+  sections: Array<{
+    title: string;
+    abbreviation: string;
+    policy: string;
+  }>;
+  plugins: string[]; // Array of enabled plugin IDs
+}): Promise<Result> {
+  await requireSiteAdmin(); // Or requireJournalRole(input.journalId, ['manager']) if we want to allow managers
+
+  const supabase = getSupabaseAdminClient();
+
+  // 1. Insert Sections
+  if (input.sections.length > 0) {
+    for (const [index, section] of input.sections.entries()) {
+      // Create section
+      const { data: sectionData, error: sectionError } = await supabase
+        .from("sections")
+        .insert({
+          journal_id: input.journalId,
+          seq: index + 1,
+          editor_restricted: false,
+          meta_indexed: true,
+          meta_reviewed: true,
+          abstracts_not_required: false,
+          hide_title: false,
+          hide_author: false,
+        })
+        .select("id")
+        .single();
+
+      if (sectionError) {
+        console.error("Error creating section:", sectionError);
+        continue;
+      }
+
+      // Create section settings
+      const settings = [
+        { section_id: sectionData.id, setting_name: "title", setting_value: section.title, locale: "" },
+        { section_id: sectionData.id, setting_name: "abbrev", setting_value: section.abbreviation, locale: "" },
+        { section_id: sectionData.id, setting_name: "policy", setting_value: section.policy, locale: "" },
+      ];
+
+      const { error: settingsError } = await supabase
+        .from("section_settings")
+        .insert(settings);
+
+      if (settingsError) {
+        console.error("Error creating section settings:", settingsError);
+      }
+    }
+  }
+
+  // 2. Insert Plugin Settings (Enable plugins)
+  if (input.plugins.length > 0) {
+    const pluginSettings = input.plugins.map(pluginId => ({
+      journal_id: input.journalId,
+      setting_name: `plugin_enabled_${pluginId}`,
+      setting_value: "true",
+      locale: "",
+    }));
+
+    const { error: pluginError } = await supabase
+      .from("journal_settings")
+      .upsert(pluginSettings, { onConflict: "journal_id,setting_name,locale" });
+
+    if (pluginError) {
+      console.error("Error enabling plugins:", pluginError);
+      return { success: false, message: "Gagal menyimpan pengaturan plugin." };
+    }
+  }
+
+  revalidateHostedJournals();
   return { success: true };
 }

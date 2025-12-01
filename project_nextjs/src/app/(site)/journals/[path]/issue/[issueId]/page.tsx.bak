@@ -1,7 +1,10 @@
+import { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
+
+export const dynamic = 'force-dynamic';
 
 type Props = {
     params: Promise<{ path: string; issueId: string }>;
@@ -9,6 +12,7 @@ type Props = {
 
 export default async function IssuePage({ params }: Props) {
     const { path, issueId } = await params;
+    if (issueId === 'archive') return notFound();
     const supabase = await createSupabaseServerClient();
 
     console.log(`[IssuePage] path: ${path}, issueId: ${issueId}`);

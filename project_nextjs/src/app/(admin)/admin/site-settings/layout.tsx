@@ -22,7 +22,7 @@ export default function SiteSettingsLayout({ children }: Props) {
   return (
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
-      <div style={{ paddingBottom: '0.5rem' }}>
+      <div style={{ padding: '0 1.5rem 0.5rem 1.5rem' }}>
         <AdminBreadcrumb items={[
           { label: t('admin.siteAdministration'), href: '/admin' },
           { label: t('admin.siteSettings') }
@@ -32,7 +32,7 @@ export default function SiteSettingsLayout({ children }: Props) {
       {/* Page Header */}
       <div className="bg-gray-200 px-6 py-4" style={{
         backgroundColor: pkpColors.pageHeaderBg,
-        padding: '1rem 0',
+        padding: '1rem 1.5rem',
         marginBottom: '1.5rem'
       }}>
         <h1 style={{
@@ -49,7 +49,8 @@ export default function SiteSettingsLayout({ children }: Props) {
       {/* Tab Navigation */}
       <nav className="mb-6 border-b border-gray-200" style={{
         marginBottom: '1.5rem',
-        borderBottom: '1px solid #e5e7eb'
+        borderBottom: '1px solid #e5e7eb',
+        padding: '0 1.5rem'
       }}>
         <div className="flex gap-6" style={{ gap: '1.5rem' }}>
           {MAIN_TABS.map((tab) => {

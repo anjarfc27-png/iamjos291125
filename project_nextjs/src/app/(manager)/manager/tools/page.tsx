@@ -35,12 +35,49 @@ export default async function ManagerToolsPage() {
           backgroundColor: "#ffffff",
           borderBottom: "1px solid #dfe3e6",
           padding: "1.5rem 2rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
         }}
       >
-        <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700, color: "#002C40" }}>Tools</h1>
-        <p style={{ margin: "0.35rem 0 0", color: "#6b7280", fontSize: "0.9rem" }}>
-          Akses alat bantu yang tersedia di laman Manager OJS.
-        </p>
+        <div>
+          <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700, color: "#002C40" }}>Tools</h1>
+          <p style={{ margin: "0.35rem 0 0", color: "#6b7280", fontSize: "0.9rem" }}>
+            Akses alat bantu yang tersedia di laman Manager OJS.
+          </p>
+        </div>
+        <button
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            color: "#006798",
+            backgroundColor: "transparent",
+            border: "none",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            padding: "0.25rem 0.5rem",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "14px",
+              height: "14px",
+              borderRadius: "50%",
+              backgroundColor: "#006798",
+              color: "#ffffff",
+              fontSize: "10px",
+              fontWeight: "bold",
+            }}
+          >
+            i
+          </span>
+          Help
+        </button>
       </div>
 
       <div style={{ padding: "2rem", maxWidth: "1100px", margin: "0 auto" }}>

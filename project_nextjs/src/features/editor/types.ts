@@ -147,6 +147,7 @@ export type IssueRow = {
   year: number | null;
   status: "published" | "scheduled" | "draft" | string;
   publishedAt?: string | null;
+  itemsCount?: number;
 };
 
 // Editor Decision Constants (matching OJS PKP 3.3)

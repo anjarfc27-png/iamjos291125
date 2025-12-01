@@ -122,28 +122,28 @@ export default function SettingsDistributionPage() {
   // Save handlers
   const handleSaveLicense = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!distributionLicense.copyrightHolderType) {
       setLicenseFeedback({ type: 'error', message: 'Copyright holder is required.' });
       return;
     }
-    
+
     if (distributionLicense.copyrightHolderType === 'other' && !distributionLicense.copyrightHolderOther.trim()) {
       setLicenseFeedback({ type: 'error', message: 'Copyright holder name is required when "Other" is selected.' });
       return;
     }
-    
+
     if (!distributionLicense.licenseUrl) {
       setLicenseFeedback({ type: 'error', message: 'License is required.' });
       return;
     }
-    
+
     if (distributionLicense.licenseUrl === 'other' && !distributionLicense.licenseUrlOther.trim()) {
       setLicenseFeedback({ type: 'error', message: 'License URL is required when "Other" is selected.' });
       return;
     }
-    
+
     if (distributionLicense.licenseUrl === 'other') {
       const urlRegex = /^https?:\/\/.+/;
       if (!urlRegex.test(distributionLicense.licenseUrlOther)) {
@@ -180,7 +180,7 @@ export default function SettingsDistributionPage() {
 
   const handleSavePayments = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (distributionPayments.paymentsEnabled) {
       if (!distributionPayments.currency) {
@@ -228,32 +228,18 @@ export default function SettingsDistributionPage() {
     }}>
       {/* Page Header - OJS 3.3 Style with Safe Area */}
       <div style={{
-        backgroundColor: "#ffffff",
-        borderBottom: "2px solid #e5e5e5",
-        padding: "1.5rem 0",
+        padding: "1.5rem 1.5rem 0 1.5rem",
       }}>
-        <div style={{
-          padding: "0 1.5rem",
+        <h1 className="text-2xl font-bold text-[#002C40] mb-2">
+          {t('editor.settings.settingsTitle')} • {t('editor.settings.distribution.title')}
+        </h1>
+        <p style={{
+          fontSize: "0.875rem",
+          color: "rgba(0, 0, 0, 0.54)",
+          marginBottom: "1.5rem",
         }}>
-          <h1 style={{
-            fontSize: "1.75rem",
-            fontWeight: 700,
-            margin: 0,
-            padding: "0.5rem 0",
-            lineHeight: "2.25rem",
-            color: "#002C40",
-          }}>
-            {t('editor.settings.settingsTitle')} • {t('editor.settings.distribution.title')}
-          </h1>
-          <p style={{
-            fontSize: "0.875rem",
-            color: "rgba(0, 0, 0, 0.54)",
-            marginTop: "0.5rem",
-            marginBottom: 0,
-          }}>
-            Configure how users access, discover, and use your journal content.
-          </p>
-        </div>
+          Configure how users access, discover, and use your journal content.
+        </p>
       </div>
 
       {/* Content - OJS 3.3 Style with Safe Area */}
@@ -270,6 +256,8 @@ export default function SettingsDistributionPage() {
             background: "#ffffff",
             padding: "0",
             display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
             marginBottom: "1.5rem",
           }}>
             <PkpTabsList style={{ flex: 1, padding: "0 1.5rem" }}>
@@ -277,6 +265,42 @@ export default function SettingsDistributionPage() {
               <PkpTabsTrigger value="indexing">Search Indexing</PkpTabsTrigger>
               <PkpTabsTrigger value="payments">Payments</PkpTabsTrigger>
             </PkpTabsList>
+
+            {/* Help Button */}
+            <div style={{ marginBottom: "0.5rem", paddingRight: "1.5rem" }}>
+              <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  color: "#006798",
+                  backgroundColor: "#ffffff",
+                  border: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: "0.25rem 0.5rem",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "14px",
+                    height: "14px",
+                    borderRadius: "50%",
+                    backgroundColor: "#006798",
+                    color: "#ffffff",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  i
+                </span>
+                Help
+              </button>
+            </div>
           </div>
 
           {/* License Tab Content */}
@@ -322,259 +346,259 @@ export default function SettingsDistributionPage() {
                 border: "1px solid #e5e5e5",
                 padding: "1.5rem",
               }}>
-              {/* Copyright Holder Type */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  Copyright Holder
-                </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <PkpRadio
-                    id="copyrightHolderType-author"
-                    name="copyrightHolderType"
-                    value="author"
-                    label="Author"
-                    checked={distributionLicense.copyrightHolderType === 'author'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, copyrightHolderType: 'author' })}
-                  />
-                  <PkpRadio
-                    id="copyrightHolderType-context"
-                    name="copyrightHolderType"
-                    value="context"
-                    label="Journal"
-                    checked={distributionLicense.copyrightHolderType === 'context'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, copyrightHolderType: 'context' })}
-                  />
-                  <PkpRadio
-                    id="copyrightHolderType-other"
-                    name="copyrightHolderType"
-                    value="other"
-                    label="Other"
-                    checked={distributionLicense.copyrightHolderType === 'other'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, copyrightHolderType: 'other' })}
-                  />
-                </div>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Select who holds the copyright for published works.
-                </p>
-              </div>
-
-              {/* Copyright Holder Other */}
-              {distributionLicense.copyrightHolderType === 'other' && (
+                {/* Copyright Holder Type */}
                 <div style={{ marginBottom: "1.5rem" }}>
-                  <label htmlFor="copyrightHolderOther" style={{
+                  <label style={{
                     display: "block",
                     fontSize: "0.875rem",
                     fontWeight: 600,
-                    marginBottom: "0.5rem",
+                    marginBottom: "0.75rem",
                     color: "#002C40",
                   }}>
-                    Copyright Holder (Other) <span style={{ color: "#dc3545" }}>*</span>
+                    Copyright Holder
                   </label>
-                  <PkpInput
-                    id="copyrightHolderOther"
-                    placeholder="Enter copyright holder name"
-                    style={{ width: "100%" }}
-                    value={distributionLicense.copyrightHolderOther}
-                    onChange={(e) => setDistributionLicense({ ...distributionLicense, copyrightHolderOther: e.target.value })}
-                    required
-                  />
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                    Enter the copyright holder name if you selected "Other".
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <PkpRadio
+                      id="copyrightHolderType-author"
+                      name="copyrightHolderType"
+                      value="author"
+                      label="Author"
+                      checked={distributionLicense.copyrightHolderType === 'author'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, copyrightHolderType: 'author' })}
+                    />
+                    <PkpRadio
+                      id="copyrightHolderType-context"
+                      name="copyrightHolderType"
+                      value="context"
+                      label="Journal"
+                      checked={distributionLicense.copyrightHolderType === 'context'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, copyrightHolderType: 'context' })}
+                    />
+                    <PkpRadio
+                      id="copyrightHolderType-other"
+                      name="copyrightHolderType"
+                      value="other"
+                      label="Other"
+                      checked={distributionLicense.copyrightHolderType === 'other'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, copyrightHolderType: 'other' })}
+                    />
+                  </div>
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    Select who holds the copyright for published works.
                   </p>
                 </div>
-              )}
 
-              {/* License URL */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  License
-                </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <PkpRadio
-                    id="licenseUrl-cc-by"
-                    name="licenseUrl"
-                    value="https://creativecommons.org/licenses/by/4.0/"
-                    label="CC-BY 4.0"
-                    checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by/4.0/'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by/4.0/' })}
-                  />
-                  <PkpRadio
-                    id="licenseUrl-cc-by-nc"
-                    name="licenseUrl"
-                    value="https://creativecommons.org/licenses/by-nc/4.0/"
-                    label="CC-BY-NC 4.0"
-                    checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nc/4.0/'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nc/4.0/' })}
-                  />
-                  <PkpRadio
-                    id="licenseUrl-cc-by-nc-nd"
-                    name="licenseUrl"
-                    value="https://creativecommons.org/licenses/by-nc-nd/4.0/"
-                    label="CC-BY-NC-ND 4.0"
-                    checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nc-nd/4.0/'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nc-nd/4.0/' })}
-                  />
-                  <PkpRadio
-                    id="licenseUrl-cc-by-nc-sa"
-                    name="licenseUrl"
-                    value="https://creativecommons.org/licenses/by-nc-sa/4.0/"
-                    label="CC-BY-NC-SA 4.0"
-                    checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nc-sa/4.0/'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' })}
-                  />
-                  <PkpRadio
-                    id="licenseUrl-cc-by-nd"
-                    name="licenseUrl"
-                    value="https://creativecommons.org/licenses/by-nd/4.0/"
-                    label="CC-BY-ND 4.0"
-                    checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nd/4.0/'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nd/4.0/' })}
-                  />
-                  <PkpRadio
-                    id="licenseUrl-cc-by-sa"
-                    name="licenseUrl"
-                    value="https://creativecommons.org/licenses/by-sa/4.0/"
-                    label="CC-BY-SA 4.0"
-                    checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-sa/4.0/'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' })}
-                  />
-                  <PkpRadio
-                    id="licenseUrl-other"
-                    name="licenseUrl"
-                    value="other"
-                    label="Other"
-                    checked={distributionLicense.licenseUrl === 'other'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'other' })}
-                  />
-                </div>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Select a license that determines usage rights for published works.
-                </p>
-              </div>
+                {/* Copyright Holder Other */}
+                {distributionLicense.copyrightHolderType === 'other' && (
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label htmlFor="copyrightHolderOther" style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Copyright Holder (Other) <span style={{ color: "#dc3545" }}>*</span>
+                    </label>
+                    <PkpInput
+                      id="copyrightHolderOther"
+                      placeholder="Enter copyright holder name"
+                      style={{ width: "100%" }}
+                      value={distributionLicense.copyrightHolderOther}
+                      onChange={(e) => setDistributionLicense({ ...distributionLicense, copyrightHolderOther: e.target.value })}
+                      required
+                    />
+                    <p style={{
+                      fontSize: "0.75rem",
+                      color: "rgba(0, 0, 0, 0.54)",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    }}>
+                      Enter the copyright holder name if you selected "Other".
+                    </p>
+                  </div>
+                )}
 
-              {/* License URL Other */}
-              {distributionLicense.licenseUrl === 'other' && (
+                {/* License URL */}
                 <div style={{ marginBottom: "1.5rem" }}>
-                  <label htmlFor="licenseUrlOther" style={{
+                  <label style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    color: "#002C40",
+                  }}>
+                    License
+                  </label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <PkpRadio
+                      id="licenseUrl-cc-by"
+                      name="licenseUrl"
+                      value="https://creativecommons.org/licenses/by/4.0/"
+                      label="CC-BY 4.0"
+                      checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by/4.0/'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by/4.0/' })}
+                    />
+                    <PkpRadio
+                      id="licenseUrl-cc-by-nc"
+                      name="licenseUrl"
+                      value="https://creativecommons.org/licenses/by-nc/4.0/"
+                      label="CC-BY-NC 4.0"
+                      checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nc/4.0/'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nc/4.0/' })}
+                    />
+                    <PkpRadio
+                      id="licenseUrl-cc-by-nc-nd"
+                      name="licenseUrl"
+                      value="https://creativecommons.org/licenses/by-nc-nd/4.0/"
+                      label="CC-BY-NC-ND 4.0"
+                      checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nc-nd/4.0/'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nc-nd/4.0/' })}
+                    />
+                    <PkpRadio
+                      id="licenseUrl-cc-by-nc-sa"
+                      name="licenseUrl"
+                      value="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                      label="CC-BY-NC-SA 4.0"
+                      checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nc-sa/4.0/'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' })}
+                    />
+                    <PkpRadio
+                      id="licenseUrl-cc-by-nd"
+                      name="licenseUrl"
+                      value="https://creativecommons.org/licenses/by-nd/4.0/"
+                      label="CC-BY-ND 4.0"
+                      checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-nd/4.0/'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-nd/4.0/' })}
+                    />
+                    <PkpRadio
+                      id="licenseUrl-cc-by-sa"
+                      name="licenseUrl"
+                      value="https://creativecommons.org/licenses/by-sa/4.0/"
+                      label="CC-BY-SA 4.0"
+                      checked={distributionLicense.licenseUrl === 'https://creativecommons.org/licenses/by-sa/4.0/'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/' })}
+                    />
+                    <PkpRadio
+                      id="licenseUrl-other"
+                      name="licenseUrl"
+                      value="other"
+                      label="Other"
+                      checked={distributionLicense.licenseUrl === 'other'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, licenseUrl: 'other' })}
+                    />
+                  </div>
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    Select a license that determines usage rights for published works.
+                  </p>
+                </div>
+
+                {/* License URL Other */}
+                {distributionLicense.licenseUrl === 'other' && (
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label htmlFor="licenseUrlOther" style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      License URL (Other) <span style={{ color: "#dc3545" }}>*</span>
+                    </label>
+                    <PkpInput
+                      id="licenseUrlOther"
+                      type="url"
+                      placeholder="https://example.com/license"
+                      style={{ width: "100%" }}
+                      value={distributionLicense.licenseUrlOther}
+                      onChange={(e) => setDistributionLicense({ ...distributionLicense, licenseUrlOther: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Copyright Year Basis */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    color: "#002C40",
+                  }}>
+                    Copyright Year Basis
+                  </label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <PkpRadio
+                      id="copyrightYearBasis-issue"
+                      name="copyrightYearBasis"
+                      value="issue"
+                      label="Issue Publication Date"
+                      checked={distributionLicense.copyrightYearBasis === 'issue'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, copyrightYearBasis: 'issue' })}
+                    />
+                    <PkpRadio
+                      id="copyrightYearBasis-submission"
+                      name="copyrightYearBasis"
+                      value="submission"
+                      label="Submission Date"
+                      checked={distributionLicense.copyrightYearBasis === 'submission'}
+                      onChange={() => setDistributionLicense({ ...distributionLicense, copyrightYearBasis: 'submission' })}
+                    />
+                  </div>
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    Select the date basis for the copyright year.
+                  </p>
+                </div>
+
+                {/* License Terms */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="licenseTerms" style={{
                     display: "block",
                     fontSize: "0.875rem",
                     fontWeight: 600,
                     marginBottom: "0.5rem",
                     color: "#002C40",
                   }}>
-                    License URL (Other) <span style={{ color: "#dc3545" }}>*</span>
+                    License Terms
                   </label>
-                  <PkpInput
-                    id="licenseUrlOther"
-                    type="url"
-                    placeholder="https://example.com/license"
+                  <PkpTextarea
+                    id="licenseTerms"
+                    rows={8}
+                    placeholder="Enter license terms and conditions"
                     style={{ width: "100%" }}
-                    value={distributionLicense.licenseUrlOther}
-                    onChange={(e) => setDistributionLicense({ ...distributionLicense, licenseUrlOther: e.target.value })}
-                    required
+                    value={distributionLicense.licenseTerms}
+                    onChange={(e) => setDistributionLicense({ ...distributionLicense, licenseTerms: e.target.value })}
                   />
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    Additional license terms and conditions that will be displayed with published works.
+                  </p>
                 </div>
-              )}
 
-              {/* Copyright Year Basis */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  Copyright Year Basis
-                </label>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <PkpRadio
-                    id="copyrightYearBasis-issue"
-                    name="copyrightYearBasis"
-                    value="issue"
-                    label="Issue Publication Date"
-                    checked={distributionLicense.copyrightYearBasis === 'issue'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, copyrightYearBasis: 'issue' })}
-                  />
-                  <PkpRadio
-                    id="copyrightYearBasis-submission"
-                    name="copyrightYearBasis"
-                    value="submission"
-                    label="Submission Date"
-                    checked={distributionLicense.copyrightYearBasis === 'submission'}
-                    onChange={() => setDistributionLicense({ ...distributionLicense, copyrightYearBasis: 'submission' })}
-                  />
-                </div>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Select the date basis for the copyright year.
-                </p>
+                <PkpButton variant="primary" type="submit" disabled={distributionSettings.loading} loading={distributionSettings.loading}>
+                  {distributionSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
+                </PkpButton>
               </div>
-
-              {/* License Terms */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="licenseTerms" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  License Terms
-                </label>
-                <PkpTextarea
-                  id="licenseTerms"
-                  rows={8}
-                  placeholder="Enter license terms and conditions"
-                  style={{ width: "100%" }}
-                  value={distributionLicense.licenseTerms}
-                  onChange={(e) => setDistributionLicense({ ...distributionLicense, licenseTerms: e.target.value })}
-                />
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Additional license terms and conditions that will be displayed with published works.
-                </p>
-              </div>
-
-              <PkpButton variant="primary" type="submit" disabled={distributionSettings.loading} loading={distributionSettings.loading}>
-                {distributionSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
-              </PkpButton>
-            </div>
             </form>
           </PkpTabsContent>
 
@@ -621,225 +645,225 @@ export default function SettingsDistributionPage() {
                 border: "1px solid #e5e5e5",
                 padding: "1.5rem",
               }}>
-              {/* Search Description */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="searchDescription" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  Search Description
-                </label>
-                <PkpTextarea
-                  id="searchDescription"
-                  rows={5}
-                  placeholder="Enter a description for search engines"
-                  style={{ width: "100%" }}
-                  value={distributionIndexing.searchDescription}
-                  onChange={(e) => setDistributionIndexing({ ...distributionIndexing, searchDescription: e.target.value })}
-                />
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  A description of your journal that search engines will index. This should be a concise summary of your journal's scope and content.
-                </p>
-              </div>
-
-              {/* Custom Headers */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="customHeaders" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  Custom Headers
-                </label>
-                <PkpTextarea
-                  id="customHeaders"
-                  rows={5}
-                  placeholder="Enter custom HTML headers (e.g., meta tags)"
-                  style={{ width: "100%", fontFamily: "monospace", fontSize: "0.8125rem" }}
-                  value={distributionIndexing.customHeaders}
-                  onChange={(e) => setDistributionIndexing({ ...distributionIndexing, customHeaders: e.target.value })}
-                />
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Custom HTML headers to include in the head section of your journal pages. This can include meta tags, verification codes, and other custom headers.
-                </p>
-              </div>
-
-              {/* OAI-PMH Settings */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <h3 style={{
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  OAI-PMH (Open Archives Initiative Protocol for Metadata Harvesting)
-                </h3>
-                <div style={{ marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <PkpCheckbox
-                      id="enableOai"
-                      checked={distributionIndexing.enableOai}
-                      onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableOai: e.target.checked })}
-                    />
-                    <label htmlFor="enableOai" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable OAI-PMH</label>
-                  </div>
+                {/* Search Description */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="searchDescription" style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "#002C40",
+                  }}>
+                    Search Description
+                  </label>
+                  <PkpTextarea
+                    id="searchDescription"
+                    rows={5}
+                    placeholder="Enter a description for search engines"
+                    style={{ width: "100%" }}
+                    value={distributionIndexing.searchDescription}
+                    onChange={(e) => setDistributionIndexing({ ...distributionIndexing, searchDescription: e.target.value })}
+                  />
                   <p style={{
                     fontSize: "0.75rem",
                     color: "rgba(0, 0, 0, 0.54)",
                     marginTop: "0.5rem",
                     marginBottom: 0,
                   }}>
-                    When enabled, your journal metadata will be discoverable through the OAI-PMH protocol. We encourage you to leave this enabled unless you are not using OJS to publish your content or otherwise do not want your metadata discoverable through the OAI protocol.
+                    A description of your journal that search engines will index. This should be a concise summary of your journal's scope and content.
                   </p>
                 </div>
-              </div>
 
-              {/* RSS Feed Settings */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <h3 style={{
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  RSS Feeds
-                </h3>
-                <div style={{ marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <PkpCheckbox
-                      id="enableRss"
-                      checked={distributionIndexing.enableRss}
-                      onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableRss: e.target.checked })}
-                    />
-                    <label htmlFor="enableRss" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable RSS feeds</label>
-                  </div>
+                {/* Custom Headers */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="customHeaders" style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "#002C40",
+                  }}>
+                    Custom Headers
+                  </label>
+                  <PkpTextarea
+                    id="customHeaders"
+                    rows={5}
+                    placeholder="Enter custom HTML headers (e.g., meta tags)"
+                    style={{ width: "100%", fontFamily: "monospace", fontSize: "0.8125rem" }}
+                    value={distributionIndexing.customHeaders}
+                    onChange={(e) => setDistributionIndexing({ ...distributionIndexing, customHeaders: e.target.value })}
+                  />
                   <p style={{
                     fontSize: "0.75rem",
                     color: "rgba(0, 0, 0, 0.54)",
                     marginTop: "0.5rem",
                     marginBottom: 0,
                   }}>
-                    When enabled, RSS feeds will be available for your journal content.
+                    Custom HTML headers to include in the head section of your journal pages. This can include meta tags, verification codes, and other custom headers.
                   </p>
                 </div>
-              </div>
 
-              {/* Sitemap Settings */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <h3 style={{
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  Sitemap
-                </h3>
-                <div style={{ marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <PkpCheckbox
-                      id="enableSitemap"
-                      checked={distributionIndexing.enableSitemap}
-                      onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableSitemap: e.target.checked })}
-                    />
-                    <label htmlFor="enableSitemap" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable sitemap</label>
+                {/* OAI-PMH Settings */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <h3 style={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    color: "#002C40",
+                  }}>
+                    OAI-PMH (Open Archives Initiative Protocol for Metadata Harvesting)
+                  </h3>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <PkpCheckbox
+                        id="enableOai"
+                        checked={distributionIndexing.enableOai}
+                        onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableOai: e.target.checked })}
+                      />
+                      <label htmlFor="enableOai" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable OAI-PMH</label>
+                    </div>
+                    <p style={{
+                      fontSize: "0.75rem",
+                      color: "rgba(0, 0, 0, 0.54)",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    }}>
+                      When enabled, your journal metadata will be discoverable through the OAI-PMH protocol. We encourage you to leave this enabled unless you are not using OJS to publish your content or otherwise do not want your metadata discoverable through the OAI protocol.
+                    </p>
                   </div>
+                </div>
+
+                {/* RSS Feed Settings */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <h3 style={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    color: "#002C40",
+                  }}>
+                    RSS Feeds
+                  </h3>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <PkpCheckbox
+                        id="enableRss"
+                        checked={distributionIndexing.enableRss}
+                        onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableRss: e.target.checked })}
+                      />
+                      <label htmlFor="enableRss" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable RSS feeds</label>
+                    </div>
+                    <p style={{
+                      fontSize: "0.75rem",
+                      color: "rgba(0, 0, 0, 0.54)",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    }}>
+                      When enabled, RSS feeds will be available for your journal content.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sitemap Settings */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <h3 style={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    color: "#002C40",
+                  }}>
+                    Sitemap
+                  </h3>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <PkpCheckbox
+                        id="enableSitemap"
+                        checked={distributionIndexing.enableSitemap}
+                        onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableSitemap: e.target.checked })}
+                      />
+                      <label htmlFor="enableSitemap" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable sitemap</label>
+                    </div>
+                    <p style={{
+                      fontSize: "0.75rem",
+                      color: "rgba(0, 0, 0, 0.54)",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    }}>
+                      When enabled, a sitemap will be generated for search engines.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Search Engine Indexing Services */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <h3 style={{
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    marginBottom: "0.75rem",
+                    color: "#002C40",
+                  }}>
+                    Search Engine Indexing Services
+                  </h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <PkpCheckbox
+                        id="enableGoogleScholar"
+                        checked={distributionIndexing.enableGoogleScholar}
+                        onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableGoogleScholar: e.target.checked })}
+                      />
+                      <label htmlFor="enableGoogleScholar" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable Google Scholar</label>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <PkpCheckbox
+                        id="enablePubMed"
+                        checked={distributionIndexing.enablePubMed}
+                        onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enablePubMed: e.target.checked })}
+                      />
+                      <label htmlFor="enablePubMed" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable PubMed</label>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <PkpCheckbox
+                        id="enableDoaj"
+                        checked={distributionIndexing.enableDoaj}
+                        onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableDoaj: e.target.checked })}
+                      />
+                      <label htmlFor="enableDoaj" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable DOAJ</label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Custom Indexing Services */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="customIndexingServices" style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "#002C40",
+                  }}>
+                    Custom Indexing Services
+                  </label>
+                  <PkpTextarea
+                    id="customIndexingServices"
+                    rows={5}
+                    placeholder="Enter custom indexing services information"
+                    style={{ width: "100%" }}
+                    value={distributionIndexing.customIndexingServices}
+                    onChange={(e) => setDistributionIndexing({ ...distributionIndexing, customIndexingServices: e.target.value })}
+                  />
                   <p style={{
                     fontSize: "0.75rem",
                     color: "rgba(0, 0, 0, 0.54)",
                     marginTop: "0.5rem",
                     marginBottom: 0,
                   }}>
-                    When enabled, a sitemap will be generated for search engines.
+                    Enter information about custom indexing services for your journal.
                   </p>
                 </div>
-              </div>
 
-              {/* Search Engine Indexing Services */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <h3 style={{
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  marginBottom: "0.75rem",
-                  color: "#002C40",
-                }}>
-                  Search Engine Indexing Services
-                </h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <PkpCheckbox
-                      id="enableGoogleScholar"
-                      checked={distributionIndexing.enableGoogleScholar}
-                      onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableGoogleScholar: e.target.checked })}
-                    />
-                    <label htmlFor="enableGoogleScholar" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable Google Scholar</label>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <PkpCheckbox
-                      id="enablePubMed"
-                      checked={distributionIndexing.enablePubMed}
-                      onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enablePubMed: e.target.checked })}
-                    />
-                    <label htmlFor="enablePubMed" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable PubMed</label>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <PkpCheckbox
-                      id="enableDoaj"
-                      checked={distributionIndexing.enableDoaj}
-                      onChange={(e) => setDistributionIndexing({ ...distributionIndexing, enableDoaj: e.target.checked })}
-                    />
-                    <label htmlFor="enableDoaj" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable DOAJ</label>
-                  </div>
-                </div>
+                <PkpButton variant="primary" type="submit" disabled={distributionSettings.loading} loading={distributionSettings.loading}>
+                  {distributionSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
+                </PkpButton>
               </div>
-
-              {/* Custom Indexing Services */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="customIndexingServices" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  Custom Indexing Services
-                </label>
-                <PkpTextarea
-                  id="customIndexingServices"
-                  rows={5}
-                  placeholder="Enter custom indexing services information"
-                  style={{ width: "100%" }}
-                  value={distributionIndexing.customIndexingServices}
-                  onChange={(e) => setDistributionIndexing({ ...distributionIndexing, customIndexingServices: e.target.value })}
-                />
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Enter information about custom indexing services for your journal.
-                </p>
-              </div>
-
-              <PkpButton variant="primary" type="submit" disabled={distributionSettings.loading} loading={distributionSettings.loading}>
-                {distributionSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
-              </PkpButton>
-            </div>
             </form>
           </PkpTabsContent>
 
@@ -886,116 +910,146 @@ export default function SettingsDistributionPage() {
                 border: "1px solid #e5e5e5",
                 padding: "1.5rem",
               }}>
-              {/* Enable Payments */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <PkpCheckbox
-                    id="paymentsEnabled"
-                    checked={distributionPayments.paymentsEnabled}
-                    onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentsEnabled: e.target.checked })}
-                  />
-                  <label htmlFor="paymentsEnabled" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable payments</label>
-                </div>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  When enabled, payment functionality will be available for subscriptions and author payment charges.
-                </p>
-              </div>
-
-              {/* Currency */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="currency" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  Currency
-                </label>
-                <PkpSelect 
-                  id="currency" 
-                  style={{ width: "100%" }}
-                  value={distributionPayments.currency}
-                  onChange={(e) => setDistributionPayments({ ...distributionPayments, currency: e.target.value })}
-                >
-                  <option value="">Select currency</option>
-                  <option value="USD">USD - US Dollar</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="GBP">GBP - British Pound</option>
-                  <option value="IDR">IDR - Indonesian Rupiah</option>
-                  <option value="JPY">JPY - Japanese Yen</option>
-                  <option value="CNY">CNY - Chinese Yuan</option>
-                  <option value="AUD">AUD - Australian Dollar</option>
-                  <option value="CAD">CAD - Canadian Dollar</option>
-                  <option value="CHF">CHF - Swiss Franc</option>
-                  <option value="SGD">SGD - Singapore Dollar</option>
-                </PkpSelect>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Select the currency for all payments in this journal.
-                </p>
-              </div>
-
-              {/* Payment Method */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="paymentPluginName" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  Payment Method
-                </label>
-                <PkpSelect 
-                  id="paymentPluginName" 
-                  style={{ width: "100%" }}
-                  value={distributionPayments.paymentPluginName}
-                  onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentPluginName: e.target.value })}
-                >
-                  <option value="">Select payment method</option>
-                  <option value="PayPal">PayPal</option>
-                  <option value="Manual">Manual Payment</option>
-                </PkpSelect>
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Select the payment method plugin to use for processing payments.
-                </p>
-              </div>
-
-              {/* Payment Gateway URL */}
-              {distributionPayments.paymentsEnabled && (
+                {/* Enable Payments */}
                 <div style={{ marginBottom: "1.5rem" }}>
-                  <label htmlFor="paymentGatewayUrl" style={{
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <PkpCheckbox
+                      id="paymentsEnabled"
+                      checked={distributionPayments.paymentsEnabled}
+                      onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentsEnabled: e.target.checked })}
+                    />
+                    <label htmlFor="paymentsEnabled" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Enable payments</label>
+                  </div>
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    When enabled, payment functionality will be available for subscriptions and author payment charges.
+                  </p>
+                </div>
+
+                {/* Currency */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="currency" style={{
                     display: "block",
                     fontSize: "0.875rem",
                     fontWeight: 600,
                     marginBottom: "0.5rem",
                     color: "#002C40",
                   }}>
-                    Payment Gateway URL <span style={{ color: "#dc3545" }}>*</span>
+                    Currency
                   </label>
-                  <PkpInput
-                    id="paymentGatewayUrl"
-                    type="url"
-                    placeholder="https://payment-gateway.example.com"
+                  <PkpSelect
+                    id="currency"
                     style={{ width: "100%" }}
-                    value={distributionPayments.paymentGatewayUrl}
-                    onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentGatewayUrl: e.target.value })}
-                    required
+                    value={distributionPayments.currency}
+                    onChange={(e) => setDistributionPayments({ ...distributionPayments, currency: e.target.value })}
+                  >
+                    <option value="">Select currency</option>
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="IDR">IDR - Indonesian Rupiah</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="CNY">CNY - Chinese Yuan</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="CHF">CHF - Swiss Franc</option>
+                    <option value="SGD">SGD - Singapore Dollar</option>
+                  </PkpSelect>
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    Select the currency for all payments in this journal.
+                  </p>
+                </div>
+
+                {/* Payment Method */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="paymentPluginName" style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "#002C40",
+                  }}>
+                    Payment Method
+                  </label>
+                  <PkpSelect
+                    id="paymentPluginName"
+                    style={{ width: "100%" }}
+                    value={distributionPayments.paymentPluginName}
+                    onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentPluginName: e.target.value })}
+                  >
+                    <option value="">Select payment method</option>
+                    <option value="PayPal">PayPal</option>
+                    <option value="Manual">Manual Payment</option>
+                  </PkpSelect>
+                  <p style={{
+                    fontSize: "0.75rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    marginTop: "0.5rem",
+                    marginBottom: 0,
+                  }}>
+                    Select the payment method plugin to use for processing payments.
+                  </p>
+                </div>
+
+                {/* Payment Gateway URL */}
+                {distributionPayments.paymentsEnabled && (
+                  <div style={{ marginBottom: "1.5rem" }}>
+                    <label htmlFor="paymentGatewayUrl" style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      marginBottom: "0.5rem",
+                      color: "#002C40",
+                    }}>
+                      Payment Gateway URL <span style={{ color: "#dc3545" }}>*</span>
+                    </label>
+                    <PkpInput
+                      id="paymentGatewayUrl"
+                      type="url"
+                      placeholder="https://payment-gateway.example.com"
+                      style={{ width: "100%" }}
+                      value={distributionPayments.paymentGatewayUrl}
+                      onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentGatewayUrl: e.target.value })}
+                      required
+                    />
+                    <p style={{
+                      fontSize: "0.75rem",
+                      color: "rgba(0, 0, 0, 0.54)",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    }}>
+                      Enter the payment gateway URL for processing payments.
+                    </p>
+                  </div>
+                )}
+
+                {/* Payment Instructions */}
+                <div style={{ marginBottom: "1.5rem" }}>
+                  <label htmlFor="paymentInstructions" style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "#002C40",
+                  }}>
+                    Payment Instructions
+                  </label>
+                  <PkpTextarea
+                    id="paymentInstructions"
+                    rows={5}
+                    placeholder="Enter payment instructions for users"
+                    style={{ width: "100%" }}
+                    value={distributionPayments.paymentInstructions}
+                    onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentInstructions: e.target.value })}
                   />
                   <p style={{
                     fontSize: "0.75rem",
@@ -1003,44 +1057,14 @@ export default function SettingsDistributionPage() {
                     marginTop: "0.5rem",
                     marginBottom: 0,
                   }}>
-                    Enter the payment gateway URL for processing payments.
+                    Enter instructions that will be displayed to users regarding payment procedures.
                   </p>
                 </div>
-              )}
 
-              {/* Payment Instructions */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label htmlFor="paymentInstructions" style={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                  color: "#002C40",
-                }}>
-                  Payment Instructions
-                </label>
-                <PkpTextarea
-                  id="paymentInstructions"
-                  rows={5}
-                  placeholder="Enter payment instructions for users"
-                  style={{ width: "100%" }}
-                  value={distributionPayments.paymentInstructions}
-                  onChange={(e) => setDistributionPayments({ ...distributionPayments, paymentInstructions: e.target.value })}
-                />
-                <p style={{
-                  fontSize: "0.75rem",
-                  color: "rgba(0, 0, 0, 0.54)",
-                  marginTop: "0.5rem",
-                  marginBottom: 0,
-                }}>
-                  Enter instructions that will be displayed to users regarding payment procedures.
-                </p>
+                <PkpButton variant="primary" type="submit" disabled={distributionSettings.loading} loading={distributionSettings.loading}>
+                  {distributionSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
+                </PkpButton>
               </div>
-
-              <PkpButton variant="primary" type="submit" disabled={distributionSettings.loading} loading={distributionSettings.loading}>
-                {distributionSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
-              </PkpButton>
-            </div>
             </form>
           </PkpTabsContent>
         </PkpTabs>

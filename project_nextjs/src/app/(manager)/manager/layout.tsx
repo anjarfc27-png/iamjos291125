@@ -2,9 +2,9 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronDown, Bell, User, BookOpen, LogOut } from "lucide-react";
+import { ChevronDown, Bell, User, LogOut, Network } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useSupabase } from "@/providers/supabase-provider";
@@ -20,6 +20,7 @@ type Props = {
 export default function ManagerLayout({ children }: Props) {
   const { t } = useI18n();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading, logout } = useAuth();
   const supabase = useSupabase();
   const [journals, setJournals] = useState<{ id: string; title: string; path: string }[]>([]);
@@ -92,6 +93,9 @@ export default function ManagerLayout({ children }: Props) {
     };
   }, [journalDropdownOpen, userDropdownOpen]);
 
+  const currentJournalId = searchParams?.get("journal");
+  const currentJournal = journals.find((j) => j.id === currentJournalId) || journals[0];
+
   if (loading || !user) {
     return (
       <div
@@ -111,7 +115,7 @@ export default function ManagerLayout({ children }: Props) {
         display: "flex",
       }}
     >
-      {/* Sidebar - PKP style with iamJOS logo */}
+      {/* Sidebar - PKP style */}
       <aside
         style={{
           width: "256px",
@@ -123,70 +127,100 @@ export default function ManagerLayout({ children }: Props) {
           boxShadow: "4px 0 6px -1px rgba(0, 0, 0, 0.1)",
         }}
       >
+        {/* Top Section: Logo/Dropdown + Journal Name */}
         <div
           style={{
-            padding: "1.5rem 1.25rem 1rem 1.25rem",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.12)",
+            padding: "1rem 1.25rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            // borderBottom removed as per request
           }}
         >
-          {/* iamJOS logo, sama dengan Editor/Author/Reviewer */}
-          <Link
-            href="/manager"
-            style={{ textDecoration: "none", color: "#ffffff" }}
-          >
-            <div style={{ marginBottom: "0.5rem" }}>
-              <div
-                className="flex items-baseline"
-                style={{ display: "flex", alignItems: "baseline", gap: "0.5rem" }}
-              >
-                <span
-                  style={{
-                    fontSize: "2.2rem",
-                    fontWeight: "bold",
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1,
-                  }}
-                >
-                  iam
-                </span>
-                <span
-                  style={{
-                    fontSize: "2.6rem",
-                    fontWeight: "bold",
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1,
-                  }}
-                >
-                  JOS
-                </span>
-              </div>
+          {/* Network icon, separator, journal title, and dropdown */}
+          <div ref={journalDropdownRef} style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              onClick={() => setJournalDropdownOpen(!journalDropdownOpen)}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0.25rem",
+                color: "#ffffff",
+              }}
+              title="Select Journal"
+            >
+              <Network size={24} strokeWidth={2} />
+            </button>
+
+            {/* Dropdown Menu */}
+            {journalDropdownOpen && journals.length > 0 && (
               <div
                 style={{
-                  fontSize: "0.65rem",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  opacity: 0.9,
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
                   marginTop: "0.5rem",
+                  minWidth: "220px",
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #dee2e6",
+                  borderRadius: "0.375rem",
+                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  zIndex: 100,
                 }}
               >
-                JOURNAL MANAGER
+                {journals.map((journal) => (
+                  <Link
+                    key={journal.id}
+                    href={`/manager?journal=${journal.id}`}
+                    style={{
+                      display: "block",
+                      padding: "0.75rem 1rem",
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      color: "#000000",
+                      textDecoration: "none",
+                      borderBottom: "1px solid #f3f4f6",
+                    }}
+                    onClick={() => setJournalDropdownOpen(false)}
+                  >
+                    {journal.title}
+                  </Link>
+                ))}
               </div>
-              <div
-                style={{
-                  fontSize: "0.65rem",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  opacity: 0.9,
-                }}
-              >
-                OPEN JOURNAL SYSTEMS
-              </div>
-            </div>
-          </Link>
+            )}
+          </div>
+
+          {/* Vertical Separator */}
+          <div
+            style={{
+              width: "1px",
+              height: "24px",
+              backgroundColor: "rgba(255, 255, 255, 0.3)",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Journal Name */}
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: "1.1rem",
+              color: "#ffffff",
+              fontFamily: "Noto Sans, sans-serif",
+              lineHeight: "1.2",
+            }}
+          >
+            {currentJournal?.title || "Select Journal"}
+          </div>
         </div>
+        {/* Navigation */}
         <div
           style={{
-            padding: "0.75rem 0.75rem 1.5rem 0.75rem",
+            padding: "1.5rem 0.75rem",
             flex: 1,
             overflowY: "auto",
           }}
@@ -204,7 +238,7 @@ export default function ManagerLayout({ children }: Props) {
           minWidth: 0,
         }}
       >
-        {/* Header - pkpColors.headerBg, selaras dengan Editor/Author; padding diperkecil */}
+        {/* Header - pkpColors.headerBg */}
         <header
           style={{
             backgroundColor: pkpColors.headerBg,
@@ -212,106 +246,48 @@ export default function ManagerLayout({ children }: Props) {
             padding: "0.5rem 1.25rem",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "flex-end", // Align items to the right
+            height: "60px",
           }}
         >
+          {/* Right: Tasks, Language, User */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '1rem'
           }}>
-            {journals.length > 0 && (
-              <div ref={journalDropdownRef} style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setJournalDropdownOpen(!journalDropdownOpen)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    color: '#ffffff',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '0.25rem 0.5rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#e5e7eb';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                >
-                  <span>{journals[0]?.title || "Select Journal"}</span>
-                  <ChevronDown style={{ height: '1rem', width: '1rem' }} />
-                </button>
-                {journalDropdownOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    marginTop: '0.5rem',
-                    minWidth: '200px',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '0.375rem',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    zIndex: 50
-                  }}>
-                    {journals.map((journal) => (
-                      <Link
-                        key={journal.id}
-                        href={`/manager?journal=${journal.id}`}
-                        style={{
-                          display: 'block',
-                          padding: '0.5rem 1rem',
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                          color: '#000000',
-                          textDecoration: 'none',
-                          borderBottom: '1px solid #f3f4f6'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f3f4f6';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        {journal.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem'
-          }}>
-            <LanguageSwitcher />
+            {/* Tasks (Bell) */}
             <button
               style={{
                 position: 'relative',
                 padding: '0.5rem',
-                color: '#e5e7eb',
+                color: '#ffffff',
                 backgroundColor: 'transparent',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#ffffff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#e5e7eb';
-              }}
+              title={t('common.tasks')}
             >
               <Bell style={{ height: '1.25rem', width: '1.25rem' }} />
+              <span style={{
+                position: 'absolute',
+                top: '0',
+                right: '0',
+                backgroundColor: '#d9534f',
+                color: 'white',
+                borderRadius: '50%',
+                padding: '0.1rem 0.3rem',
+                fontSize: '0.65rem',
+                fontWeight: 'bold'
+              }}>
+                0
+              </span>
             </button>
+
+            <LanguageSwitcher />
+
             <div ref={userDropdownRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -320,21 +296,15 @@ export default function ManagerLayout({ children }: Props) {
                   alignItems: 'center',
                   gap: '0.5rem',
                   color: '#ffffff',
-                  fontSize: '0.875rem',
+                  fontSize: '0.9rem',
                   backgroundColor: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
                   padding: '0.25rem 0.5rem'
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#e5e7eb';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#ffffff';
-                }}
               >
                 <User style={{ height: '1.25rem', width: '1.25rem' }} />
-                <span>{user?.full_name || user?.username || user?.email}</span>
+                <span>{user?.username || 'admin'}</span>
                 <ChevronDown style={{ height: '1rem', width: '1rem' }} />
               </button>
               {userDropdownOpen && (
@@ -355,20 +325,14 @@ export default function ManagerLayout({ children }: Props) {
                       href="/manager/profile"
                       style={{
                         display: 'block',
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.875rem',
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.9rem',
                         fontWeight: 500,
                         color: '#000000',
                         textDecoration: 'none'
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f3f4f6';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
                     >
-                      Profile
+                      {t('user.profile')}
                     </Link>
                   </div>
                   <div>
@@ -380,23 +344,17 @@ export default function ManagerLayout({ children }: Props) {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
-                        padding: '0.5rem 1rem',
-                        fontSize: '0.875rem',
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.9rem',
                         fontWeight: 500,
                         color: '#000000',
                         backgroundColor: 'transparent',
                         border: 'none',
                         cursor: 'pointer'
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f3f4f6';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
                     >
                       <LogOut style={{ height: '1rem', width: '1rem' }} />
-                      Logout
+                      {t('user.logOut')}
                     </button>
                   </div>
                 </div>
@@ -405,7 +363,7 @@ export default function ManagerLayout({ children }: Props) {
           </div>
         </header>
 
-        {/* Page Content - OJS-style grey background dengan jarak lebih dekat */}
+        {/* Page Content - OJS-style grey background */}
         <main
           style={{
             flex: 1,
@@ -415,8 +373,8 @@ export default function ManagerLayout({ children }: Props) {
         >
           <div
             style={{
-              padding: "1rem 1.25rem 1.5rem 1.25rem",
-              maxWidth: "1100px",
+              padding: "2rem",
+              maxWidth: "100%",
               margin: "0 auto",
             }}
           >
