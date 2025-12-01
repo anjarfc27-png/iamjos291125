@@ -246,6 +246,90 @@ export default function CreateJournalPage() {
           />
         </div>
 
+        {/* Publisher */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{
+            display: 'block',
+            marginBottom: '0.5rem',
+            fontWeight: pkpTypography.semibold,
+            fontSize: pkpTypography.bodyRegular,
+            color: pkpColors.textDark,
+          }}>
+            Publisher
+          </label>
+          <input
+            type="text"
+            maxLength={128}
+            value={formData.publisher}
+            onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '0.625rem 0.75rem',
+              border: `1px solid ${pkpColors.borderSubtle}`,
+              borderRadius: '4px',
+              fontSize: pkpTypography.bodyRegular,
+              fontFamily: pkpTypography.fontFamily
+            }}
+            placeholder="Organization or institution name"
+          />
+        </div>
+
+        {/* ISSNs */}
+        <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ flex: 1 }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontWeight: pkpTypography.semibold,
+              fontSize: pkpTypography.bodyRegular,
+              color: pkpColors.textDark,
+            }}>
+              ISSN (Online)
+            </label>
+            <input
+              type="text"
+              maxLength={32}
+              value={formData.issnOnline}
+              onChange={(e) => setFormData({ ...formData, issnOnline: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '0.625rem 0.75rem',
+                border: `1px solid ${pkpColors.borderSubtle}`,
+                borderRadius: '4px',
+                fontSize: pkpTypography.bodyRegular,
+                fontFamily: pkpTypography.fontFamily
+              }}
+              placeholder="e.g., 1234-5678"
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontWeight: pkpTypography.semibold,
+              fontSize: pkpTypography.bodyRegular,
+              color: pkpColors.textDark,
+            }}>
+              ISSN (Print)
+            </label>
+            <input
+              type="text"
+              maxLength={32}
+              value={formData.issnPrint}
+              onChange={(e) => setFormData({ ...formData, issnPrint: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '0.625rem 0.75rem',
+                border: `1px solid ${pkpColors.borderSubtle}`,
+                borderRadius: '4px',
+                fontSize: pkpTypography.bodyRegular,
+                fontFamily: pkpTypography.fontFamily
+              }}
+              placeholder="e.g., 1234-5678"
+            />
+          </div>
+        </div>
+
         {/* Journal Description */}
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{

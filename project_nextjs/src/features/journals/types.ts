@@ -6,6 +6,9 @@ export type HostedJournal = {
   description?: string;
   initials?: string;
   abbreviation?: string;
+  publisher?: string;
+  issnOnline?: string;
+  issnPrint?: string;
 };
 
 export type JournalSettings = {

@@ -99,15 +99,16 @@ export function JournalEditForm({ journal, mode, onCancel, onSuccess, }: Props) 
     let description: string | null = null;
 
     if (mode === "create") {
-      const mainLocale = (primaryLocales.length > 0 ? primaryLocales[0] : activeLocale) || 'en_US';
-      title = localeData[mainLocale]?.title?.trim() || '';
+      // Fix: Read directly from formData since the input is uncontrolled and not bound to localeData
+      title = (formData.get("title") as string | null)?.trim() ?? "";
+
+      // Only fallback to localeData if formData is empty (which shouldn't happen with required input)
       if (!title) {
-        const anyLocale = Object.keys(localeData).find(k => localeData[k]?.title?.trim());
-        if (anyLocale) {
-          title = localeData[anyLocale]?.title?.trim() || '';
-        }
+        const mainLocale = (primaryLocales.length > 0 ? primaryLocales[0] : activeLocale) || 'en_US';
+        title = localeData[mainLocale]?.title?.trim() || '';
       }
-      description = localeData[mainLocale]?.description?.trim() || null;
+
+      description = (formData.get("description") as string | null)?.trim() || null;
     } else {
       title = (formData.get("title") as string | null)?.trim() ?? "";
       description = (formData.get("description") as string | null)?.trim() ?? null;
@@ -175,7 +176,22 @@ export function JournalEditForm({ journal, mode, onCancel, onSuccess, }: Props) 
 
         <div className="space-y-2 md:col-span-4">
           <Label htmlFor="journal-description">{t('journalDescription')}</Label>
-          <textarea id="journal-description" name="description" defaultValue={journal?.description} className="w-full p-2 border rounded" rows={4} placeholder={t('descriptionPlaceholder')} />
+          <textarea id="journal-description" name="description" defaultValue={journal?.description ?? ''} className="w-full p-2 border rounded" rows={4} placeholder={t('descriptionPlaceholder')} />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="journal-publisher">Publisher</Label>
+          <Input id="journal-publisher" name="publisher" defaultValue={journal?.publisher ?? ''} placeholder="Organization or institution name" maxLength={128} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="journal-issn-online">ISSN (Online)</Label>
+          <Input id="journal-issn-online" name="issnOnline" defaultValue={journal?.issnOnline ?? ''} placeholder="e.g., 1234-5678" maxLength={32} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="journal-issn-print">ISSN (Print)</Label>
+          <Input id="journal-issn-print" name="issnPrint" defaultValue={journal?.issnPrint ?? ''} placeholder="e.g., 1234-5678" maxLength={32} />
         </div>
 
         <div className="space-y-2 md:col-span-2">

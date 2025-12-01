@@ -8,7 +8,7 @@ import { requireSiteAdmin, requireJournalRole } from "@/lib/permissions";
 
 // Complete OJS 3.3 journal schema
 const journalSchema = z.object({
-  title: z.string().trim().min(3, "Judul minimal 3 karakter."),
+  title: z.string().trim().min(2, "Judul minimal 2 karakter."),
   initials: z.string().trim().max(16).optional().default(""),
   abbreviation: z.string().trim().max(32).optional().default(""),
   publisher: z.string().trim().max(128).optional().default(""),
