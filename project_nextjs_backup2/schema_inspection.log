@@ -1,0 +1,10 @@
+Starting inspection...
+Inspecting schema...
+
+--- Journals Columns ---
+Columns: id, path, enabled, primary_locale, seq, created_at, updated_at
+
+--- Testing Joins ---
+Test 1 (Implicit journals(title)): {"code":"PGRST201","details":[{"cardinality":"many-to-one","embedding":"submissions with journals","relationship":"submissions_context_id_fkey using submissions(context_id) and journals(id)"},{"cardinality":"many-to-one","embedding":"submissions with journals","relationship":"submissions_journal_id_fkey using submissions(journal_id) and journals(id)"}],"hint":"Try changing 'journals' to one of the following: 'journals!submissions_context_id_fkey', 'journals!submissions_journal_id_fkey'. Find the desired relationship in the 'details' key.","message":"Could not embed because more than one relationship was found for 'submissions' and 'journals'"}
+Test 2 (Explicit FK submissions_journal_id_fkey): {"code":"42703","details":null,"hint":null,"message":"column journals_1.title does not exist"}
+Test 3 (Alias + FK): {"code":"42703","details":null,"hint":null,"message":"column journals_1.title does not exist"}

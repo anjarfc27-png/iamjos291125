@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Editor</title>
+</head>
+<body>
+    <h1>Test Login Editor</h1>
+    <button onclick="testEditorLogin()">Test Editor Login</button>
+    <button onclick="testAdminLogin()">Test Admin Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testEditorLogin() {
+            document.getElementById('result').innerHTML = 'Testing editor login...';
+            
+            try {
+                // Test login
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email: 'editor@example.com', 
+                        password: 'password' 
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (!loginResponse.ok) {
+                    document.getElementById('result').innerHTML = 'Login failed: ' + JSON.stringify(loginData, null, 2);
+                    return;
+                }
+                
+                document.getElementById('result').innerHTML = 'Login success: ' + JSON.stringify(loginData, null, 2) + '<br><br>';
+                
+                // Test editor page access
+                document.getElementById('result').innerHTML += 'Testing editor page access...<br>';
+                
+                const editorResponse = await fetch('/editor');
+                document.getElementById('result').innerHTML += 'Editor page status: ' + editorResponse.status + '<br>';
+                document.getElementById('result').innerHTML += 'Editor page URL: ' + editorResponse.url + '<br>';
+                
+                if (editorResponse.status === 200) {
+                    document.getElementById('result').innerHTML += '<strong style="color: green;">✓ Editor access successful!</strong>';
+                } else {
+                    document.getElementById('result').innerHTML += '<strong style="color: red;">✗ Editor access failed!</strong>';
+                }
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+        
+        async function testAdminLogin() {
+            document.getElementById('result').innerHTML = 'Testing admin login...';
+            
+            try {
+                // Test login
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email: 'admin@example.com', 
+                        password: 'password' 
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (!loginResponse.ok) {
+                    document.getElementById('result').innerHTML = 'Login failed: ' + JSON.stringify(loginData, null, 2);
+                    return;
+                }
+                
+                document.getElementById('result').innerHTML = 'Login success: ' + JSON.stringify(loginData, null, 2) + '<br><br>';
+                
+                // Test admin page access
+                document.getElementById('result').innerHTML += 'Testing admin page access...<br>';
+                
+                const adminResponse = await fetch('/admin');
+                document.getElementById('result').innerHTML += 'Admin page status: ' + adminResponse.status + '<br>';
+                document.getElementById('result').innerHTML += 'Admin page URL: ' + adminResponse.url + '<br>';
+                
+                if (adminResponse.status === 200) {
+                    document.getElementById('result').innerHTML += '<strong style="color: green;">✓ Admin access successful!</strong>';
+                } else {
+                    document.getElementById('result').innerHTML += '<strong style="color: red;">✗ Admin access failed!</strong>';
+                }
+                
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

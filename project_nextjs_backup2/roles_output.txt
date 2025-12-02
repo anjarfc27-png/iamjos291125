@@ -1,0 +1,26 @@
+--- CHECKING ALL USERS ---
+Found 20 users:
+- admin@ojs.test (admin) [ID: cff38119-7986-47d5-9d76-b9862848a8ad]
+- copyeditor@example.com (copyeditor) [ID: e3a41fbe-0948-49d9-a0f5-90c1c55a3aec]
+- proofreader@example.com (proofreader) [ID: 22939e7c-7717-48ed-8e36-49612fa7373e]
+- layouteditor@example.com (layouteditor) [ID: d52c67a9-a3a1-4a8f-823e-ff67259a3c3e]
+- subscription@example.com (subscription) [ID: e1433f52-0d54-4777-bcde-6fd8c4767552]
+- verify_admin@example.com (verify_admin) [ID: 98fd3855-9602-4b46-9d51-bbeaad3ef75f]
+- verify_manager@example.com (verify_manager) [ID: 5c648a05-998f-4cfe-bb5e-2c50cdd4e7ae]
+- verify_editor@example.com (verify_editor) [ID: de7b676e-a66a-406c-8565-3d04f2ddd072]
+- layout-editor@test.com (layout-editor) [ID: bc8bb904-5d89-48e7-a183-c5246dd448c6]
+- subscription-manager@test.com (subscription-manager) [ID: 87653210-c447-43b5-b512-0c9806a355dd]
+- verify_author@example.com (verify_author) [ID: 0c8e68a8-494e-4e71-8326-63845217776a]
+- verify_reviewer@example.com (verify_reviewer) [ID: 26ed773f-c0d1-4de3-8a24-4905eef16652]
+- copyeditor@test.com (copyeditor-test) [ID: 6a125891-539e-4cba-a09e-6c05474b12e1]
+- proofreader@test.com (proofreader-test) [ID: c3a2af5e-fd72-468b-b9a5-dc9902d6ac9f]
+- reader@test.com (reader-test) [ID: 16804c62-561c-48b9-92b8-125682fdc2ce]
+- admin2@ojs.test (admin2) [ID: 9b044aca-002b-4951-8999-783627d9e34e]
+- multi_author_reviewer@ojs.test (multi_author_reviewer) [ID: 4319a7ec-884a-44c1-b627-0430b53b9efc]
+- reader@ojs.test (reader) [ID: 3df459b6-9e95-45c7-b7c2-f97b411385a5]
+- reviewer@ojs.test (reviewer) [ID: 3dc4a7f8-72d2-4d3d-85a9-d0267d9545e2]
+- author@ojs.test (author) [ID: debb57a4-4ba9-4a58-9f86-4c53009f5f96]
+
+--- CHECKING ADMIN ROLES ---
+Found 1 admin role assignments:
+- User ID: 98fd3855-9602-4b46-9d51-bbeaad3ef75f, Role: admin

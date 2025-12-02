@@ -1,0 +1,53 @@
+================================================================
+               SYSTEM ROLE & ACCOUNT AUDIT REPORT               
+================================================================
+Date: 2025-12-02T02:17:55.337Z
+
+1. STANDARD OJS 3.3 ROLES (Reference)
+----------------------------------------------------------------
+- Site Administrator        (ID: admin, Path: /admin)
+- Journal Manager           (ID: manager, Path: /manager)
+- Editor                    (ID: editor, Path: /editor)
+- Section Editor            (ID: section_editor, Path: /section-editor)
+- Reviewer                  (ID: reviewer, Path: /reviewer)
+- Author                    (ID: author, Path: /author)
+- Reader                    (ID: reader, Path: /reader)
+- Subscription Manager      (ID: subscription-manager, Path: /subscription-manager)
+- Layout Editor             (ID: layout-editor, Path: /layout-editor)
+- Copyeditor                (ID: copyeditor, Path: /copyeditor)
+- Proofreader               (ID: proofreader, Path: /proofreader)
+
+2. CURRENT REGISTERED ACCOUNTS & ROLES
+----------------------------------------------------------------
+Email                              Username            Roles                                   User ID
+--------------------------------------------------------------------------------------------------------------
+admin@ojs.test                     admin               site admin                              cff38119-7986-47d5-9d76-b9862848a8ad
+admin2@ojs.test                    admin2              (No Role)                               9b044aca-002b-4951-8999-783627d9e34e
+aksiomayufuna@gmail.com            pipsemarang         (No Role)                               71efb0f9-2f1a-4c4e-bb84-b9a0d80ffedf
+author@ojs.test                    author              (No Role)                               debb57a4-4ba9-4a58-9f86-4c53009f5f96
+copyeditor@example.com             copyeditor          (No Role)                               e3a41fbe-0948-49d9-a0f5-90c1c55a3aec
+copyeditor@test.com                copyeditor-test     (No Role)                               6a125891-539e-4cba-a09e-6c05474b12e1
+copyeditor1@example.com            copyeditor@ojs.test (No Role)                               498a26f5-e062-4fbf-b2c2-4ebc59653b8d
+editor@ojs.test                    editor              (No Role)                               dc6b6860-9bd2-4f05-bdb7-c5f26b4a3d08
+layout-editor@test.com             layout-editor       (No Role)                               bc8bb904-5d89-48e7-a183-c5246dd448c6
+layouteditor@example.com           layouteditor        (No Role)                               d52c67a9-a3a1-4a8f-823e-ff67259a3c3e
+manager@ojs.test                   manager             (No Role)                               cf616a62-891f-4bcc-9d0e-94a0a2a3eba2
+manager@test.com                   manager-test        (No Role)                               e0f095fc-8e9f-4e59-9b7c-1116909326bd
+multi_author_reviewer@ojs.test     multi_author_reviewer(No Role)                               4319a7ec-884a-44c1-b627-0430b53b9efc
+proofreader@example.com            proofreader         (No Role)                               22939e7c-7717-48ed-8e36-49612fa7373e
+proofreader@test.com               proofreader-test    (No Role)                               c3a2af5e-fd72-468b-b9a5-dc9902d6ac9f
+reader@ojs.test                    reader              (No Role)                               3df459b6-9e95-45c7-b7c2-f97b411385a5
+reader@test.com                    reader-test         (No Role)                               16804c62-561c-48b9-92b8-125682fdc2ce
+reviewer@ojs.test                  reviewer            (No Role)                               3dc4a7f8-72d2-4d3d-85a9-d0267d9545e2
+subscription-manager@test.com      subscription-manager(No Role)                               87653210-c447-43b5-b512-0c9806a355dd
+subscription@example.com           subscription        (No Role)                               e1433f52-0d54-4777-bcde-6fd8c4767552
+syswebcosmg@gmail.com              senopatiklipang     (No Role)                               7a3ee009-5f34-4bab-92c0-981f5b6b0dee
+verify_admin@example.com           verify_admin        site admin                              98fd3855-9602-4b46-9d51-bbeaad3ef75f
+verify_author@example.com          verify_author       author                                  0c8e68a8-494e-4e71-8326-63845217776a
+verify_editor@example.com          verify_editor       editor                                  de7b676e-a66a-406c-8565-3d04f2ddd072
+verify_manager@example.com         verify_manager      manager                                 5c648a05-998f-4cfe-bb5e-2c50cdd4e7ae
+verify_reviewer@example.com        verify_reviewer     reviewer                                26ed773f-c0d1-4de3-8a24-4905eef16652
+
+================================================================
+                       END OF REPORT                            
+================================================================

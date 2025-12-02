@@ -1,0 +1,19 @@
+﻿src/app/(editor)/editor/issues/[id]/page.tsx(129,37): error TS2322: Type '"destructive"' is not assignable to type '"primary" | "secondary" | "ghost" | "danger" | "outline" | undefined'.
+src/lib/__tests__/permissions.test.ts(142,66): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RolePath[]'.
+  Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(156,66): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RolePath[]'.
+  Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(167,66): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RolePath[]'.
+  Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(234,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(258,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(270,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(292,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.

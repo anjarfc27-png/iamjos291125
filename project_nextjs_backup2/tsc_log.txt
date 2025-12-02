@@ -1,0 +1,11 @@
+src/app/(admin)/admin/site-management/hosted-journals/create/page.tsx(56,18): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string>'.
+src/app/(manager)/manager/issues/[id]/issue-detail-client.tsx(181,36): error TS2322: Type '"destructive"' is not assignable to type 'Variant | undefined'.
+src/app/(manager)/manager/issues/[id]/issue-detail-client.tsx(194,14): error TS2741: Property 'defaultValue' is missing in type '{ children: Element[]; value: string; onValueChange: Dispatch<SetStateAction<string>>; className: string; }' but required in type 'PkpTabsProps'.
+src/app/(manager)/manager/issues/[id]/page.tsx(43,13): error TS2322: Type '{ id: any; title: any; status: any; authors: any; version: any; published_at: any; }[] | undefined' is not assignable to type 'Submission[]'.
+  Type 'undefined' is not assignable to type 'Submission[]'.
+src/app/(manager)/manager/issues/[id]/page.tsx(44,13): error TS2322: Type '{ id: any; title: any; status: any; metadata: any; }[] | undefined' is not assignable to type 'Submission[]'.
+  Type 'undefined' is not assignable to type 'Submission[]'.
+src/components/ui/dialog.tsx(46,17): error TS18046: 'children.props' is of type 'unknown'.
+src/features/editor/actions/reviewer-assignment.ts(57,16): error TS2304: Cannot find name 'userId'.
+src/features/editor/actions/reviewer-assignment.ts(65,7): error TS18004: No value exists in scope for the shorthand property 'reviewId'. Either declare one or provide an initializer.

@@ -1,0 +1,57 @@
+﻿scripts/check_parity.ts(45,35): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/(admin)/admin/site-settings/[tab]/page.tsx(111,15): error TS2322: Type '(formData: FormData) => Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type 'string | ((formData: FormData) => void | Promise<void>) | undefined'.
+  Type '(formData: FormData) => Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type '(formData: FormData) => void | Promise<void>'.
+    Type 'Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type 'void | Promise<void>'.
+      Type 'Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type 'Promise<void>'.
+        Type '{ success: boolean; message?: string | undefined; }' is not assignable to type 'void'.
+src/app/(admin)/admin/site-settings/appearance/setup/page.tsx(41,33): error TS2339: Property 'theme' does not exist on type '{ pageHeaderTitleImage: string; pageFooter: string; sidebar: string[]; styleSheet: string; }'.
+src/app/(admin)/admin/site-settings/site-setup/settings/page.tsx(25,13): error TS2322: Type '(formData: FormData) => Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type 'string | ((formData: FormData) => void | Promise<void>) | undefined'.
+  Type '(formData: FormData) => Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type '(formData: FormData) => void | Promise<void>'.
+    Type 'Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type 'void | Promise<void>'.
+      Type 'Promise<{ success: boolean; message?: string | undefined; }>' is not assignable to type 'Promise<void>'.
+        Type '{ success: boolean; message?: string | undefined; }' is not assignable to type 'void'.
+src/app/(admin)/admin/workflow/reviews/forms/client.tsx(40,23): error TS2322: Type '(formData: FormData) => Promise<{ success: boolean; message: any; }>' is not assignable to type 'string | ((formData: FormData) => void | Promise<void>) | undefined'.
+  Type '(formData: FormData) => Promise<{ success: boolean; message: any; }>' is not assignable to type '(formData: FormData) => void | Promise<void>'.
+    Type 'Promise<{ success: boolean; message: any; }>' is not assignable to type 'void | Promise<void>'.
+      Type 'Promise<{ success: boolean; message: any; }>' is not assignable to type 'Promise<void>'.
+        Type '{ success: boolean; message: any; }' is not assignable to type 'void'.
+src/app/(author)/author/submission/new/page.tsx(408,16): error TS2678: Type '2' is not comparable to type '1'.
+src/app/(author)/author/submission/new/page.tsx(578,16): error TS2678: Type '3' is not comparable to type '1'.
+src/app/(author)/author/submission/new/page.tsx(999,16): error TS2678: Type '4' is not comparable to type '1'.
+src/app/(author)/author/submission/new/page.tsx(1108,16): error TS2678: Type '5' is not comparable to type '1'.
+src/app/(author)/author/submission/new/page.tsx(1395,20): error TS2367: This comparison appears to be unintentional because the types '1' and '4' have no overlap.
+src/app/(author)/author/submission/new/page.tsx(1398,16): error TS2367: This comparison appears to be unintentional because the types '1' and '5' have no overlap.
+src/app/(author)/author/submission/new/page.tsx(1427,25): error TS2345: Argument of type '() => void' is not assignable to parameter of type 'ComponentType<object>'.
+  Type '() => void' is not assignable to type 'FunctionComponent<object>'.
+    Type 'void' is not assignable to type 'ReactNode | Promise<ReactNode>'.
+src/app/(editor)/editor/issues/[id]/page.tsx(121,55): error TS2322: Type '{ children: Element; variant: "outline"; asChild: true; }' is not assignable to type 'IntrinsicAttributes & ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | undefined; size?: "md" | ... 1 more ... | undefined; loading?: boolean | undefined; } & RefAttributes<...>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | undefined; size?: "md" | ... 1 more ... | undefined; loading?: boolean | undefined; } & RefAttributes<...>'.
+src/app/(editor)/editor/issues/[id]/page.tsx(124,55): error TS2322: Type '{ children: Element; variant: "outline"; asChild: true; }' is not assignable to type 'IntrinsicAttributes & ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | undefined; size?: "md" | ... 1 more ... | undefined; loading?: boolean | undefined; } & RefAttributes<...>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | undefined; size?: "md" | ... 1 more ... | undefined; loading?: boolean | undefined; } & RefAttributes<...>'.
+src/app/(editor)/editor/issues/[id]/page.tsx(129,37): error TS2322: Type '"destructive"' is not assignable to type '"primary" | "secondary" | "ghost" | "danger" | "outline" | undefined'.
+src/app/(editor)/editor/issues/page.tsx(32,25): error TS2554: Expected 1 arguments, but got 0.
+src/features/admin/actions/users.ts(109,43): error TS2339: Property 'errors' does not exist on type 'ZodError<{ userId: string; firstName: string; email: string; username: string; lastName?: string | undefined; preferredName?: string | undefined; phone?: string | undefined; affiliation?: string | undefined; ... 5 more ...; password?: string | undefined; }>'.
+src/features/announcements/actions.ts(33,56): error TS2339: Property 'errors' does not exist on type 'ZodError<{ title: string; shortDescription?: string | undefined; description?: string | undefined; dateExpire?: string | null | undefined; journalId?: string | null | undefined; }>'.
+src/features/emails/actions.ts(58,56): error TS2339: Property 'errors' does not exist on type 'ZodError<{ templateId: string; subject: string; body: string; }>'.
+src/features/navigation/actions.ts(70,56): error TS2339: Property 'errors' does not exist on type 'ZodError<{ menuId: string; title: string; type: "custom" | "page"; url?: string | undefined; parentId?: string | null | undefined; }>'.
+src/features/reviews/actions/forms.ts(90,56): error TS2339: Property 'errors' does not exist on type 'ZodError<{ title: string; description?: string | undefined; }>'.
+src/features/reviews/actions/forms.ts(152,56): error TS2339: Property 'errors' does not exist on type 'ZodError<{ formId: string; question: string; type: "text" | "textarea" | "radio" | "checkbox"; required?: boolean | undefined; options?: string[] | undefined; }>'.
+src/lib/__tests__/permissions.test.ts(142,66): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RolePath[]'.
+  Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(156,66): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RolePath[]'.
+  Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(167,66): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RolePath[]'.
+  Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(234,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(258,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(270,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.
+src/lib/__tests__/permissions.test.ts(292,50): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string | RolePath[] | undefined'.
+  Type 'string[]' is not assignable to type 'RolePath[]'.
+    Type 'string' is not assignable to type 'RolePath'.

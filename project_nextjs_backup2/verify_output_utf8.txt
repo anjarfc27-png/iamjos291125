@@ -1,0 +1,16 @@
+﻿Verifying Reviewer Dashboard...
+Using Submission: 6d570a5b-77f3-4203-9a40-d1818cc3fed0
+Found Reviewer: cfcb689f-8dc6-49a5-a7f4-2bfe29dd84d7
+Assignment ID: def479de-4dcd-4693-8d70-482c2ef50303
+Testing getReviewerAssignments...
+Fetched 2 assignments.
+Γ£à Assignment found in list:
+   - ID: def479de-4dcd-4693-8d70-482c2ef50303
+   - Title: Seeded Test Submission for Editor Verification
+   - Status: pending
+   - Stage: review
+Testing getReviewerAssignment (Single)...
+Γ£à Single Assignment fetched:
+   - ID: def479de-4dcd-4693-8d70-482c2ef50303
+   - Title: Seeded Test Submission for Editor Verification
+   - Abstract: N/A

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Editor</title>
+</head>
+<body>
+    <h1>Test Login Editor</h1>
+    <form id="loginForm">
+        <input type="email" id="email" value="editor@example.com" placeholder="Email">
+        <input type="password" id="password" value="password123" placeholder="Password">
+        <button type="submit">Login</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h3>Login Result:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p>Status: ${response.ok ? 'SUCCESS' : 'FAILED'}</p>
+                    ${response.ok ? '<p><a href="/editor">Go to Editor Dashboard</a></p>' : ''}
+                `;
+                
+                if (response.ok) {
+                    // Try to access editor page
+                    setTimeout(async () => {
+                        const editorResponse = await fetch('/editor');
+                        document.getElementById('result').innerHTML += `
+                            <h3>Editor Page Access:</h3>
+                            <p>Status: ${editorResponse.status}</p>
+                            <p>URL: ${editorResponse.url}</p>
+                        `;
+                    }, 1000);
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

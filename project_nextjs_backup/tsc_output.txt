@@ -1,0 +1,2 @@
+﻿src/app/(author)/author/submission/new/page.tsx(1426,1): error TS1005: '}' expected.
+src/middleware.ts(141,6): error TS1005: '}' expected.

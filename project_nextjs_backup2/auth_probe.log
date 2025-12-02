@@ -1,0 +1,6 @@
+Starting auth probe...
+Table 'user_accounts': OK (Count: 21)
+Table 'user_account_roles': OK (Count: 3)
+Table 'user_user_groups': OK (Count: 0)
+Table 'user_groups': OK (Count: 0)
+Table 'users': OK (Count: 17)
