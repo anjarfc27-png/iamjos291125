@@ -51,42 +51,24 @@ export async function assignReviewer(
   data: AssignReviewerData
 ): Promise<ActionResult> {
   try {
-    const { submissionId, reviewRoundId } = data;
+    const { submissionId, reviewRoundId, reviewerId, dueDate, responseDueDate } = data;
     const { userId } = await assertEditorAccess(submissionId);
-    await ensureDummyEditorData();
-
     const supabase = getSupabaseAdminClient();
 
-    const { data: round } = await supabase
-      .from("submission_review_rounds")
-      .select("id, stage")
-      .eq("id", reviewRoundId)
-      .maybeSingle();
-
-    if (!round) {
-      throw new Error("Review round not found");
-    }
-
     const reviewId = randomUUID();
-    const metadata = {
-      reviewMethod: data.reviewMethod,
-      personalMessage: data.personalMessage,
-    };
-
-    const { error } = await supabase.from("submission_reviews").insert({
+    const { error } = await supabase.from("review_assignments").insert({
       id: reviewId,
+      submission_id: submissionId,
       review_round_id: reviewRoundId,
-      reviewer_id: data.reviewerId,
-      assignment_date: new Date().toISOString(),
-      due_date: data.dueDate ?? null,
-      response_due_date: data.responseDueDate ?? null,
-      status: "pending",
-      metadata,
+      reviewer_id: reviewerId,
+      stage_id: 3, // Review stage
+      date_assigned: new Date().toISOString(),
+      date_due: dueDate,
+      date_response_due: responseDueDate,
+      status: 0, // Pending
     });
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
 
     await logActivity({
       submissionId,
@@ -120,8 +102,8 @@ export async function updateReviewerAssignment(
     const supabase = getSupabaseAdminClient();
 
     const { data: existing, error: fetchError } = await supabase
-      .from("submission_reviews")
-      .select("review_round_id, reviewer_id, metadata, due_date, response_due_date")
+      .from("review_assignments")
+      .select("review_round_id, reviewer_id, date_due, date_response_due")
       .eq("id", reviewId)
       .maybeSingle();
 
@@ -130,7 +112,7 @@ export async function updateReviewerAssignment(
     }
 
     const { data: round } = await supabase
-      .from("submission_review_rounds")
+      .from("review_rounds")
       .select("submission_id")
       .eq("id", existing.review_round_id)
       .maybeSingle();
@@ -141,21 +123,15 @@ export async function updateReviewerAssignment(
 
     const { userId } = await assertEditorAccess(round.submission_id);
 
-    const updatedMetadata =
-      data.personalMessage !== undefined
-        ? { ...(existing.metadata ?? {}), personalMessage: data.personalMessage }
-        : existing.metadata ?? {};
-
     const payload: Record<string, unknown> = {};
     if (data.dueDate !== undefined) {
-      payload.due_date = data.dueDate;
+      payload.date_due = data.dueDate;
     }
     if (data.responseDueDate !== undefined) {
-      payload.response_due_date = data.responseDueDate;
+      payload.date_response_due = data.responseDueDate;
     }
-    if (data.personalMessage !== undefined) {
-      payload.metadata = updatedMetadata;
-    }
+    // Personal message usually goes to email log, not stored in review_assignments metadata in OJS 3.3
+    // So we ignore personalMessage update here unless we want to log it.
 
     if (Object.keys(payload).length === 0) {
       return {
@@ -165,7 +141,7 @@ export async function updateReviewerAssignment(
     }
 
     const { error } = await supabase
-      .from("submission_reviews")
+      .from("review_assignments")
       .update(payload)
       .eq("id", reviewId);
 
@@ -202,7 +178,7 @@ export async function removeReviewerAssignment(
   try {
     const supabase = getSupabaseAdminClient();
     const { data: existing, error: fetchError } = await supabase
-      .from("submission_reviews")
+      .from("review_assignments")
       .select("review_round_id")
       .eq("id", reviewId)
       .maybeSingle();
@@ -212,7 +188,7 @@ export async function removeReviewerAssignment(
     }
 
     const { data: round } = await supabase
-      .from("submission_review_rounds")
+      .from("review_rounds")
       .select("submission_id")
       .eq("id", existing.review_round_id)
       .maybeSingle();
@@ -223,7 +199,7 @@ export async function removeReviewerAssignment(
 
     const { userId } = await assertEditorAccess(round.submission_id);
 
-    const { error } = await supabase.from("submission_reviews").delete().eq("id", reviewId);
+    const { error } = await supabase.from("review_assignments").delete().eq("id", reviewId);
     if (error) {
       throw new Error(error.message);
     }

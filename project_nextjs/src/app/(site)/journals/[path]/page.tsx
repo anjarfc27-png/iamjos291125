@@ -1,7 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-
-export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { format } from "date-fns";
 

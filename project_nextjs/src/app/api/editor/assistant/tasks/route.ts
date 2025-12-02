@@ -1,14 +1,14 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/editor/assistant/tasks
  * Get tasks assigned to the current assistant user
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUser(request);
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = getSupabaseAdminClient();
 
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "Missing journalId" }, { status: 400 });
     }
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
  * POST /api/editor/assistant/tasks
  * Assign a task to an assistant
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const user = await getCurrentUser(request);
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "Missing journalId" }, { status: 400 });
     }

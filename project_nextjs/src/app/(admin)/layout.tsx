@@ -223,7 +223,7 @@ export default function AdminLayout({
       {/* Main Layout Area with Sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-
+        {/* Sidebar removed as per user request */}
 
         {/* Main Content - Full Width */}
         <main

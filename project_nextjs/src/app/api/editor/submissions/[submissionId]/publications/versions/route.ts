@@ -1,9 +1,9 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
@@ -14,7 +14,7 @@ type RouteParams = {
  * POST: Create a new publication version
  * Based on OJS 3.3 version creation
  */
-export async function POST(request: NextRequest, context: RouteParams) {
+export async function POST(request: Request, context: RouteParams) {
   try {
     const { submissionId } = await context.params;
 

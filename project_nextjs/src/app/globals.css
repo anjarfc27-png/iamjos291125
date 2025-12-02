@@ -418,7 +418,7 @@ a:hover {
   color: rgba(0, 0, 0, 0.84) !important; /* text-light-rgba - dark grey text */
   border-top: none !important;
   border-right: none !important;
-  border-bottom: 2px solid #006798 !important; /* primary (blue) underline at bottom */
+  border-bottom: 4px solid #006798 !important; /* primary (blue) underline at bottom */
   border-left: none !important;
   margin-bottom: 0 !important;
   position: relative;

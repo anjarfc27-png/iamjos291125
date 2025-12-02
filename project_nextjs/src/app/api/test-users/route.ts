@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/db'
+export const dynamic = 'force-dynamic';
 
 async function ensureUser(email: string, username: string, first_name: string, last_name: string) {
   const { data: existing } = await supabaseAdmin
@@ -32,7 +33,7 @@ async function ensureRole(user_id: string, role_name: string) {
   return true
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{}> }) {
+export async function GET(request: Request, { params }: { params: Promise<{}> }) {
   const users = [
     { email: 'admin@example.com', username: 'admin', first_name: 'Site', last_name: 'Admin', roles: ['Site admin'] },
     { email: 'editor@example.com', username: 'editor', first_name: 'Main', last_name: 'Editor', roles: ['Section editor'] },

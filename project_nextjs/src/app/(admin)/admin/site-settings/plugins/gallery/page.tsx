@@ -116,8 +116,7 @@ export default function PluginGalleryPage() {
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
-        marginBottom: '1.5rem',
-        padding: '0 1.5rem'
+        marginBottom: '1.5rem'
       }}>
         <div style={{
           display: 'flex',
@@ -166,8 +165,7 @@ export default function PluginGalleryPage() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '1rem',
-        padding: '0 1.5rem 2rem 1.5rem'
+        gap: '1rem'
       }}>
         {filteredPlugins.map((plugin) => (
           <div

@@ -24,26 +24,17 @@ const journalSchema = z.object({
     .string()
     .trim()
     .transform((value) => (value.length > 0 ? value : null))
-    .nullable(),
-  isPublic: z.boolean(),
+    .optional(),
+  isPublic: z.boolean().optional().default(false),
 });
 
-type Result = { success: true; journalId?: string } | { success: false; message: string };
+type Result = { success: boolean; message?: string; journalId?: string };
 
-const revalidateHostedJournals = () => revalidatePath("/admin/site-management/hosted-journals");
+function revalidateHostedJournals() {
+  revalidatePath("/admin/site-management/hosted-journals");
+}
 
-// CREATE JOURNAL ACTION - Complete with all OJS 3.3 fields
-export async function createJournalAction(input: {
-  title: string;
-  initials?: string;
-  abbreviation?: string;
-  publisher?: string;
-  issnOnline?: string;
-  issnPrint?: string;
-  path: string;
-  description?: string | null;
-  isPublic: boolean;
-}): Promise<Result> {
+export async function createJournalAction(input: z.infer<typeof journalSchema>): Promise<Result> {
   const parsed = journalSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, message: parsed.error.issues[0]?.message ?? "Validasi gagal." };
@@ -96,12 +87,155 @@ export async function createJournalAction(input: {
   return { success: true, journalId: newJournalId };
 }
 
-// UPDATE JOURNAL ACTION
+// ... existing code ...
+
+// SECTION ACTIONS
+export async function createSectionAction(input: {
+  journalId: string;
+  title: string;
+  abbreviation: string;
+  policy?: string;
+}): Promise<Result> {
+  try {
+    await requireJournalRole(input.journalId, "manager");
+    const supabase = getSupabaseAdminClient();
+
+    const { error } = await supabase.from("sections").insert({
+      journal_id: input.journalId,
+      title: input.title,
+      abbreviation: input.abbreviation,
+      policy: input.policy,
+      is_active: true,
+    });
+
+    if (error) throw error;
+    revalidatePath(`/admin/journals/${input.journalId}/settings/wizard`);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Create Section Error:", error);
+    return { success: false, message: error?.message || "Gagal membuat section." };
+  }
+}
+
+export async function updateSectionAction(input: {
+  sectionId: string;
+  journalId: string;
+  title: string;
+  abbreviation: string;
+  policy?: string;
+}): Promise<Result> {
+  try {
+    await requireJournalRole(input.journalId, "manager");
+    const supabase = getSupabaseAdminClient();
+
+    const { error } = await supabase
+      .from("sections")
+      .update({
+        title: input.title,
+        abbreviation: input.abbreviation,
+        policy: input.policy,
+      })
+      .eq("id", input.sectionId);
+
+    if (error) throw error;
+    revalidatePath(`/admin/journals/${input.journalId}/settings/wizard`);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Section Error:", error);
+    return { success: false, message: error?.message || "Gagal memperbarui section." };
+  }
+}
+
+export async function deleteSectionAction(
+  sectionId: string,
+  journalId: string
+): Promise<Result> {
+  try {
+    await requireJournalRole(journalId, "manager");
+    const supabase = getSupabaseAdminClient();
+
+    const { error } = await supabase
+      .from("sections")
+      .delete()
+      .eq("id", sectionId);
+
+    if (error) throw error;
+    revalidatePath(`/admin/journals/${journalId}/settings/wizard`);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Delete Section Error:", error);
+    return { success: false, message: error?.message || "Gagal menghapus section." };
+  }
+}
+
+// USER ENROLLMENT ACTION
+export async function enrollUserAction(input: {
+  journalId: string;
+  email: string;
+  roleId: number; // OJS role ID
+}): Promise<Result> {
+  try {
+    await requireJournalRole(input.journalId, "manager");
+    const supabase = getSupabaseAdminClient();
+
+    // 1. Find user by email
+    const { data: user, error: userError } = await supabase
+      .from("user_accounts")
+      .select("id")
+      .eq("email", input.email)
+      .single();
+
+    if (userError || !user) {
+      return { success: false, message: "User not found." };
+    }
+
+    // 2. Assign role in user_user_groups
+    const { error: roleError } = await supabase.from("user_user_groups").insert({
+      user_id: user.id,
+      user_group_id: null, // We don't use user_groups table directly for now if using raw role_id
+      // Wait, we need a user_group_id that matches the role_id and context_id
+      // Let's find or create a user_group for this role in this context
+    });
+
+    // Correction: We need to find a valid user_group for this role in this journal
+    // If it doesn't exist, we might need to create it, but usually standard groups exist.
+    // For MVP, let's assume we insert into user_user_groups linking to a user_group.
+
+    // Fetch a user_group for this role in this journal
+    const { data: userGroup } = await supabase
+      .from("user_groups")
+      .select("id")
+      .eq("context_id", input.journalId)
+      .eq("role_id", input.roleId)
+      .limit(1)
+      .single();
+
+    if (!userGroup) {
+      return { success: false, message: "Role group not found for this journal." };
+    }
+
+    const { error: enrollError } = await supabase.from("user_user_groups").insert({
+      user_id: user.id,
+      user_group_id: userGroup.id
+    });
+
+    if (enrollError) throw enrollError;
+
+    revalidatePath(`/admin/journals/${input.journalId}/settings/wizard`);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Enroll User Error:", error);
+    return { success: false, message: error?.message || "Gagal mendaftarkan user." };
+  }
+}
 export async function updateJournalAction(input: {
   id: string;
   title: string;
   initials?: string;
   abbreviation?: string;
+  publisher?: string;
+  issnOnline?: string;
+  issnPrint?: string;
   path: string;
   description?: string | null;
   isPublic: boolean;
@@ -111,7 +245,7 @@ export async function updateJournalAction(input: {
     return { success: false, message: parsed.error.issues[0]?.message ?? "Validasi gagal." };
   }
 
-  await requireJournalRole(input.id, ["manager"]);
+  await requireJournalRole(input.id, ["manager", "admin"]);
 
   const supabase = getSupabaseAdminClient();
 
@@ -141,101 +275,38 @@ export async function updateJournalAction(input: {
   if (parsed.data.abbreviation !== undefined) {
     settingsUpdates.push({ setting_name: "abbreviation", setting_value: parsed.data.abbreviation });
   }
+  if (parsed.data.publisher !== undefined) {
+    settingsUpdates.push({ setting_name: "publisher", setting_value: parsed.data.publisher });
+  }
+  if (parsed.data.issnOnline !== undefined) {
+    settingsUpdates.push({ setting_name: "onlineIssn", setting_value: parsed.data.issnOnline });
+  }
+  if (parsed.data.issnPrint !== undefined) {
+    settingsUpdates.push({ setting_name: "printIssn", setting_value: parsed.data.issnPrint });
+  }
   if (parsed.data.description !== undefined) {
     settingsUpdates.push({ setting_name: "description", setting_value: parsed.data.description ?? "" });
   }
 
   const settingsPayload = settingsUpdates.map(setting => ({
     journal_id: input.id,
-    locale: '',
+    locale: '', // Default locale, or make it dynamic if needed
     setting_name: setting.setting_name,
     setting_value: setting.setting_value,
   }));
 
   if (settingsPayload.length > 0) {
-    await supabase.from("journal_settings").upsert(settingsPayload, { onConflict: 'journal_id,setting_name,locale' });
-  }
+    const { error: settingsError } = await supabase
+      .from("journal_settings")
+      .upsert(settingsPayload, { onConflict: 'journal_id,setting_name,locale' });
 
-  revalidateHostedJournals();
-  return { success: true };
-}
-
-// DELETE JOURNAL ACTION
-export async function deleteJournalAction(id: string): Promise<Result> {
-  await requireSiteAdmin();
-
-  const supabase = getSupabaseAdminClient();
-  const { error } = await supabase.from("journals").delete().eq("id", id);
-
-  if (error) {
-    return { success: false, message: "Tidak dapat menghapus jurnal ini." };
-  }
-
-  revalidateHostedJournals();
-  return { success: true };
-}
-
-// USER ROLE MANAGEMENT ACTIONS
-
-export async function listJournalUserRoles(journalId: string) {
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("user_account_roles")
-    .select("user_id, role, assigned_at, user_accounts(first_name, last_name, email, username)")
-    .eq("journal_id", journalId);
-
-  if (error) return [];
-
-  return data.map((row: any) => ({
-    user_id: row.user_id,
-    role: row.role,
-    assigned_at: row.assigned_at,
-    first_name: row.user_accounts?.first_name,
-    last_name: row.user_accounts?.last_name,
-    email: row.user_accounts?.email,
-    username: row.user_accounts?.username,
-  }));
-}
-
-export async function addJournalUserRole(journalId: string, userId: string, role: string): Promise<Result> {
-  await requireJournalRole(journalId, ["manager", "admin"]);
-
-  const supabase = getSupabaseAdminClient();
-  const { error } = await supabase
-    .from("user_account_roles")
-    .insert({
-      journal_id: journalId,
-      user_id: userId,
-      role: role,
-    });
-
-  if (error) {
-    if (error.code === "23505") {
-      return { success: false, message: "Pengguna sudah memiliki peran ini." };
+    if (settingsError) {
+      console.error("Error updating settings:", settingsError);
+      return { success: false, message: "Gagal memperbarui pengaturan jurnal." };
     }
-    return { success: false, message: "Gagal menambahkan peran." };
   }
 
-  revalidatePath(`/journals/${journalId}/users`);
-  return { success: true };
-}
-
-export async function removeJournalUserRole(journalId: string, userId: string, role: string): Promise<Result> {
-  await requireJournalRole(journalId, ["manager", "admin"]);
-
-  const supabase = getSupabaseAdminClient();
-  const { error } = await supabase
-    .from("user_account_roles")
-    .delete()
-    .eq("journal_id", journalId)
-    .eq("user_id", userId)
-    .eq("role", role);
-
-  if (error) {
-    return { success: false, message: "Gagal menghapus peran." };
-  }
-
-  revalidatePath(`/journals/${journalId}/users`);
+  revalidateHostedJournals();
   return { success: true };
 }
 
@@ -315,4 +386,134 @@ export async function setupJournalAction(input: {
 
   revalidateHostedJournals();
   return { success: true };
+}
+
+// USER ROLE MANAGEMENT ACTIONS
+export async function listJournalUserRoles(journalId: string) {
+  const supabase = getSupabaseAdminClient();
+
+  // Get all roles for this journal
+  // We need to join with user_accounts to get user details if needed, 
+  // but for now let's just get the roles and maybe user emails if possible
+  // user_account_roles has: user_id, role_name, journal_id
+
+  const { data, error } = await supabase
+    .from("user_account_roles")
+    .select("user_id, role_name, created_at")
+    .eq("journal_id", journalId);
+
+  if (error) {
+    console.error("Error listing journal user roles:", error);
+    throw error;
+  }
+
+  return data.map(row => ({
+    user_id: row.user_id,
+    role: row.role_name,
+    assigned_at: row.created_at
+  }));
+}
+
+export async function addJournalUserRole(journalId: string, userId: string, role: string): Promise<Result> {
+  const supabase = getSupabaseAdminClient();
+
+  // Validate role
+  const validRoles = ["manager", "editor", "reviewer", "author", "reader", "copyeditor", "layout_editor", "proofreader"];
+  if (!validRoles.includes(role)) {
+    return { success: false, message: "Peran tidak valid." };
+  }
+
+  // Check if role already exists
+  const { data: existing } = await supabase
+    .from("user_account_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("journal_id", journalId)
+    .eq("role_name", role)
+    .single();
+
+  if (existing) {
+    return { success: false, message: "Pengguna sudah memiliki peran ini." };
+  }
+
+  const { error } = await supabase
+    .from("user_account_roles")
+    .insert({
+      user_id: userId,
+      journal_id: journalId,
+      role_name: role,
+    });
+
+  if (error) {
+    console.error("Error adding journal user role:", error);
+    return { success: false, message: "Gagal menambahkan peran pengguna." };
+  }
+
+  return { success: true };
+}
+
+export async function removeJournalUserRole(journalId: string, userId: string, role: string): Promise<Result> {
+  const supabase = getSupabaseAdminClient();
+
+  const { error } = await supabase
+    .from("user_account_roles")
+    .delete()
+    .eq("user_id", userId)
+    .eq("journal_id", journalId)
+    .eq("role_name", role);
+
+  if (error) {
+    console.error("Error removing journal user role:", error);
+    return { success: false, message: "Gagal menghapus peran pengguna." };
+  }
+
+  return { success: true };
+}
+
+export async function getSectionsAction(journalId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("sections")
+    .select("id, title, abbreviation")
+    .eq("journal_id", journalId)
+    .order("seq", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching sections:", error);
+    return { success: false, message: "Gagal mengambil data section." };
+  }
+  return { success: true, data };
+}
+
+export async function getJournalUsersAction(journalId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("user_account_roles")
+    .select(`
+      user_id,
+      role_name,
+      user:user_accounts(id, first_name, last_name, email)
+    `)
+    .eq("journal_id", journalId);
+
+  if (error) {
+    console.error("Error fetching journal users:", error);
+    return { success: false, message: "Gagal mengambil data user." };
+  }
+
+  const userMap = new Map();
+  data.forEach((row: any) => {
+    if (!row.user) return;
+    if (!userMap.has(row.user_id)) {
+      userMap.set(row.user_id, {
+        id: row.user.id,
+        fullName: `${row.user.first_name} ${row.user.last_name}`.trim(),
+        email: row.user.email,
+        roles: []
+      });
+    }
+    userMap.get(row.user_id).roles.push(row.role_name);
+  });
+
+  return { success: true, data: Array.from(userMap.values()) };
 }

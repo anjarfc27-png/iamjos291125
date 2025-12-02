@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addMenuItem, deleteMenuItem, moveMenuItem } from "../actions";
-import { Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { addMenuItem, deleteMenuItem } from "../actions";
+import { Plus, Trash2, GripVertical } from "lucide-react";
 
 type MenuItem = {
     id: string;
@@ -31,12 +30,6 @@ export function MenuEditor({ menu }: Props) {
     const handleDelete = async (itemId: string) => {
         if (!confirm("Delete this item?")) return;
         await deleteMenuItem(itemId);
-    };
-
-    const handleMove = async (itemId: string, direction: 'up' | 'down') => {
-        startTransition(async () => {
-            await moveMenuItem(itemId, direction);
-        });
     };
 
     const handleAdd = async (formData: FormData) => {
@@ -88,27 +81,10 @@ export function MenuEditor({ menu }: Props) {
                 {menu.items.length === 0 ? (
                     <p className="text-sm text-gray-400 italic">No items in this menu.</p>
                 ) : (
-                    menu.items.map((item, index) => (
+                    menu.items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-100 group">
                             <div className="flex items-center gap-3">
-                                <div className="flex flex-col gap-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMove(item.id, 'up')}
-                                        disabled={index === 0 || isPending}
-                                        className="text-gray-400 hover:text-[#006798] disabled:opacity-30"
-                                    >
-                                        <ArrowUp className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMove(item.id, 'down')}
-                                        disabled={index === menu.items.length - 1 || isPending}
-                                        className="text-gray-400 hover:text-[#006798] disabled:opacity-30"
-                                    >
-                                        <ArrowDown className="h-3 w-3" />
-                                    </button>
-                                </div>
+                                <GripVertical className="h-4 w-4 text-gray-400 cursor-move" />
                                 <div>
                                     <div className="text-sm font-medium text-gray-900">{item.title}</div>
                                     {item.url && <div className="text-xs text-gray-500">{item.url}</div>}

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSiteAdmin } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 // Dummy version check - in production, this would check against OJS PKP API
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     await requireSiteAdmin();
 

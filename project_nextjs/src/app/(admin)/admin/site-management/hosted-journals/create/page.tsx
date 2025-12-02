@@ -53,7 +53,7 @@ export default function CreateJournalPage() {
         // Redirect to journal settings wizard
         router.push(`/admin/journals/${result.journalId}/settings/wizard`);
       } else if (!result.success) {
-        setError(result.message);
+        setError(result.message || 'Unknown error');
         setLoading(false);
       }
     } catch (err: any) {
@@ -270,7 +270,7 @@ export default function CreateJournalPage() {
               fontSize: pkpTypography.bodyRegular,
               fontFamily: pkpTypography.fontFamily
             }}
-            placeholder="Organization or institution name"
+            placeholder="Publisher name"
           />
         </div>
 
@@ -325,7 +325,7 @@ export default function CreateJournalPage() {
                 fontSize: pkpTypography.bodyRegular,
                 fontFamily: pkpTypography.fontFamily
               }}
-              placeholder="e.g., 1234-5678"
+              placeholder="e.g., 1234-5679"
             />
           </div>
         </div>

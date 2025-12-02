@@ -27,9 +27,9 @@ export const en = {
     details: 'Details',
   },
 
-  // Navigation
-  navigation: {
-    admin: 'Administration',
+  user: {
+    profile: 'Edit Profile',
+    logOut: 'Logout',
   },
 
   // Site Administration

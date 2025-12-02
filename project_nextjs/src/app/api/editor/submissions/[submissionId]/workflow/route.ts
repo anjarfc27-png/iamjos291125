@@ -1,4 +1,3 @@
-"use server";
 
 import { NextResponse } from "next/server";
 
@@ -27,6 +26,7 @@ import {
   requestAuthorCopyeditAction,
   logActivity,
 } from "@/features/editor/actions/workflow-helpers";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;

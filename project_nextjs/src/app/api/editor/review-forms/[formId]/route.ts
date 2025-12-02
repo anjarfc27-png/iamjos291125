@@ -1,4 +1,3 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,15 +6,16 @@ import { requireJournalRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import { EDITOR_ROLES, handleError } from "../../library-files/utils";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ formId: string }>;
 };
 
-export async function PATCH(request: NextRequest, context: RouteParams) {
+export async function PATCH(request: Request, context: RouteParams) {
   try {
     const { formId } = await context.params;
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }
@@ -81,10 +81,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteParams) {
+export async function DELETE(request: Request, context: RouteParams) {
   try {
     const { formId } = await context.params;
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }

@@ -1,4 +1,3 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
@@ -9,6 +8,7 @@ import {
   saveSetting,
 } from "@/lib/settings-helpers";
 import { ensureDummySettingsSeed } from "@/features/editor/dummy-settings";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ section: string }>;
@@ -18,7 +18,7 @@ type RouteParams = {
  * GET /api/editor/settings/[section]
  * Load settings for a specific section
  */
-export async function GET(request: NextRequest, context: RouteParams) {
+export async function GET(request: Request, context: RouteParams) {
   try {
     const { section } = await context.params;
     const user = await getCurrentUser(request);
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
  * POST /api/editor/settings/[section]
  * Save settings for a specific section
  */
-export async function POST(request: NextRequest, context: RouteParams) {
+export async function POST(request: Request, context: RouteParams) {
   try {
     const { section } = await context.params;
     const user = await getCurrentUser(request);

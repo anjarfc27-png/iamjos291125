@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserServer } from "@/lib/auth-server";
 import { getReviewerAssignment } from "@/features/reviewer/data";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     const user = await getCurrentUserServer();
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     const user = await getCurrentUserServer();

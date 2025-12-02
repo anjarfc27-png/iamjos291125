@@ -1,9 +1,9 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string; fileId: string }>;
@@ -14,7 +14,7 @@ type RouteParams = {
  * Download a submission file
  * Based on OJS 3.3 FileManager::downloadByPath()
  */
-export async function GET(request: NextRequest, context: RouteParams) {
+export async function GET(request: Request, context: RouteParams) {
   try {
     const { submissionId, fileId } = await context.params;
 

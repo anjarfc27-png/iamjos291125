@@ -4,8 +4,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@supabase/supabase-js";
 import { publicEnv } from "@/lib/env";
+export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{}> }) {
+export async function POST(request: Request, { params }: { params: Promise<{}> }) {
   const server = await createSupabaseServerClient();
   const { data } = await server.auth.getUser();
   let user = data.user;

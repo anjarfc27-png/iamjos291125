@@ -1,15 +1,15 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export const dynamic = 'force-dynamic';
 
 /**
  * Reset Permissions API Endpoint
  * POST /api/editor/tools/reset-permissions
  * Resets permissions for all submissions in a journal
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     // Check permissions
     const user = await getCurrentUser(request);

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PkpTabs, PkpTabsList, PkpTabsTrigger, PkpTabsContent } from "@/components/ui/pkp-tabs";
 import { SubmissionTable } from "@/features/editor/components/submission-table";
 import { useAuth } from "@/contexts/AuthContext";
 import type { EditorDashboardStats, SubmissionSummary } from "@/features/editor/types";
-import { useI18n } from "@/contexts/I18nContext";
 
 type FetchResult<T> = { ok: boolean; error?: string;[key: string]: any } & T;
 
@@ -15,19 +14,13 @@ async function fetchJson<T>(url: string): Promise<T> {
   const json = (await res.json()) as FetchResult<T>;
   if (!res.ok || !json?.ok) {
     const errorMessage = typeof json?.error === "string" ? json.error : `Request failed ${res.status}`;
-    console.error(`Fetch failed for ${url}:`, errorMessage);
     throw new Error(errorMessage);
   }
   return json as unknown as T;
 }
 
-interface ManagerDashboardSubmissionsClientProps {
-  journalId?: string;
-}
-
-export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboardSubmissionsClientProps) {
+export function ManagerDashboardSubmissionsClient() {
   const { user } = useAuth();
-  const { t } = useI18n();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,20 +42,12 @@ export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboar
       try {
         setLoading(true);
         setError(null);
-
-        // Construct URLs with journalId if present
-        const statsUrl = journalId ? `/api/editor/dashboard?journalId=${journalId}` : "/api/editor/dashboard";
-        const myUrl = journalId ? `/api/editor/submissions?queue=my&journalId=${journalId}` : "/api/editor/submissions?queue=my";
-        const unassignedUrl = journalId ? `/api/editor/submissions?queue=unassigned&journalId=${journalId}` : "/api/editor/submissions?queue=unassigned";
-        const allUrl = journalId ? `/api/editor/submissions?queue=all&journalId=${journalId}` : "/api/editor/submissions?queue=all";
-        const archivedUrl = journalId ? `/api/editor/submissions?queue=archived&journalId=${journalId}` : "/api/editor/submissions?queue=archived";
-
         const [statsRes, myRes, unassignedRes, allRes, archivedRes] = await Promise.all([
-          fetchJson<{ stats: EditorDashboardStats }>(statsUrl),
-          fetchJson<{ submissions: SubmissionSummary[] }>(myUrl),
-          fetchJson<{ submissions: SubmissionSummary[] }>(unassignedUrl),
-          fetchJson<{ submissions: SubmissionSummary[] }>(allUrl),
-          fetchJson<{ submissions: SubmissionSummary[] }>(archivedUrl),
+          fetchJson<{ stats: EditorDashboardStats }>("/api/editor/dashboard"),
+          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=my"),
+          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=unassigned"),
+          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=all"),
+          fetchJson<{ submissions: SubmissionSummary[] }>("/api/editor/submissions?queue=archived"),
         ]);
 
         if (!activeRequest) return;
@@ -73,7 +58,6 @@ export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboar
         setArchived(archivedRes.submissions);
       } catch (err) {
         if (!activeRequest) return;
-        console.error("Dashboard data load error:", err);
         setError(err instanceof Error ? err.message : "Failed to load submissions");
       } finally {
         if (activeRequest) {
@@ -81,13 +65,11 @@ export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboar
         }
       }
     }
-    if (user) {
-      loadData();
-    }
+    loadData();
     return () => {
       activeRequest = false;
     };
-  }, [user, journalId]);
+  }, []);
 
   // Styling active/inactive tabs (same logic as editor page)
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -146,25 +128,6 @@ export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboar
 
     return () => observer.disconnect();
   }, []);
-
-  if (loading) {
-    return <div className="p-8 text-center">Loading dashboard...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center text-red-600">
-        <h3 className="font-bold">Error loading dashboard</h3>
-        <p>{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
 
   return (
     <section
@@ -303,8 +266,8 @@ export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboar
                 </PkpTabsTrigger>
               )}
 
-              {/* Archives */}
-              <PkpTabsTrigger value="archives">
+              {/* Archive */}
+              <PkpTabsTrigger value="archive">
                 Archives
                 {(stats?.archived ?? 0) > 0 && (
                   <span
@@ -331,30 +294,103 @@ export function ManagerDashboardSubmissionsClient({ journalId }: ManagerDashboar
               </PkpTabsTrigger>
             </PkpTabsList>
           </div>
+
+          {/* Help Button */}
+          <div style={{ marginBottom: "0.5rem" }}>
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                color: "#006798",
+                backgroundColor: "#ffffff",
+                border: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "0.25rem 0.5rem",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "14px",
+                  height: "14px",
+                  borderRadius: "50%",
+                  backgroundColor: "#006798",
+                  color: "#ffffff",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                }}
+              >
+                i
+              </span>
+              Help
+            </button>
+          </div>
         </div>
 
-        <div style={{ padding: "2rem" }}>
-          <PkpTabsContent value="myQueue">
-            <SubmissionTable submissions={myQueue} />
+        {/* Tab Contents */}
+        <PkpTabsContent
+          value="myQueue"
+          style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}
+        >
+          <SubmissionTable
+            submissions={myQueue}
+            emptyMessage="No submissions found."
+            tabLabel="My Assigned"
+            isLoading={loading && !myQueue.length}
+            error={error}
+          />
+        </PkpTabsContent>
+
+        {isManagerOrAdmin && (
+          <PkpTabsContent
+            value="unassigned"
+            style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}
+          >
+            <SubmissionTable
+              submissions={unassigned}
+              emptyMessage="No submissions found."
+              tabLabel="Unassigned"
+              isLoading={loading && !unassigned.length}
+              error={error}
+            />
           </PkpTabsContent>
+        )}
 
-          {isManagerOrAdmin && (
-            <>
-              <PkpTabsContent value="unassigned">
-                <SubmissionTable submissions={unassigned} />
-              </PkpTabsContent>
-
-              <PkpTabsContent value="active">
-                <SubmissionTable submissions={active} />
-              </PkpTabsContent>
-            </>
-          )}
-
-          <PkpTabsContent value="archives">
-            <SubmissionTable submissions={archived} />
+        {isManagerOrAdmin && (
+          <PkpTabsContent
+            value="active"
+            style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}
+          >
+            <SubmissionTable
+              submissions={active}
+              emptyMessage="No submissions found."
+              tabLabel="All Active"
+              isLoading={loading && !active.length}
+              error={error}
+            />
           </PkpTabsContent>
-        </div>
+        )}
+
+        <PkpTabsContent
+          value="archive"
+          style={{ position: "relative", padding: "1.5rem 2rem", backgroundColor: "#eaedee" }}
+        >
+          <SubmissionTable
+            submissions={archived}
+            emptyMessage="No submissions found."
+            tabLabel="Archives"
+            isLoading={loading && !archived.length}
+            error={error}
+          />
+        </PkpTabsContent>
       </PkpTabs>
     </section>
   );
 }
+
+

@@ -157,7 +157,7 @@ export default function ManagerLayout({ children }: Props) {
             </button>
 
             {/* Dropdown Menu */}
-            {journalDropdownOpen && journals.length > 0 && (
+            {journalDropdownOpen && (journals.length > 0 || user?.roles?.some((r) => r.role_path === "admin")) && (
               <div
                 style={{
                   position: "absolute",
@@ -172,6 +172,23 @@ export default function ManagerLayout({ children }: Props) {
                   zIndex: 100,
                 }}
               >
+                {user?.roles?.some((r) => r.role_path === "admin") && (
+                  <Link
+                    href="/admin"
+                    style={{
+                      display: "block",
+                      padding: "0.75rem 1rem",
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      color: "#000000",
+                      textDecoration: "none",
+                      borderBottom: "1px solid #f3f4f6",
+                    }}
+                    onClick={() => setJournalDropdownOpen(false)}
+                  >
+                    {t("admin.siteAdministration")}
+                  </Link>
+                )}
                 {journals.map((journal) => (
                   <Link
                     key={journal.id}

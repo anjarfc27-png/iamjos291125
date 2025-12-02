@@ -1,16 +1,16 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string; versionId: string }>;
 };
 
-export async function POST(request: NextRequest, context: RouteParams) {
+export async function POST(request: Request, context: RouteParams) {
   try {
     const { submissionId, versionId } = await context.params;
     if (!submissionId || !versionId) {

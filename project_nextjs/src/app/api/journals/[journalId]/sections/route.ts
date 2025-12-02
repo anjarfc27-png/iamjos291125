@@ -1,8 +1,8 @@
-"use server";
 
 import { NextResponse } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ journalId: string }>;

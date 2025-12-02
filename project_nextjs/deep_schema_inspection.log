@@ -1,18 +1,10 @@
 Starting deep inspection...
 
 --- Submissions Table ---
-Submissions table empty or no access. Trying to insert a dummy to check columns? No, too risky.
-Column 'id' exists? YES
-Column 'title' exists? NO (column submissions.title does not exist)
-Column 'locale' exists? NO (column submissions.locale does not exist)
-Column 'submission_progress' exists? NO (column submissions.submission_progress does not exist)
+Submissions Columns: id, context_id, stage_id, status, current_publication_id, date_submitted, date_last_activity, date_status_modified, last_modified, created_at, updated_at, journal_id, current_stage, submitter_id, locale
 
 --- Publications Table ---
-Publications table empty or no access.
-Column 'id' exists? YES
-Column 'submission_id' exists? YES
-Column 'title' exists? NO (column publications.title does not exist)
-Column 'status' exists? YES
+Publications Columns: id, submission_id, version, status, primary_locale, date_published, seq, created_at, updated_at
 
 --- Submission Settings Table ---
 Error fetching submission_settings: {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.publication_settings'","message":"Could not find the table 'public.submission_settings' in the schema cache"}

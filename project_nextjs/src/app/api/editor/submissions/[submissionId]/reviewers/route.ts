@@ -1,16 +1,16 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
 };
 
-export async function POST(request: NextRequest, context: RouteParams) {
+export async function POST(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   
   // Check permissions - only editors, section editors, and managers (or site admin) can assign reviewers
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest, context: RouteParams) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(request: NextRequest, context: RouteParams) {
+export async function DELETE(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   const body = (await request.json().catch(() => null)) as { reviewId?: string } | null;
   const reviewId = body?.reviewId;

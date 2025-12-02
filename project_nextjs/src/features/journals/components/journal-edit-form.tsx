@@ -54,9 +54,9 @@ export function JournalEditForm({ journal, mode, onCancel, onSuccess, }: Props) 
   ];
 
   const translations: Record<string, Record<string, string>> = {
-    en_US: { journalTitle: 'Journal title', journalInitials: 'Journal initials', journalAbbreviation: 'Journal Abbreviation', journalDescription: 'Journal description', path: 'Path', pathHint: 'A unique path for the journal URL', languages: 'Languages', primaryLocale: 'Primary locale', enable: 'Enable', enableHint: 'Enable this journal to appear publicly on the site', cancel: 'Cancel', create: 'Create', save: 'Save', titlePlaceholder: 'e.g., Journal of Software Documentation', initialsPlaceholder: 'e.g., JSD', abbreviationPlaceholder: 'e.g., J Softw Doc', descriptionPlaceholder: 'Describe the focus and scope of this journal...', pathPlaceholder: 'e.g., public-knowledge', },
-    es_ES: { journalTitle: 'Título de la revista', journalInitials: 'Iniciales de la revista', journalAbbreviation: 'Abreviatura de la revista', journalDescription: 'Descripción de la revista', path: 'Ruta', pathHint: 'Una ruta única para la URL de la revista', languages: 'Idiomas', primaryLocale: 'Idioma principal', enable: 'Habilitar', enableHint: 'Habilitar esta revista para que aparezca públicamente en el sitio', cancel: 'Cancelar', create: 'Crear', save: 'Guardar', titlePlaceholder: 'ej., Revista de Documentación de Software', initialsPlaceholder: 'ej., RDS', abbreviationPlaceholder: 'ej., Rev Doc Soft', descriptionPlaceholder: 'Describa el enfoque y alcance de esta revista...', pathPlaceholder: 'ej., conocimiento-publico', },
-    id_ID: { journalTitle: 'Judul jurnal', journalInitials: 'Inisial jurnal', journalAbbreviation: 'Singkatan jurnal', journalDescription: 'Deskripsi jurnal', path: 'Path', pathHint: 'Path unik untuk URL jurnal', languages: 'Bahasa', primaryLocale: 'Bahasa utama', enable: 'Aktifkan', enableHint: 'Aktifkan jurnal ini agar muncul secara publik di situs', cancel: 'Batal', create: 'Buat', save: 'Simpan', titlePlaceholder: 'contoh: Jurnal Dokumentasi Perangkat Lunak', initialsPlaceholder: 'contoh: JDP', abbreviationPlaceholder: 'contoh: J Dok PL', descriptionPlaceholder: 'Jelaskan fokus dan cakupan jurnal ini...', pathPlaceholder: 'contoh: pengetahuan-umum', },
+    en_US: { journalTitle: 'Journal title', journalInitials: 'Journal initials', journalAbbreviation: 'Journal Abbreviation', publisher: 'Publisher', issnOnline: 'ISSN (Online)', issnPrint: 'ISSN (Print)', journalDescription: 'Journal description', path: 'Path', pathHint: 'A unique path for the journal URL', languages: 'Languages', primaryLocale: 'Primary locale', enable: 'Enable', enableHint: 'Enable this journal to appear publicly on the site', cancel: 'Cancel', create: 'Create', save: 'Save', titlePlaceholder: 'e.g., Journal of Software Documentation', initialsPlaceholder: 'e.g., JSD', abbreviationPlaceholder: 'e.g., J Softw Doc', publisherPlaceholder: 'Publisher name', issnPlaceholder: 'e.g., 1234-5678', descriptionPlaceholder: 'Describe the focus and scope of this journal...', pathPlaceholder: 'e.g., public-knowledge', },
+    es_ES: { journalTitle: 'Título de la revista', journalInitials: 'Iniciales de la revista', journalAbbreviation: 'Abreviatura de la revista', publisher: 'Editor', issnOnline: 'ISSN (En línea)', issnPrint: 'ISSN (Impreso)', journalDescription: 'Descripción de la revista', path: 'Ruta', pathHint: 'Una ruta única para la URL de la revista', languages: 'Idiomas', primaryLocale: 'Idioma principal', enable: 'Habilitar', enableHint: 'Habilitar esta revista para que aparezca públicamente en el sitio', cancel: 'Cancelar', create: 'Crear', save: 'Guardar', titlePlaceholder: 'ej., Revista de Documentación de Software', initialsPlaceholder: 'ej., RDS', abbreviationPlaceholder: 'ej., Rev Doc Soft', publisherPlaceholder: 'Nombre del editor', issnPlaceholder: 'ej., 1234-5678', descriptionPlaceholder: 'Describa el enfoque y alcance de esta revista...', pathPlaceholder: 'ej., conocimiento-publico', },
+    id_ID: { journalTitle: 'Judul jurnal', journalInitials: 'Inisial jurnal', journalAbbreviation: 'Singkatan jurnal', publisher: 'Penerbit', issnOnline: 'ISSN (Online)', issnPrint: 'ISSN (Cetak)', journalDescription: 'Deskripsi jurnal', path: 'Path', pathHint: 'Path unik untuk URL jurnal', languages: 'Bahasa', primaryLocale: 'Bahasa utama', enable: 'Aktifkan', enableHint: 'Aktifkan jurnal ini agar muncul secara publik di situs', cancel: 'Batal', create: 'Buat', save: 'Simpan', titlePlaceholder: 'contoh: Jurnal Dokumentasi Perangkat Lunak', initialsPlaceholder: 'contoh: JDP', abbreviationPlaceholder: 'contoh: J Dok PL', publisherPlaceholder: 'Nama penerbit', issnPlaceholder: 'contoh: 1234-5678', descriptionPlaceholder: 'Jelaskan fokus dan cakupan jurnal ini...', pathPlaceholder: 'contoh: pengetahuan-umum', },
   };
 
   const t = (key: string) => translations[activeLocale]?.[key] || translations['en_US'][key];
@@ -98,20 +98,23 @@ export function JournalEditForm({ journal, mode, onCancel, onSuccess, }: Props) 
     let title = "";
     let description: string | null = null;
 
-    if (mode === "create") {
-      // Fix: Read directly from formData since the input is uncontrolled and not bound to localeData
-      title = (formData.get("title") as string | null)?.trim() ?? "";
+    // Always get title and description from formData first, as the inputs have name attributes
+    title = (formData.get("title") as string | null)?.trim() ?? "";
+    description = (formData.get("description") as string | null)?.trim() ?? null;
 
-      // Only fallback to localeData if formData is empty (which shouldn't happen with required input)
+    // Fallback to localeData only if formData is empty (though required attribute on input should prevent this for title)
+    if (mode === "create" && !title) {
+      const mainLocale = (primaryLocales.length > 0 ? primaryLocales[0] : activeLocale) || 'en_US';
+      title = localeData[mainLocale]?.title?.trim() || '';
       if (!title) {
-        const mainLocale = (primaryLocales.length > 0 ? primaryLocales[0] : activeLocale) || 'en_US';
-        title = localeData[mainLocale]?.title?.trim() || '';
+        const anyLocale = Object.keys(localeData).find(k => localeData[k]?.title?.trim());
+        if (anyLocale) {
+          title = localeData[anyLocale]?.title?.trim() || '';
+        }
       }
-
-      description = (formData.get("description") as string | null)?.trim() || null;
-    } else {
-      title = (formData.get("title") as string | null)?.trim() ?? "";
-      description = (formData.get("description") as string | null)?.trim() ?? null;
+      if (!description) {
+        description = localeData[mainLocale]?.description?.trim() || null;
+      }
     }
     const initials = (formData.get("initials") as string | null)?.trim() ?? "";
     const abbreviation = (formData.get("abbreviation") as string | null)?.trim() ?? "";
@@ -124,10 +127,10 @@ export function JournalEditForm({ journal, mode, onCancel, onSuccess, }: Props) 
     startTransition(async () => {
       const result = mode === "create"
         ? await createJournalAction({ title, initials, abbreviation, publisher, issnOnline, issnPrint, path, description, isPublic, })
-        : await updateJournalAction({ id: journal?.id ?? "", title, initials, abbreviation, path, description, isPublic, });
+        : await updateJournalAction({ id: journal?.id ?? "", title, initials, abbreviation, publisher, issnOnline, issnPrint, path, description, isPublic, });
 
       if (!result.success) {
-        setError(result.message);
+        setError(result.message || "An error occurred");
         return;
       }
 
@@ -174,24 +177,24 @@ export function JournalEditForm({ journal, mode, onCancel, onSuccess, }: Props) 
           <Input id="journal-abbreviation" name="abbreviation" defaultValue={journal?.abbreviation} placeholder={t('abbreviationPlaceholder')} maxLength={32} />
         </div>
 
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="journal-publisher">{t('publisher')}</Label>
+          <Input id="journal-publisher" name="publisher" defaultValue={journal?.publisher} placeholder={t('publisherPlaceholder')} maxLength={128} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="journal-issn-online">{t('issnOnline')}</Label>
+          <Input id="journal-issn-online" name="issnOnline" defaultValue={journal?.issnOnline} placeholder={t('issnPlaceholder')} maxLength={32} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="journal-issn-print">{t('issnPrint')}</Label>
+          <Input id="journal-issn-print" name="issnPrint" defaultValue={journal?.issnPrint} placeholder={t('issnPlaceholder')} maxLength={32} />
+        </div>
+
         <div className="space-y-2 md:col-span-4">
           <Label htmlFor="journal-description">{t('journalDescription')}</Label>
-          <textarea id="journal-description" name="description" defaultValue={journal?.description ?? ''} className="w-full p-2 border rounded" rows={4} placeholder={t('descriptionPlaceholder')} />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="journal-publisher">Publisher</Label>
-          <Input id="journal-publisher" name="publisher" defaultValue={journal?.publisher ?? ''} placeholder="Organization or institution name" maxLength={128} />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="journal-issn-online">ISSN (Online)</Label>
-          <Input id="journal-issn-online" name="issnOnline" defaultValue={journal?.issnOnline ?? ''} placeholder="e.g., 1234-5678" maxLength={32} />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="journal-issn-print">ISSN (Print)</Label>
-          <Input id="journal-issn-print" name="issnPrint" defaultValue={journal?.issnPrint ?? ''} placeholder="e.g., 1234-5678" maxLength={32} />
+          <textarea id="journal-description" name="description" defaultValue={journal?.description} className="w-full p-2 border rounded" rows={4} placeholder={t('descriptionPlaceholder')} />
         </div>
 
         <div className="space-y-2 md:col-span-2">

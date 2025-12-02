@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireSiteAdmin } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

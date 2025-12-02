@@ -1,8 +1,6 @@
 import { getNavigationMenus } from "@/features/navigation/actions";
 import { MenuEditor } from "@/features/navigation/components/menu-editor";
 
-export const dynamic = 'force-dynamic';
-
 export default async function NavigationPage() {
     const menus = await getNavigationMenus();
 

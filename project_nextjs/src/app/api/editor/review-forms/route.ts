@@ -1,4 +1,3 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,6 +6,7 @@ import { requireJournalRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 import { EDITOR_ROLES, handleError } from "../library-files/utils";
+export const dynamic = 'force-dynamic';
 
 type ReviewFormRow = {
   id: string;
@@ -22,9 +22,9 @@ type ReviewFormRow = {
   }> | null;
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       journalId?: string;
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       questions?: number | null;
     };
 
-    const journalId = body.journalId ?? request.nextUrl.searchParams.get("journalId");
+    const journalId = body.journalId ?? (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }

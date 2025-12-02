@@ -1,4 +1,3 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,15 +12,16 @@ import {
   handleError,
   mapLibraryFile,
 } from "../utils";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ fileId: string }>;
 };
 
-export async function PATCH(request: NextRequest, context: RouteParams) {
+export async function PATCH(request: Request, context: RouteParams) {
   try {
     const { fileId } = await context.params;
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }
@@ -83,10 +83,10 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteParams) {
+export async function DELETE(request: Request, context: RouteParams) {
   try {
     const { fileId } = await context.params;
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }

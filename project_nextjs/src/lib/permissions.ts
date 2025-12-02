@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "./supabase/server";
 import { getSupabaseAdminClient } from "./supabase/admin";
 import type { NextRequest } from "next/server";
+import { getRolePath } from "./auth";
 
 export type RolePath =
   | "admin"
@@ -67,12 +68,15 @@ export async function hasUserSiteRole(userId: string, rolePath: RolePath): Promi
   // First check: Site roles in user_account_roles with context_id = null
   const { data: accountRoles, error: accountError } = await supabase
     .from("user_account_roles")
-    .select("role_path, context_id")
+    .select("role_path, role_name, context_id")
     .eq("user_id", userId);
 
   console.log('[hasUserSiteRole] user_account_roles query result:', { accountRoles, accountError });
 
-  const hasAccountRole = (accountRoles ?? []).some((r: any) => r.role_path === rolePath && (r.context_id == null));
+  const hasAccountRole = (accountRoles ?? []).some((r: any) => {
+    const effectiveRolePath = r.role_path || getRolePath(r.role_name);
+    return effectiveRolePath === rolePath && (r.context_id == null);
+  });
 
   if (hasAccountRole) {
     console.log('[hasUserSiteRole] Found in user_account_roles!');
@@ -182,7 +186,7 @@ export async function hasUserJournalRole(
 }
 
 export async function requireJournalRole(
-  requestOrJournalId: NextRequest | string,
+  requestOrJournalId: Request | NextRequest | string,
   journalIdOrRoles?: string | RolePath[],
   rolePaths?: RolePath[],
 ): Promise<void> {

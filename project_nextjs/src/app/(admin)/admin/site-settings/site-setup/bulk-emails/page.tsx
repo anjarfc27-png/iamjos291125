@@ -1,8 +1,6 @@
 import { fetchHostedJournals } from "@/features/journals/data";
 import { getBulkEmailPermissions, updateBulkEmailPermissionsAction } from "../../actions";
 
-export const dynamic = 'force-dynamic';
-
 export default async function SiteSetupBulkEmailsPage() {
   const [journals, permissions] = await Promise.all([
     fetchHostedJournals(),
@@ -31,12 +29,11 @@ export default async function SiteSetupBulkEmailsPage() {
           Bulk Emails
         </h2>
       </header>
-
+      
       <form action={updateBulkEmailPermissionsAction} style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.5rem',
-        padding: '0 1.5rem 2rem 1.5rem'
+        gap: '1.5rem'
       }}>
         <div style={{
           display: 'flex',
@@ -56,7 +53,7 @@ export default async function SiteSetupBulkEmailsPage() {
               Belum ada jurnal yang di-host. Tambahkan jurnal pada menu Hosted Journals untuk mengaktifkan izin email massal.
             </div>
           )}
-
+          
           {journals.map((journal) => (
             <label
               key={journal.id}
@@ -93,7 +90,7 @@ export default async function SiteSetupBulkEmailsPage() {
             </label>
           ))}
         </div>
-
+        
         <div style={{
           padding: '0.75rem 0',
           fontSize: '0.875rem',
@@ -103,7 +100,7 @@ export default async function SiteSetupBulkEmailsPage() {
             Pastikan kebijakan anti-spam & privasi user telah dipenuhi sebelum mengaktifkan email massal.
           </p>
         </div>
-
+        
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',

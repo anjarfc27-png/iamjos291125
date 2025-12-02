@@ -1,0 +1,15 @@
+src/app/api/auth/session/route.ts(10,39): error TS2345: Argument of type 'Request' is not assignable to parameter of type 'NextRequest'.
+  Type 'Request' is missing the following properties from type 'NextRequest': cookies, nextUrl, page, ua
+src/app/api/editor/assistant/submissions/route.ts(23,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/assistant/tasks/route.ts(22,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/assistant/tasks/route.ts(101,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/library-files/[fileId]/download/route.ts(19,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/library-files/[fileId]/route.ts(25,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/library-files/[fileId]/route.ts(90,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/library-files/route.ts(20,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/library-files/route.ts(35,28): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/library-files/route.ts(55,79): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/review-forms/[formId]/route.ts(19,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/review-forms/[formId]/route.ts(88,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/review-forms/route.ts(28,31): error TS2339: Property 'nextUrl' does not exist on type 'Request'.
+src/app/api/editor/review-forms/route.ts(78,49): error TS2339: Property 'nextUrl' does not exist on type 'Request'.

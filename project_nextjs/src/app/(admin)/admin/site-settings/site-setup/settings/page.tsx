@@ -1,7 +1,5 @@
 import { getSiteSettings, updateSiteSettingsAction, getEnabledJournals } from "../../actions";
 
-export const dynamic = 'force-dynamic';
-
 export default async function SiteSetupSettingsPage() {
   const settings = await getSiteSettings();
   const journals = await getEnabledJournals();
@@ -30,8 +28,7 @@ export default async function SiteSetupSettingsPage() {
       }} style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.5rem',
-        padding: '0 1.5rem 2rem 1.5rem'
+        gap: '1.5rem'
       }}>
         {/* Site Title */}
         <div style={{

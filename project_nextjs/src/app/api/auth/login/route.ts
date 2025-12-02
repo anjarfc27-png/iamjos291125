@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+export const dynamic = 'force-dynamic';
 
 // Create a Supabase client with service role key for server-side operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -78,6 +79,7 @@ async function getRolesFromAccountRoles(userId: string) {
 function getRolePath(userGroupName: string): string {
   const rolePaths: Record<string, string> = {
     'Site admin': 'admin',
+    'site admin': 'admin',
     'Manager': 'manager',
     'Editor': 'editor',
     'Section editor': 'editor', // Map Section editor ke editor path untuk OJS compatibility
@@ -92,7 +94,7 @@ function getRolePath(userGroupName: string): string {
   return rolePaths[userGroupName] || 'reader'
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{}> }) {
+export async function POST(request: Request, { params }: { params: Promise<{}> }) {
   try {
     let email, password
 

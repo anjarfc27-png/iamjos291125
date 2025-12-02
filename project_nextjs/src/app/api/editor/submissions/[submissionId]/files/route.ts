@@ -1,4 +1,3 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -6,6 +5,7 @@ import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SUBMISSION_STAGES } from "@/features/editor/types";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string }>;
@@ -148,7 +148,7 @@ export async function POST(request: Request, context: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteParams) {
+export async function DELETE(request: Request, context: RouteParams) {
   const { submissionId } = await context.params;
   if (!submissionId) {
     return NextResponse.json({ ok: false, message: "Submission tidak ditemukan." }, { status: 400 });

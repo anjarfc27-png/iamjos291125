@@ -9,6 +9,7 @@ import { PkpTextarea } from "@/components/ui/pkp-textarea";
 import { PkpSelect } from "@/components/ui/pkp-select";
 import { PkpRadio } from "@/components/ui/pkp-radio";
 import { PkpTable, PkpTableHeader, PkpTableRow, PkpTableHead, PkpTableCell } from "@/components/ui/pkp-table";
+import { Bold, Italic, Link as LinkIcon, List, ListOrdered, Image as ImageIcon, Code, ChevronRight, ChevronDown, Quote, Superscript, Subscript, HelpCircle, Upload } from "lucide-react";
 import {
   DUMMY_METADATA_FIELDS,
   DUMMY_COMPONENTS,
@@ -135,11 +136,38 @@ export default function SettingsWorkflowPage() {
 
   // Form states - Author Guidelines
   const [authorGuidelines, setAuthorGuidelines] = useState("");
+  const [copyrightNotice, setCopyrightNotice] = useState("");
 
   // Form states - Email Setup
   const [emailSetup, setEmailSetup] = useState({
     emailSignature: "",
     envelopeSender: "",
+  });
+
+  // UI States
+  const [expandedComponent, setExpandedComponent] = useState<number | null>(null);
+  const [expandedChecklistItem, setExpandedChecklistItem] = useState<number | null>(null);
+
+  // Metadata State
+  const [metadataSettings, setMetadataSettings] = useState({
+    coverage: false,
+    languages: false,
+    rights: false,
+    source: false,
+    subjects: false,
+    type: false,
+    disciplines: false,
+    keywords: true,
+    keywordsOption: "suggest", // "none", "suggest", "require"
+    supportingAgencies: false,
+    competingInterests: false,
+    references: false,
+    publisherId: {
+      publications: false,
+      galleys: false,
+      issues: false,
+      issueGalleys: false
+    }
   });
 
   // Sync form states with database settings when loaded
@@ -273,6 +301,12 @@ export default function SettingsWorkflowPage() {
     }
   };
 
+  const handleSaveCopyrightNotice = async () => {
+    // Mock save for Copyright Notice
+    setFeedback({ type: "success", message: "Copyright notice saved successfully." });
+    setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+  };
+
   const handleSaveEmailSetup = async () => {
     // Validate email if provided
     if (emailSetup.envelopeSender && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailSetup.envelopeSender)) {
@@ -348,7 +382,7 @@ export default function SettingsWorkflowPage() {
             <PkpTabsList style={{ flex: 1, padding: "0 1.5rem" }}>
               <PkpTabsTrigger value="submission">{t('editor.settings.workflow.submission')}</PkpTabsTrigger>
               <PkpTabsTrigger value="review">{t('editor.settings.workflow.review')}</PkpTabsTrigger>
-              <PkpTabsTrigger value="library">{t('editor.settings.workflow.library')}</PkpTabsTrigger>
+              <PkpTabsTrigger value="library">Publisher Library</PkpTabsTrigger>
               <PkpTabsTrigger value="emails">{t('editor.settings.workflow.emails')}</PkpTabsTrigger>
             </PkpTabsList>
 
@@ -527,73 +561,258 @@ export default function SettingsWorkflowPage() {
                 {activeSubTab === "metadata" && (
                   <div>
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h2 style={{
-                        fontSize: "1.125rem",
-                        fontWeight: 600,
-                        marginBottom: "1rem",
-                        color: "#002C40",
-                      }}>
-                        Metadata
-                      </h2>
                       <div style={{
                         backgroundColor: "#ffffff",
                         border: "1px solid #e5e5e5",
                         padding: "1.5rem",
                       }}>
-                        <p style={{
-                          fontSize: "0.875rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginBottom: "1.5rem",
-                        }}>
-                          Configure which metadata fields are available and whether authors can add them during submission.
-                        </p>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                          <PkpButton variant="primary">
-                            Add Metadata Field
+                        {/* Coverage */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Coverage</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Coverage will typically indicate a work's spatial location (a place name or geographic coordinates), temporal period (a period label, date, or date range) or jurisdiction (such as a named administrative entity).
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.coverage}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, coverage: e.target.checked })}
+                            />
+                            Enable coverage metadata
+                          </label>
+                        </div>
+
+                        {/* Languages */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Languages</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Language indicates the work's primary language using a language code ("en") with an optional country code ("en_US").
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.languages}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, languages: e.target.checked })}
+                            />
+                            Enable language metadata
+                          </label>
+                        </div>
+
+                        {/* Rights */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Rights</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Any rights held over the submission, which may include Intellectual Property Rights (IPR), Copyright, and various Property Rights.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.rights}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, rights: e.target.checked })}
+                            />
+                            Enable rights metadata
+                          </label>
+                        </div>
+
+                        {/* Source */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Source</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            The source may be an ID, such as a DOI, of another work or resource from which the submission is derived.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.source}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, source: e.target.checked })}
+                            />
+                            Enable source metadata
+                          </label>
+                        </div>
+
+                        {/* Subjects */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Subjects</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Subjects will be keywords, key phrases or classification codes that describe a topic of the submission.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.subjects}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, subjects: e.target.checked })}
+                            />
+                            Enable subject metadata
+                          </label>
+                        </div>
+
+                        {/* Type */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Type</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            The nature or genre of the main content of the submission. The type is usually "Text", but may also be "Dataset", "Image" or any of the <a href="#" style={{ color: "#006798", textDecoration: "underline" }}>Dublin Core types</a>.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.type}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, type: e.target.checked })}
+                            />
+                            Enable type metadata
+                          </label>
+                        </div>
+
+                        {/* Disciplines */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Disciplines</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Disciplines are types of study or branches of knowledge as described by university faculties and learned societies.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.disciplines}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, disciplines: e.target.checked })}
+                            />
+                            Enable disciplines metadata
+                          </label>
+                        </div>
+
+                        {/* Keywords */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Keywords</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Keywords are typically one- to three-word phrases that are used to indicate the main topics of a submission.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.keywords}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, keywords: e.target.checked })}
+                            />
+                            Enable keyword metadata
+                          </label>
+
+                          {metadataSettings.keywords && (
+                            <div style={{ borderTop: "1px solid #e5e5e5", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                                <input
+                                  type="radio"
+                                  name="keywordsOption"
+                                  checked={metadataSettings.keywordsOption === "none"}
+                                  onChange={() => setMetadataSettings({ ...metadataSettings, keywordsOption: "none" })}
+                                  className="accent-[#006798]"
+                                />
+                                Do not request keywords from the author during submission.
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                                <input
+                                  type="radio"
+                                  name="keywordsOption"
+                                  checked={metadataSettings.keywordsOption === "suggest"}
+                                  onChange={() => setMetadataSettings({ ...metadataSettings, keywordsOption: "suggest" })}
+                                  className="accent-[#006798]"
+                                />
+                                Ask the author to suggest keywords during submission.
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                                <input
+                                  type="radio"
+                                  name="keywordsOption"
+                                  checked={metadataSettings.keywordsOption === "require"}
+                                  onChange={() => setMetadataSettings({ ...metadataSettings, keywordsOption: "require" })}
+                                  className="accent-[#006798]"
+                                />
+                                Require the author to suggest keywords before accepting their submission.
+                              </label>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Supporting Agencies */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Supporting Agencies</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Supporting agencies may indicate the source of research funding or other institutional support that facilitated the research.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.supportingAgencies}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, supportingAgencies: e.target.checked })}
+                            />
+                            Enable supporting agencies metadata
+                          </label>
+                        </div>
+
+                        {/* Competing Interests */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Competing Interests</h3>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.competingInterests}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, competingInterests: e.target.checked })}
+                            />
+                            Require submitting Authors to file a Competing Interest (CI) statement with their submission.
+                          </label>
+                        </div>
+
+                        {/* References */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>References</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Collect a submission's references in a separate field. This may be required to comply with citation-tracking services such as Crossref.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              checked={metadataSettings.references}
+                              onChange={(e) => setMetadataSettings({ ...metadataSettings, references: e.target.checked })}
+                            />
+                            Enable references metadata
+                          </label>
+                        </div>
+
+                        {/* Publisher ID */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Publisher ID</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            The publisher ID may be used to record the ID from an external database. For example, items exported for deposit to PubMed may include the publisher ID. This should not be used for DOIs.
+                          </p>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                              <PkpCheckbox
+                                checked={metadataSettings.publisherId.publications}
+                                onChange={(e) => setMetadataSettings({ ...metadataSettings, publisherId: { ...metadataSettings.publisherId, publications: e.target.checked } })}
+                              />
+                              Enable for Publications
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                              <PkpCheckbox
+                                checked={metadataSettings.publisherId.galleys}
+                                onChange={(e) => setMetadataSettings({ ...metadataSettings, publisherId: { ...metadataSettings.publisherId, galleys: e.target.checked } })}
+                              />
+                              Enable for Galleys
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                              <PkpCheckbox
+                                checked={metadataSettings.publisherId.issues}
+                                onChange={(e) => setMetadataSettings({ ...metadataSettings, publisherId: { ...metadataSettings.publisherId, issues: e.target.checked } })}
+                              />
+                              Enable for Issues
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                              <PkpCheckbox
+                                checked={metadataSettings.publisherId.issueGalleys}
+                                onChange={(e) => setMetadataSettings({ ...metadataSettings, publisherId: { ...metadataSettings.publisherId, issueGalleys: e.target.checked } })}
+                              />
+                              Enable for Issue Galleys
+                            </label>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e5e5e5", paddingTop: "1rem" }}>
+                          <PkpButton
+                            variant="primary"
+                            onClick={() => {
+                              // Handle save
+                              setFeedback({ type: "success", message: "Metadata settings saved successfully." });
+                              setTimeout(() => setFeedback({ type: null, message: "" }), 3000);
+                            }}
+                          >
+                            Save
                           </PkpButton>
                         </div>
-                        <PkpTable>
-                          <PkpTableHeader>
-                            <PkpTableRow isHeader>
-                              <PkpTableHead>Metadata Field</PkpTableHead>
-                              <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Required</PkpTableHead>
-                              <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Author Editable</PkpTableHead>
-                              <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Actions</PkpTableHead>
-                            </PkpTableRow>
-                          </PkpTableHeader>
-                          <tbody>
-                            {USE_DUMMY && DUMMY_METADATA_FIELDS.length > 0 ? (
-                              DUMMY_METADATA_FIELDS.map((field) => (
-                                <PkpTableRow key={field.id}>
-                                  <PkpTableCell>
-                                    <div style={{ fontWeight: 500 }}>{field.field}</div>
-                                    {field.description && (
-                                      <div style={{ fontSize: "0.75rem", color: "rgba(0, 0, 0, 0.54)", marginTop: "0.25rem" }}>
-                                        {field.description}
-                                      </div>
-                                    )}
-                                  </PkpTableCell>
-                                  <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                    <PkpCheckbox checked={field.required} readOnly />
-                                  </PkpTableCell>
-                                  <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                    <PkpCheckbox checked={field.authorEditable} readOnly />
-                                  </PkpTableCell>
-                                  <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                    <PkpButton variant="onclick" size="sm" style={{ marginRight: "0.5rem" }}>{t('common.edit')}</PkpButton>
-                                    <PkpButton variant="onclick" size="sm">{t('common.delete')}</PkpButton>
-                                  </PkpTableCell>
-                                </PkpTableRow>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(0, 0, 0, 0.54)", fontSize: "0.875rem" }}>
-                                  {USE_DUMMY ? "No metadata fields found." : "Metadata fields grid will be implemented here with add, edit, delete, and configuration functionality."}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </PkpTable>
                       </div>
                     </div>
                   </div>
@@ -603,73 +822,65 @@ export default function SettingsWorkflowPage() {
                 {activeSubTab === "components" && (
                   <div>
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h2 style={{
-                        fontSize: "1.125rem",
-                        fontWeight: 600,
-                        marginBottom: "1rem",
-                        color: "#002C40",
-                      }}>
-                        Components (File Types)
-                      </h2>
                       <div style={{
                         backgroundColor: "#ffffff",
                         border: "1px solid #e5e5e5",
                         padding: "1.5rem",
                       }}>
-                        <p style={{
-                          fontSize: "0.875rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginBottom: "1.5rem",
-                        }}>
-                          Components are types of files that can be included with a submission. Configure which file types authors can upload.
-                        </p>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                          <PkpButton variant="primary">
-                            Add Component
-                          </PkpButton>
+                          <h2 style={{
+                            fontSize: "1.125rem",
+                            fontWeight: 700,
+                            color: "#002C40",
+                            margin: 0,
+                          }}>
+                            Article Components
+                          </h2>
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <PkpButton variant="onclick" style={{ fontSize: "0.875rem" }}>Order</PkpButton>
+                            <PkpButton variant="onclick" style={{ fontSize: "0.875rem" }}>Add a Component</PkpButton>
+                            <PkpButton variant="onclick" style={{ fontSize: "0.875rem" }}>Restore Defaults</PkpButton>
+                          </div>
                         </div>
-                        <PkpTable>
-                          <PkpTableHeader>
-                            <PkpTableRow isHeader>
-                              <PkpTableHead style={{ width: "60px" }}>ID</PkpTableHead>
-                              <PkpTableHead>Component Name</PkpTableHead>
-                              <PkpTableHead>Designation</PkpTableHead>
-                              <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Required</PkpTableHead>
-                              <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Actions</PkpTableHead>
-                            </PkpTableRow>
-                          </PkpTableHeader>
-                          <tbody>
-                            {USE_DUMMY && DUMMY_COMPONENTS.length > 0 ? (
-                              DUMMY_COMPONENTS.map((component) => (
-                                <PkpTableRow key={component.id}>
-                                  <PkpTableCell style={{ width: "60px" }}>{component.id}</PkpTableCell>
-                                  <PkpTableCell>
-                                    <div style={{ fontWeight: 500 }}>{component.name}</div>
-                                    {component.description && (
-                                      <div style={{ fontSize: "0.75rem", color: "rgba(0, 0, 0, 0.54)", marginTop: "0.25rem" }}>
-                                        {component.description}
-                                      </div>
-                                    )}
-                                  </PkpTableCell>
-                                  <PkpTableCell>{component.designation}</PkpTableCell>
-                                  <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                    <PkpCheckbox checked={component.required} readOnly />
-                                  </PkpTableCell>
-                                  <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                    <PkpButton variant="onclick" size="sm" style={{ marginRight: "0.5rem" }}>{t('common.edit')}</PkpButton>
-                                    <PkpButton variant="onclick" size="sm">{t('common.delete')}</PkpButton>
-                                  </PkpTableCell>
-                                </PkpTableRow>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(0, 0, 0, 0.54)", fontSize: "0.875rem" }}>
-                                  {USE_DUMMY ? "No components found." : "Components grid will be implemented here with add, edit, delete functionality."}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </PkpTable>
+
+                        <div style={{ display: "flex", flexDirection: "column", border: "1px solid #e5e5e5", borderRadius: "4px" }}>
+                          {[
+                            "Article Text", "Research Instrument", "Research Materials", "Research Results",
+                            "Transcripts", "Data Analysis", "Data Set", "Source Texts", "Multimedia",
+                            "Image", "HTML Stylesheet", "Other"
+                          ].map((item, index) => (
+                            <div key={index} style={{
+                              borderBottom: index < 11 ? "1px solid #e5e5e5" : "none",
+                              backgroundColor: expandedComponent === index ? "#f8f9fa" : "#ffffff",
+                            }}>
+                              <div
+                                onClick={() => setExpandedComponent(expandedComponent === index ? null : index)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  padding: "0.75rem 1rem",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                {expandedComponent === index ? (
+                                  <ChevronDown size={16} color="#006798" style={{ marginRight: "0.5rem" }} />
+                                ) : (
+                                  <ChevronRight size={16} color="#006798" style={{ marginRight: "0.5rem" }} />
+                                )}
+                                <span style={{ fontSize: "0.875rem", color: expandedComponent === index ? "#002C40" : "#006798", fontWeight: expandedComponent === index ? 600 : 400 }}>{item}</span>
+                              </div>
+
+                              {expandedComponent === index && (
+                                <div style={{ padding: "0 1rem 1rem 2.5rem" }}>
+                                  <div style={{ display: "flex", gap: "1rem" }}>
+                                    <button style={{ color: "#006798", fontSize: "0.875rem", fontWeight: "bold", border: "none", background: "none", cursor: "pointer" }}>Edit</button>
+                                    <button style={{ color: "#d00a6c", fontSize: "0.875rem", fontWeight: "bold", border: "none", background: "none", cursor: "pointer" }}>Delete</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -679,62 +890,66 @@ export default function SettingsWorkflowPage() {
                 {activeSubTab === "submissionChecklist" && (
                   <div>
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h2 style={{
-                        fontSize: "1.125rem",
-                        fontWeight: 600,
-                        marginBottom: "1rem",
-                        color: "#002C40",
-                      }}>
-                        Submission Checklist
-                      </h2>
                       <div style={{
                         backgroundColor: "#ffffff",
                         border: "1px solid #e5e5e5",
                         padding: "1.5rem",
                       }}>
-                        <p style={{
-                          fontSize: "0.875rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginBottom: "1.5rem",
-                        }}>
-                          Provide authors with a checklist of tasks they should complete before submitting their manuscript.
-                        </p>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                          <PkpButton variant="primary">
-                            Add Checklist Item
-                          </PkpButton>
+                          <h2 style={{
+                            fontSize: "1.125rem",
+                            fontWeight: 700,
+                            color: "#002C40",
+                            margin: 0,
+                          }}>
+                            Submission Preparation Checklist
+                          </h2>
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <PkpButton variant="onclick" style={{ fontSize: "0.875rem" }}>Order</PkpButton>
+                            <PkpButton variant="onclick" style={{ fontSize: "0.875rem" }}>Add Item</PkpButton>
+                          </div>
                         </div>
-                        <PkpTable>
-                          <PkpTableHeader>
-                            <PkpTableRow isHeader>
-                              <PkpTableHead style={{ width: "60px" }}>Order</PkpTableHead>
-                              <PkpTableHead>Checklist Item</PkpTableHead>
-                              <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Actions</PkpTableHead>
-                            </PkpTableRow>
-                          </PkpTableHeader>
-                          <tbody>
-                            {USE_DUMMY && DUMMY_CHECKLIST.length > 0 ? (
-                              DUMMY_CHECKLIST.map((item) => (
-                                <PkpTableRow key={item.id}>
-                                  <PkpTableCell style={{ width: "60px" }}>{item.order}</PkpTableCell>
-                                  <PkpTableCell>
-                                    <div style={{ fontSize: "0.875rem", color: "rgba(0, 0, 0, 0.84)" }}>{item.content}</div>
-                                  </PkpTableCell>
-                                  <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                    <PkpButton variant="onclick" size="sm" style={{ marginRight: "0.5rem" }}>{t('common.edit')}</PkpButton>
-                                    <PkpButton variant="onclick" size="sm">{t('common.delete')}</PkpButton>
-                                  </PkpTableCell>
-                                </PkpTableRow>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={3} style={{ padding: "2rem", textAlign: "center", color: "rgba(0, 0, 0, 0.54)", fontSize: "0.875rem" }}>
-                                  {USE_DUMMY ? "No checklist items found." : "Submission checklist grid will be implemented here with add, edit, delete, and reorder functionality."}
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </PkpTable>
+
+                        <div style={{ display: "flex", flexDirection: "column", border: "1px solid #e5e5e5", borderRadius: "4px" }}>
+                          {[
+                            "The submission has not been previously published, nor is it before another journal for consideration (or an explanation has been provided in Comments to the Editor).",
+                            "The submission file is in OpenOffice, Microsoft Word, or RTF document file format.",
+                            "Where available, URLs for the references have been provided.",
+                            "The text is single-spaced; uses a 12-point font; employs italics, rather than underlining (except with URL addresses); and all illustrations, figures, and tables are placed within the text at the appropriate points,...",
+                            "The text adheres to the stylistic and bibliographic requirements outlined in the Author Guidelines."
+                          ].map((item, index) => (
+                            <div key={index} style={{
+                              borderBottom: index < 4 ? "1px solid #e5e5e5" : "none",
+                              backgroundColor: expandedChecklistItem === index ? "#f8f9fa" : "#ffffff",
+                            }}>
+                              <div
+                                onClick={() => setExpandedChecklistItem(expandedChecklistItem === index ? null : index)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "flex-start",
+                                  padding: "0.75rem 1rem",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                {expandedChecklistItem === index ? (
+                                  <ChevronDown size={16} color="#006798" style={{ marginRight: "0.5rem", marginTop: "0.25rem", flexShrink: 0 }} />
+                                ) : (
+                                  <ChevronRight size={16} color="#006798" style={{ marginRight: "0.5rem", marginTop: "0.25rem", flexShrink: 0 }} />
+                                )}
+                                <span style={{ fontSize: "0.875rem", color: "#333", lineHeight: "1.5" }}>{item}</span>
+                              </div>
+
+                              {expandedChecklistItem === index && (
+                                <div style={{ padding: "0 1rem 1rem 2.5rem" }}>
+                                  <div style={{ display: "flex", gap: "1rem" }}>
+                                    <button style={{ color: "#006798", fontSize: "0.875rem", fontWeight: "bold", border: "none", background: "none", cursor: "pointer" }}>Edit</button>
+                                    <button style={{ color: "#d00a6c", fontSize: "0.875rem", fontWeight: "bold", border: "none", background: "none", cursor: "pointer" }}>Delete</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -744,14 +959,6 @@ export default function SettingsWorkflowPage() {
                 {activeSubTab === "authorGuidelines" && (
                   <div>
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h2 style={{
-                        fontSize: "1.125rem",
-                        fontWeight: 600,
-                        marginBottom: "1rem",
-                        color: "#002C40",
-                      }}>
-                        Author Guidelines
-                      </h2>
                       <div style={{
                         backgroundColor: "#ffffff",
                         border: "1px solid #e5e5e5",
@@ -772,41 +979,87 @@ export default function SettingsWorkflowPage() {
                           </div>
                         )}
 
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Author Guidelines
-                        </label>
-                        <PkpTextarea
-                          rows={10}
-                          value={authorGuidelines}
-                          onChange={(e) => setAuthorGuidelines(e.target.value)}
-                          placeholder="Enter author guidelines that will be shown to authors when they make a submission..."
-                          style={{
-                            width: "100%",
-                            minHeight: "200px",
-                          }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: "1rem",
-                        }}>
-                          These guidelines will be displayed to authors during the submission process.
-                        </p>
-                        <PkpButton
-                          variant="primary"
-                          onClick={handleSaveAuthorGuidelines}
-                          disabled={authorGuidelinesSettings.loading}
-                          loading={authorGuidelinesSettings.loading}
-                        >
-                          {authorGuidelinesSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
-                        </PkpButton>
+                        {/* Author Guidelines Section */}
+                        <div style={{ marginBottom: "2rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            color: "#002C40",
+                            marginBottom: "0.5rem",
+                          }}>
+                            Author Guidelines
+                          </h3>
+                          <p style={{
+                            fontSize: "0.875rem",
+                            color: "#333",
+                            marginBottom: "0.5rem",
+                            lineHeight: "1.5",
+                          }}>
+                            Recommended guidelines include bibliographic and formatting standards alongside examples of common citation formats to be used in submissions.
+                          </p>
+                          <div style={{ border: "1px solid #ccc", borderBottom: "none", padding: "0.5rem", display: "flex", gap: "0.75rem", backgroundColor: "#fff", borderTopLeftRadius: "4px", borderTopRightRadius: "4px" }}>
+                            <Bold size={16} color="#555" /><Italic size={16} color="#555" /><Superscript size={16} color="#555" /><Subscript size={16} color="#555" /><LinkIcon size={16} color="#555" /><Quote size={16} color="#555" /><List size={16} color="#555" /><List size={16} color="#555" />
+                          </div>
+                          <PkpTextarea
+                            rows={10}
+                            value={authorGuidelines}
+                            onChange={(e) => setAuthorGuidelines(e.target.value)}
+                            style={{
+                              width: "100%",
+                              minHeight: "200px",
+                              borderTopLeftRadius: 0,
+                              borderTopRightRadius: 0,
+                            }}
+                          />
+                        </div>
+
+                        {/* Copyright Notice Section */}
+                        <div style={{ marginBottom: "2rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            color: "#002C40",
+                            marginBottom: "0.5rem",
+                          }}>
+                            Copyright Notice
+                          </h3>
+                          <p style={{
+                            fontSize: "0.875rem",
+                            color: "#333",
+                            marginBottom: "0.5rem",
+                            lineHeight: "1.5",
+                          }}>
+                            Require authors to agree to the following copyright notice as part of the submission process.
+                          </p>
+                          <div style={{ border: "1px solid #ccc", borderBottom: "none", padding: "0.5rem", display: "flex", gap: "0.75rem", backgroundColor: "#fff", borderTopLeftRadius: "4px", borderTopRightRadius: "4px" }}>
+                            <Bold size={16} color="#555" /><Italic size={16} color="#555" /><Superscript size={16} color="#555" /><Subscript size={16} color="#555" /><LinkIcon size={16} color="#555" /><Quote size={16} color="#555" /><List size={16} color="#555" /><ListOrdered size={16} color="#555" />
+                          </div>
+                          <PkpTextarea
+                            rows={8}
+                            value={copyrightNotice}
+                            onChange={(e) => setCopyrightNotice(e.target.value)}
+                            style={{
+                              width: "100%",
+                              minHeight: "150px",
+                              borderTopLeftRadius: 0,
+                              borderTopRightRadius: 0,
+                            }}
+                          />
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e5e5e5", paddingTop: "1rem" }}>
+                          <PkpButton
+                            variant="primary"
+                            onClick={() => {
+                              handleSaveAuthorGuidelines();
+                              handleSaveCopyrightNotice();
+                            }}
+                            disabled={authorGuidelinesSettings.loading}
+                            loading={authorGuidelinesSettings.loading}
+                          >
+                            {authorGuidelinesSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
+                          </PkpButton>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -884,237 +1137,161 @@ export default function SettingsWorkflowPage() {
                 {/* Review Setup */}
                 {activeReviewSubTab === "reviewSetup" && (
                   <div>
-                    <h2 style={{
-                      fontSize: "1.125rem",
-                      fontWeight: 600,
-                      marginBottom: "1rem",
-                      color: "#002C40",
-                    }}>
-                      Review Setup
-                    </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      {/* Feedback Message */}
-                      {feedback.type && (
-                        <div style={{
-                          padding: "0.75rem 1rem",
-                          marginBottom: "1.5rem",
-                          borderRadius: "4px",
-                          backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
-                          color: feedback.type === "success" ? "#155724" : "#721c24",
-                          border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
-                          fontSize: "0.875rem",
-                        }}>
-                          {feedback.message}
-                        </div>
-                      )}
-
-                      {/* Review Mode */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.75rem",
-                          color: "#002C40",
-                        }}>
-                          Default Review Mode
-                        </label>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                          <PkpRadio
-                            id="reviewMode-doubleAnonymous"
-                            name="defaultReviewMode"
-                            value="doubleAnonymous"
-                            checked={reviewSetup.defaultReviewMode === "doubleAnonymous"}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "doubleAnonymous" })}
-                            label="Double Anonymous"
-                          />
-                          <PkpRadio
-                            id="reviewMode-anonymous"
-                            name="defaultReviewMode"
-                            value="anonymous"
-                            checked={reviewSetup.defaultReviewMode === "anonymous"}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "anonymous" })}
-                            label="Anonymous"
-                          />
-                          <PkpRadio
-                            id="reviewMode-open"
-                            name="defaultReviewMode"
-                            value="open"
-                            checked={reviewSetup.defaultReviewMode === "open"}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "open" })}
-                            label="Open"
-                          />
-                        </div>
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Choose the default review mode. This can be changed on a per-submission and per-review basis by an editor.
-                        </p>
-                      </div>
-
-                      {/* Restrict Reviewer File Access */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#002C40", fontWeight: 600 }}>
-                          <PkpCheckbox
-                            id="restrictReviewerFileAccess"
-                            checked={reviewSetup.restrictReviewerFileAccess}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, restrictReviewerFileAccess: e.target.checked })}
-                          />
-                          <span>Restrict reviewer file access to assigned submissions only</span>
-                        </label>
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          When enabled, reviewers can only access files for submissions they have been assigned to review.
-                        </p>
-                      </div>
-
-                      {/* One-Click Reviewer Access */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#002C40", fontWeight: 600 }}>
-                          <PkpCheckbox
-                            id="reviewerAccessKeysEnabled"
-                            checked={reviewSetup.reviewerAccessKeysEnabled}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, reviewerAccessKeysEnabled: e.target.checked })}
-                          />
-                          <span>Enable one-click reviewer access</span>
-                        </label>
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          When enabled, email invitations to reviewers will contain a special URL that takes invited reviewers directly to the Review page for the submission without requiring them to log in. For security reasons, with this option, editors are not able to modify email addresses or add CCs or BCCs prior to sending invitations to reviewers.
-                        </p>
-                      </div>
-
-                      {/* Default Review Response Time */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label htmlFor="numWeeksPerResponse" style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Default Review Response Time (Weeks)
-                        </label>
-                        <PkpInput
-                          id="numWeeksPerResponse"
-                          type="number"
-                          value={reviewSetup.numWeeksPerResponse}
-                          onChange={(e) => setReviewSetup({ ...reviewSetup, numWeeksPerResponse: e.target.value })}
-                          placeholder="2"
-                          style={{ width: "200px" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Number of weeks reviewers have to respond to review invitations.
-                        </p>
-                      </div>
-
-                      {/* Default Review Completion Time */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label htmlFor="numWeeksPerReview" style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Default Review Completion Time (Weeks)
-                        </label>
-                        <PkpInput
-                          id="numWeeksPerReview"
-                          type="number"
-                          value={reviewSetup.numWeeksPerReview}
-                          onChange={(e) => setReviewSetup({ ...reviewSetup, numWeeksPerReview: e.target.value })}
-                          placeholder="4"
-                          style={{ width: "200px" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Number of weeks reviewers have to complete their reviews.
-                        </p>
-                      </div>
-
-                      {/* Review Reminders */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <h3 style={{
-                          fontSize: "1rem",
-                          fontWeight: 600,
-                          marginBottom: "0.75rem",
-                          color: "#002C40",
-                        }}>
-                          Review Reminders
-                        </h3>
-                        <div style={{ marginBottom: "1rem" }}>
-                          <label htmlFor="numDaysBeforeInviteReminder" style={{
-                            display: "block",
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
+                      }}>
+                        {/* Feedback Message */}
+                        {feedback.type && (
+                          <div style={{
+                            padding: "0.75rem 1rem",
+                            marginBottom: "1.5rem",
+                            borderRadius: "4px",
+                            backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                            color: feedback.type === "success" ? "#155724" : "#721c24",
+                            border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
                             fontSize: "0.875rem",
-                            fontWeight: 600,
+                          }}>
+                            {feedback.message}
+                          </div>
+                        )}
+
+                        {/* Default Review Mode */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Default Review Mode</h3>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <PkpRadio
+                              id="reviewMode-doubleAnonymous"
+                              name="defaultReviewMode"
+                              value="doubleAnonymous"
+                              checked={reviewSetup.defaultReviewMode === "doubleAnonymous"}
+                              onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "doubleAnonymous" })}
+                              label="Anonymous Reviewer/Anonymous Author"
+                            />
+                            <PkpRadio
+                              id="reviewMode-anonymous"
+                              name="defaultReviewMode"
+                              value="anonymous"
+                              checked={reviewSetup.defaultReviewMode === "anonymous"}
+                              onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "anonymous" })}
+                              label="Anonymous Reviewer/Disclosed Author"
+                            />
+                            <PkpRadio
+                              id="reviewMode-open"
+                              name="defaultReviewMode"
+                              value="open"
+                              checked={reviewSetup.defaultReviewMode === "open"}
+                              onChange={(e) => setReviewSetup({ ...reviewSetup, defaultReviewMode: "open" })}
+                              label="Open"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Restrict File Access */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>Restrict File Access</h3>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              id="restrictReviewerFileAccess"
+                              checked={reviewSetup.restrictReviewerFileAccess}
+                              onChange={(e) => setReviewSetup({ ...reviewSetup, restrictReviewerFileAccess: e.target.checked })}
+                            />
+                            Reviewers will not be given access to the submission file until they have agreed to review it.
+                          </label>
+                        </div>
+
+                        {/* One-click Reviewer Access */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#002C40", marginBottom: "0.5rem", marginTop: "-1.7rem", backgroundColor: "#fff", width: "fit-content", paddingRight: "0.5rem" }}>One-click Reviewer Access</h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "1rem" }}>
+                            Reviewers can be sent a secure link in the email invitation, which will log them in automatically when they click the link.
+                          </p>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              id="reviewerAccessKeysEnabled"
+                              checked={reviewSetup.reviewerAccessKeysEnabled}
+                              onChange={(e) => setReviewSetup({ ...reviewSetup, reviewerAccessKeysEnabled: e.target.checked })}
+                            />
+                            Include a secure link in the email invitation to reviewers.
+                          </label>
+                        </div>
+
+                        {/* Default Response Deadline */}
+                        <div style={{ marginBottom: "1.5rem" }}>
+                          <label htmlFor="numWeeksPerResponse" style={{
+                            display: "block",
+                            fontSize: "1rem",
+                            fontWeight: 700,
                             marginBottom: "0.5rem",
                             color: "#002C40",
                           }}>
-                            Days Before Sending Reminder for Review Invitation Response
+                            Default Response Deadline
                           </label>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "0.5rem" }}>
+                            Number of weeks to accept or decline a review request.
+                          </p>
                           <PkpInput
-                            id="numDaysBeforeInviteReminder"
+                            id="numWeeksPerResponse"
                             type="number"
-                            value={reviewSetup.numDaysBeforeInviteReminder}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, numDaysBeforeInviteReminder: e.target.value })}
-                            placeholder="3"
-                            style={{ width: "200px" }}
+                            value={reviewSetup.numWeeksPerResponse}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, numWeeksPerResponse: e.target.value })}
+                            placeholder="4"
+                            style={{ width: "100px" }}
                           />
                         </div>
-                        <div style={{ marginBottom: "1rem" }}>
-                          <label htmlFor="numDaysBeforeSubmitReminder" style={{
+
+                        {/* Default Completion Deadline */}
+                        <div style={{ marginBottom: "1.5rem" }}>
+                          <label htmlFor="numWeeksPerReview" style={{
                             display: "block",
-                            fontSize: "0.875rem",
-                            fontWeight: 600,
+                            fontSize: "1rem",
+                            fontWeight: 700,
                             marginBottom: "0.5rem",
                             color: "#002C40",
                           }}>
-                            Days Before Sending Reminder for Review Submission
+                            Default Completion Deadline
                           </label>
+                          <p style={{ fontSize: "0.875rem", color: "#333", marginBottom: "0.5rem" }}>
+                            Weeks allowed to complete the review
+                          </p>
                           <PkpInput
-                            id="numDaysBeforeSubmitReminder"
+                            id="numWeeksPerReview"
                             type="number"
-                            value={reviewSetup.numDaysBeforeSubmitReminder}
-                            onChange={(e) => setReviewSetup({ ...reviewSetup, numDaysBeforeSubmitReminder: e.target.value })}
-                            placeholder="7"
-                            style={{ width: "200px" }}
+                            value={reviewSetup.numWeeksPerReview}
+                            onChange={(e) => setReviewSetup({ ...reviewSetup, numWeeksPerReview: e.target.value })}
+                            placeholder="4"
+                            style={{ width: "100px" }}
                           />
                         </div>
-                      </div>
 
-                      <PkpButton
-                        variant="primary"
-                        onClick={handleSaveReviewSetup}
-                        disabled={reviewSetupSettings.loading}
-                        loading={reviewSetupSettings.loading}
-                      >
-                        {reviewSetupSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
-                      </PkpButton>
+                        {/* Automated Email Reminders */}
+                        <div style={{ marginBottom: "1.5rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            marginBottom: "0.5rem",
+                            color: "#002C40",
+                          }}>
+                            Automated Email Reminders
+                          </h3>
+                          <p style={{ fontSize: "0.875rem", color: "#333", lineHeight: "1.5" }}>
+                            To send automated email reminders, the site administrator must enable the <code style={{ backgroundColor: "#f8f9fa", padding: "0.1rem 0.3rem", borderRadius: "3px" }}>scheduled_tasks</code> option in the OJS configuration file. Additional server configuration may be required as indicated in the OJS documentation.
+                          </p>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e5e5e5", paddingTop: "1rem" }}>
+                          <PkpButton
+                            variant="primary"
+                            onClick={handleSaveReviewSetup}
+                            disabled={reviewSetupSettings.loading}
+                            loading={reviewSetupSettings.loading}
+                          >
+                            {reviewSetupSettings.loading ? t('editor.settings.saving') : t('editor.settings.save')}
+                          </PkpButton>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1122,120 +1299,104 @@ export default function SettingsWorkflowPage() {
                 {/* Reviewer Guidance */}
                 {activeReviewSubTab === "reviewerGuidance" && (
                   <div>
-                    <h2 style={{
-                      fontSize: "1.125rem",
-                      fontWeight: 600,
-                      marginBottom: "1rem",
-                      color: "#002C40",
-                    }}>
-                      Reviewer Guidance
-                    </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      {/* Feedback Message */}
-                      {feedback.type && (
-                        <div style={{
-                          padding: "0.75rem 1rem",
-                          marginBottom: "1.5rem",
-                          borderRadius: "4px",
-                          backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
-                          color: feedback.type === "success" ? "#155724" : "#721c24",
-                          border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
-                          fontSize: "0.875rem",
-                        }}>
-                          {feedback.message}
-                        </div>
-                      )}
-
-                      <p style={{
-                        fontSize: "0.875rem",
-                        color: "rgba(0, 0, 0, 0.54)",
-                        marginBottom: "1.5rem",
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <div style={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e5e5",
+                        padding: "1.5rem",
                       }}>
-                        Provide reviewers with criteria for judging a submission's suitability for publication in the journal, which may include instructions for preparing an effective and helpful review.
-                      </p>
+                        {/* Feedback Message */}
+                        {feedback.type && (
+                          <div style={{
+                            padding: "0.75rem 1rem",
+                            marginBottom: "1.5rem",
+                            borderRadius: "4px",
+                            backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                            color: feedback.type === "success" ? "#155724" : "#721c24",
+                            border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                            fontSize: "0.875rem",
+                          }}>
+                            {feedback.message}
+                          </div>
+                        )}
 
-                      {/* Review Guidelines */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label htmlFor="reviewGuidelines" style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Review Guidelines
-                        </label>
-                        <PkpTextarea
-                          id="reviewGuidelines"
-                          rows={10}
-                          value={reviewerGuidance.reviewGuidelines}
-                          onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, reviewGuidelines: e.target.value })}
-                          placeholder="Enter review guidelines for reviewers..."
-                          style={{ width: "100%" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Guidelines that will be displayed to reviewers when they prepare their reviews.
-                        </p>
-                      </div>
-
-                      {/* Competing Interests */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label htmlFor="competingInterests" style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Competing Interests
-                        </label>
-                        <PkpTextarea
-                          id="competingInterests"
-                          rows={8}
-                          value={reviewerGuidance.competingInterests}
-                          onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, competingInterests: e.target.value })}
-                          placeholder="Enter competing interests statement..."
-                          style={{ width: "100%" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Statement about competing interests that will be displayed to reviewers.
-                        </p>
-                      </div>
-
-                      {/* Show Ensuring Link */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#002C40", fontWeight: 600 }}>
-                          <PkpCheckbox
-                            id="showEnsuringLink"
-                            checked={reviewerGuidance.showEnsuringLink}
-                            onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, showEnsuringLink: e.target.checked })}
+                        {/* Review Guidelines */}
+                        <div style={{ marginBottom: "2rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            color: "#002C40",
+                            marginBottom: "0.5rem",
+                          }}>
+                            Review Guidelines
+                          </h3>
+                          <div style={{ border: "1px solid #ccc", borderBottom: "none", padding: "0.5rem", display: "flex", gap: "0.75rem", backgroundColor: "#fff", borderTopLeftRadius: "4px", borderTopRightRadius: "4px" }}>
+                            <Bold size={16} color="#555" /><Italic size={16} color="#555" /><Superscript size={16} color="#555" /><Subscript size={16} color="#555" /><LinkIcon size={16} color="#555" /><Quote size={16} color="#555" /><List size={16} color="#555" /><ListOrdered size={16} color="#555" />
+                          </div>
+                          <PkpTextarea
+                            id="reviewGuidelines"
+                            rows={10}
+                            value={reviewerGuidance.reviewGuidelines}
+                            onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, reviewGuidelines: e.target.value })}
+                            style={{
+                              width: "100%",
+                              minHeight: "200px",
+                              borderTopLeftRadius: 0,
+                              borderTopRightRadius: 0,
+                            }}
                           />
-                          <span>Show link to the anonymous review process documentation</span>
-                        </label>
-                      </div>
+                        </div>
 
-                      <PkpButton
-                        variant="primary"
-                        onClick={handleSaveReviewerGuidance}
-                        disabled={reviewerGuidanceSettings.loading}
-                        loading={reviewerGuidanceSettings.loading}
-                      >
-                        {reviewerGuidanceSettings.loading ? "Saving..." : "Save"}
-                      </PkpButton>
+                        {/* Competing Interests */}
+                        <div style={{ marginBottom: "2rem" }}>
+                          <h3 style={{
+                            fontSize: "1rem",
+                            fontWeight: 700,
+                            color: "#002C40",
+                            marginBottom: "0.5rem",
+                          }}>
+                            Competing Interests
+                          </h3>
+                          <div style={{ border: "1px solid #ccc", borderBottom: "none", padding: "0.5rem", display: "flex", gap: "0.75rem", backgroundColor: "#fff", borderTopLeftRadius: "4px", borderTopRightRadius: "4px" }}>
+                            <Bold size={16} color="#555" /><Italic size={16} color="#555" /><Superscript size={16} color="#555" /><Subscript size={16} color="#555" /><LinkIcon size={16} color="#555" /><Quote size={16} color="#555" /><List size={16} color="#555" /><ListOrdered size={16} color="#555" />
+                          </div>
+                          <PkpTextarea
+                            id="competingInterests"
+                            rows={8}
+                            value={reviewerGuidance.competingInterests}
+                            onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, competingInterests: e.target.value })}
+                            style={{
+                              width: "100%",
+                              minHeight: "150px",
+                              borderTopLeftRadius: 0,
+                              borderTopRightRadius: 0,
+                            }}
+                          />
+                        </div>
+
+                        {/* Show Ensuring Link */}
+                        <div style={{ marginBottom: "1.5rem", border: "1px solid #e5e5e5", padding: "1rem", borderRadius: "4px" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+                            <PkpCheckbox
+                              id="showEnsuringLink"
+                              checked={reviewerGuidance.showEnsuringLink}
+                              onChange={(e) => setReviewerGuidance({ ...reviewerGuidance, showEnsuringLink: e.target.checked })}
+                            />
+                            <span>Present a link to <a href="#" style={{ color: "#006798", textDecoration: "underline" }}>how to ensure all files are anonymized</a> during upload</span>
+                          </label>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e5e5e5", paddingTop: "1rem" }}>
+                          <PkpButton
+                            variant="primary"
+                            onClick={handleSaveReviewerGuidance}
+                            disabled={reviewerGuidanceSettings.loading}
+                            loading={reviewerGuidanceSettings.loading}
+                          >
+                            {reviewerGuidanceSettings.loading ? "Saving..." : "Save"}
+                          </PkpButton>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1279,256 +1440,227 @@ export default function SettingsWorkflowPage() {
             boxShadow: "none",
             borderRadius: 0,
           }}>
-            <h2 style={{
-              fontSize: "1.125rem",
-              fontWeight: 600,
-              marginBottom: "1rem",
-              color: "#002C40",
-            }}>
-              Library Files
-            </h2>
-            <p style={{
-              fontSize: "0.875rem",
-              color: "rgba(0, 0, 0, 0.54)",
-              marginBottom: "1.5rem",
-            }}>
-              The Library provides a file repository for storing and quickly sharing common files, such as writing guidelines, author contracts and release forms, and marketing materials. Items that are stored in the Library can be quickly retrieved and added into a Submission Library to be shared with authors or assistants.
-            </p>
-            <LibraryFilesPanel />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h2 style={{
+                fontSize: "1.125rem",
+                fontWeight: 700,
+                color: "#002C40",
+                margin: 0,
+              }}>
+                Publisher Library
+              </h2>
+              <PkpButton variant="onclick" style={{ fontSize: "0.875rem" }}>Add a file</PkpButton>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {["Marketing", "Permissions", "Reports", "Other"].map((category, index) => (
+                <div key={index}>
+                  <h3 style={{
+                    fontSize: "0.875rem",
+                    fontWeight: 700,
+                    color: "#002C40",
+                    marginBottom: "0.5rem",
+                  }}>
+                    {category}
+                  </h3>
+                  <div style={{
+                    padding: "1rem",
+                    color: "rgba(0, 0, 0, 0.54)",
+                    fontSize: "0.875rem",
+                    fontStyle: "italic",
+                    borderBottom: index < 3 ? "1px solid #e5e5e5" : "none"
+                  }}>
+                    No Items
+                  </div>
+                </div>
+              ))}
+            </div>
           </PkpTabsContent>
 
           {/* Emails Tab */}
           <PkpTabsContent value="emails" style={{ padding: "0", backgroundColor: "#ffffff" }}>
-            <div style={{ display: "flex", gap: 0, minHeight: "500px" }}>
-              {/* Side Tabs */}
-              <div style={{
-                width: "20rem",
-                flexShrink: 0,
-                borderRight: "1px solid #e5e5e5",
-                backgroundColor: "#f8f9fa",
-                padding: "1rem 0",
-              }}>
+            <div style={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e5e5",
+              padding: "1.5rem",
+              minHeight: "500px"
+            }}>
+              {/* Horizontal Tabs */}
+              <div className="flex border-b border-gray-200 mb-6">
                 <button
-                  onClick={() => setActiveEmailSubTab("emailsSetup")}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    textAlign: "left",
-                    backgroundColor: activeEmailSubTab === "emailsSetup" ? "rgba(0, 103, 152, 0.1)" : "transparent",
-                    color: activeEmailSubTab === "emailsSetup" ? "#006798" : "rgba(0, 0, 0, 0.84)",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "0.875rem",
-                    fontWeight: activeEmailSubTab === "emailsSetup" ? 600 : 400,
-                  }}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${activeEmailSubTab === 'emailsSetup' ? 'text-[#006798] font-bold' : 'text-gray-600 hover:text-[#006798]'}`}
+                  onClick={() => setActiveEmailSubTab('emailsSetup')}
                 >
                   Setup
+                  {activeEmailSubTab === 'emailsSetup' && (
+                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#006798]"></div>
+                  )}
                 </button>
                 <button
-                  onClick={() => setActiveEmailSubTab("emailTemplates")}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    textAlign: "left",
-                    backgroundColor: activeEmailSubTab === "emailTemplates" ? "rgba(0, 103, 152, 0.1)" : "transparent",
-                    color: activeEmailSubTab === "emailTemplates" ? "#006798" : "rgba(0, 0, 0, 0.84)",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "0.875rem",
-                    fontWeight: activeEmailSubTab === "emailTemplates" ? 600 : 400,
-                  }}
+                  className={`px-4 py-2 text-sm font-medium transition-colors relative ${activeEmailSubTab === 'emailTemplates' ? 'text-[#006798] font-bold' : 'text-gray-600 hover:text-[#006798]'}`}
+                  onClick={() => setActiveEmailSubTab('emailTemplates')}
                 >
                   Email Templates
+                  {activeEmailSubTab === 'emailTemplates' && (
+                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#006798]"></div>
+                  )}
                 </button>
               </div>
 
-              {/* Content Area */}
-              <div style={{ flex: 1, padding: "1.5rem", backgroundColor: "#ffffff" }}>
-                {/* Emails Setup */}
-                {activeEmailSubTab === "emailsSetup" && (
-                  <div>
-                    <h2 style={{
-                      fontSize: "1.125rem",
-                      fontWeight: 600,
-                      marginBottom: "1rem",
+              {/* Emails Setup */}
+              {activeEmailSubTab === "emailsSetup" && (
+                <div>
+                  {/* Feedback Message */}
+                  {feedback.type && (
+                    <div style={{
+                      padding: "0.75rem 1rem",
+                      marginBottom: "1.5rem",
+                      borderRadius: "4px",
+                      backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
+                      color: feedback.type === "success" ? "#155724" : "#721c24",
+                      border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
+                      fontSize: "0.875rem",
+                    }}>
+                      {feedback.message}
+                    </div>
+                  )}
+
+                  {/* Signature */}
+                  <div style={{ marginBottom: "2rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                      <label htmlFor="emailSignature" style={{
+                        fontSize: "0.875rem",
+                        fontWeight: 700,
+                        color: "#002C40",
+                      }}>
+                        Signature
+                      </label>
+                      <HelpCircle size={14} color="#006798" />
+                    </div>
+                    <div style={{ border: "1px solid #ccc", borderBottom: "none", padding: "0.5rem", display: "flex", gap: "0.75rem", backgroundColor: "#fff", borderTopLeftRadius: "4px", borderTopRightRadius: "4px" }}>
+                      <Bold size={16} color="#555" /><Italic size={16} color="#555" /><Superscript size={16} color="#555" /><Subscript size={16} color="#555" /><LinkIcon size={16} color="#555" /><Upload size={16} color="#555" />
+                    </div>
+                    <PkpTextarea
+                      id="emailSignature"
+                      rows={8}
+                      value={emailSetup.emailSignature}
+                      onChange={(e) => setEmailSetup({ ...emailSetup, emailSignature: e.target.value })}
+                      style={{
+                        width: "100%",
+                        minHeight: "200px",
+                        borderTopLeftRadius: 0,
+                        borderTopRightRadius: 0,
+                      }}
+                    />
+                  </div>
+
+                  {/* Bounce Address */}
+                  <div style={{ marginBottom: "2rem" }}>
+                    <label style={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      marginBottom: "0.5rem",
                       color: "#002C40",
                     }}>
-                      Email Setup
-                    </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
+                      Bounce Address
+                    </label>
+                    <p style={{
+                      fontSize: "0.875rem",
+                      color: "#333",
+                      lineHeight: "1.5",
+                      marginBottom: 0,
                     }}>
-                      {/* Feedback Message */}
-                      {feedback.type && (
-                        <div style={{
-                          padding: "0.75rem 1rem",
-                          marginBottom: "1.5rem",
-                          borderRadius: "4px",
-                          backgroundColor: feedback.type === "success" ? "#d4edda" : "#f8d7da",
-                          color: feedback.type === "success" ? "#155724" : "#721c24",
-                          border: `1px solid ${feedback.type === "success" ? "#c3e6cb" : "#f5c6cb"}`,
-                          fontSize: "0.875rem",
-                        }}>
-                          {feedback.message}
-                        </div>
-                      )}
-
-                      <p style={{
-                        fontSize: "0.875rem",
-                        color: "rgba(0, 0, 0, 0.54)",
-                        marginBottom: "1.5rem",
-                      }}>
-                        OJS sends a number of emails during various stages of the editorial workflow as well as other actions such as registration and submission acknowledgement. The settings in this section allow you to edit the signature attached to each email as well as change the default messages sent for each type of email.
-                      </p>
-
-                      {/* Email Signature */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label htmlFor="emailSignature" style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Email Signature
-                        </label>
-                        <PkpTextarea
-                          id="emailSignature"
-                          rows={8}
-                          value={emailSetup.emailSignature}
-                          onChange={(e) => setEmailSetup({ ...emailSetup, emailSignature: e.target.value })}
-                          placeholder="Enter email signature that will be attached to all emails sent from the journal..."
-                          style={{ width: "100%" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          The email signature that will be attached to all emails sent from the journal. You can use the following variables: {"{"}$contextName{"}"} will be replaced with the journal name.
-                        </p>
-                      </div>
-
-                      {/* Email Bounce Address */}
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <label htmlFor="envelopeSender" style={{
-                          display: "block",
-                          fontSize: "0.875rem",
-                          fontWeight: 600,
-                          marginBottom: "0.5rem",
-                          color: "#002C40",
-                        }}>
-                          Email Bounce Address
-                        </label>
-                        <PkpInput
-                          id="envelopeSender"
-                          type="email"
-                          value={emailSetup.envelopeSender}
-                          onChange={(e) => setEmailSetup({ ...emailSetup, envelopeSender: e.target.value })}
-                          placeholder="noreply@journal.example"
-                          style={{ width: "100%" }}
-                        />
-                        <p style={{
-                          fontSize: "0.75rem",
-                          color: "rgba(0, 0, 0, 0.54)",
-                          marginTop: "0.5rem",
-                          marginBottom: 0,
-                        }}>
-                          Email address to use as the envelope sender (return path) for bounced emails.
-                        </p>
-                      </div>
-
-                      <PkpButton
-                        variant="primary"
-                        onClick={handleSaveEmailSetup}
-                        disabled={emailSetupSettings.loading}
-                        loading={emailSetupSettings.loading}
-                      >
-                        {emailSetupSettings.loading ? "Saving..." : "Save"}
-                      </PkpButton>
-                    </div>
+                      In order to send undeliverable emails to a bounce address, the site administrator must enable the <code style={{ backgroundColor: "#f8f9fa", padding: "0.1rem 0.3rem", borderRadius: "3px" }}>allow_envelope_sender</code> option in the site configuration file. Server configuration may be required, as indicated in the OJS documentation.
+                    </p>
                   </div>
-                )}
 
-                {/* Email Templates */}
-                {activeEmailSubTab === "emailTemplates" && (
-                  <div>
-                    <h2 style={{
-                      fontSize: "1.125rem",
-                      fontWeight: 600,
-                      marginBottom: "1rem",
-                      color: "#002C40",
-                    }}>
-                      Email Templates
-                    </h2>
-                    <div style={{
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #e5e5e5",
-                      padding: "1.5rem",
-                    }}>
-                      <p style={{
-                        fontSize: "0.875rem",
-                        color: "rgba(0, 0, 0, 0.54)",
-                        marginBottom: "1.5rem",
-                      }}>
-                        You can view a description of each email and edit the email by clicking the dropdown arrow on the right. Click Filters to filter templates by sender, recipient, workflow stage, and whether the template is enabled.
-                      </p>
-                      <div style={{ marginBottom: "1rem" }}>
-                        <PkpInput
-                          type="search"
-                          placeholder="Filter by sender, recipient, workflow stage..."
-                          style={{ width: "100%", maxWidth: "400px" }}
-                        />
-                      </div>
-                      <PkpTable>
-                        <PkpTableHeader>
-                          <PkpTableRow isHeader>
-                            <PkpTableHead>Email Template</PkpTableHead>
-                            <PkpTableHead>Description</PkpTableHead>
-                            <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Enabled</PkpTableHead>
-                            <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Actions</PkpTableHead>
-                          </PkpTableRow>
-                        </PkpTableHeader>
-                        <tbody>
-                          {USE_DUMMY && DUMMY_EMAIL_TEMPLATES.length > 0 ? (
-                            DUMMY_EMAIL_TEMPLATES.map((template) => (
-                              <PkpTableRow key={template.id}>
-                                <PkpTableCell>
-                                  <div style={{ fontWeight: 500 }}>{template.name}</div>
-                                  <div style={{ fontSize: "0.75rem", color: "rgba(0, 0, 0, 0.54)", marginTop: "0.25rem" }}>
-                                    Stage: {template.stage} • To: {template.recipient}
-                                  </div>
-                                </PkpTableCell>
-                                <PkpTableCell>
-                                  <div style={{ fontSize: "0.875rem", color: "rgba(0, 0, 0, 0.84)" }}>{template.description}</div>
-                                </PkpTableCell>
-                                <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                  <PkpCheckbox checked={template.enabled} readOnly />
-                                </PkpTableCell>
-                                <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
-                                  <PkpButton variant="onclick" size="sm" style={{ marginRight: "0.5rem" }}>Edit</PkpButton>
-                                  <PkpButton variant="onclick" size="sm">Preview</PkpButton>
-                                </PkpTableCell>
-                              </PkpTableRow>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(0, 0, 0, 0.54)", fontSize: "0.875rem" }}>
-                                {USE_DUMMY ? "No email templates found." : "Email templates list will be implemented here with edit, preview, and enable/disable functionality."}
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </PkpTable>
-                    </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e5e5e5", paddingTop: "1rem" }}>
+                    <PkpButton
+                      variant="primary"
+                      onClick={handleSaveEmailSetup}
+                      disabled={emailSetupSettings.loading}
+                      loading={emailSetupSettings.loading}
+                    >
+                      {emailSetupSettings.loading ? "Saving..." : "Save"}
+                    </PkpButton>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* Email Templates */}
+              {activeEmailSubTab === "emailTemplates" && (
+                <div>
+                  <h2 style={{
+                    fontSize: "1.125rem",
+                    fontWeight: 600,
+                    marginBottom: "1rem",
+                    color: "#002C40",
+                  }}>
+                    Email Templates
+                  </h2>
+                  <div style={{
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #e5e5e5",
+                    padding: "1.5rem",
+                  }}>
+                    <p style={{
+                      fontSize: "0.875rem",
+                      color: "rgba(0, 0, 0, 0.54)",
+                      marginBottom: "1.5rem",
+                    }}>
+                      You can view a description of each email and edit the email by clicking the dropdown arrow on the right. Click Filters to filter templates by sender, recipient, workflow stage, and whether the template is enabled.
+                    </p>
+                    <div style={{ marginBottom: "1rem" }}>
+                      <PkpInput
+                        type="search"
+                        placeholder="Filter by sender, recipient, workflow stage..."
+                        style={{ width: "100%", maxWidth: "400px" }}
+                      />
+                    </div>
+                    <PkpTable>
+                      <PkpTableHeader>
+                        <PkpTableRow isHeader>
+                          <PkpTableHead>Email Template</PkpTableHead>
+                          <PkpTableHead>Description</PkpTableHead>
+                          <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Enabled</PkpTableHead>
+                          <PkpTableHead style={{ width: "120px", textAlign: "center" }}>Actions</PkpTableHead>
+                        </PkpTableRow>
+                      </PkpTableHeader>
+                      <tbody>
+                        {USE_DUMMY && DUMMY_EMAIL_TEMPLATES.length > 0 ? (
+                          DUMMY_EMAIL_TEMPLATES.map((template) => (
+                            <PkpTableRow key={template.id}>
+                              <PkpTableCell>
+                                <div style={{ fontWeight: 500 }}>{template.name}</div>
+                                <div style={{ fontSize: "0.75rem", color: "rgba(0, 0, 0, 0.54)", marginTop: "0.25rem" }}>
+                                  Stage: {template.stage} • To: {template.recipient}
+                                </div>
+                              </PkpTableCell>
+                              <PkpTableCell>
+                                <div style={{ fontSize: "0.875rem", color: "rgba(0, 0, 0, 0.84)" }}>{template.description}</div>
+                              </PkpTableCell>
+                              <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
+                                <PkpCheckbox checked={template.enabled} readOnly />
+                              </PkpTableCell>
+                              <PkpTableCell style={{ width: "120px", textAlign: "center" }}>
+                                <PkpButton variant="onclick" size="sm" style={{ marginRight: "0.5rem" }}>Edit</PkpButton>
+                                <PkpButton variant="onclick" size="sm">Preview</PkpButton>
+                              </PkpTableCell>
+                            </PkpTableRow>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(0, 0, 0, 0.54)", fontSize: "0.875rem" }}>
+                              {USE_DUMMY ? "No email templates found." : "Email templates list will be implemented here with edit, preview, and enable/disable functionality."}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </PkpTable>
+                  </div>
+                </div>
+              )}
             </div>
           </PkpTabsContent>
         </PkpTabs>

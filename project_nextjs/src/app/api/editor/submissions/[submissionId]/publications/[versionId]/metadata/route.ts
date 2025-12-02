@@ -1,16 +1,16 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string; versionId: string }>;
 };
 
-export async function PATCH(request: NextRequest, context: RouteParams) {
+export async function PATCH(request: Request, context: RouteParams) {
   try {
     const { submissionId, versionId } = await context.params;
     if (!submissionId || !versionId) {

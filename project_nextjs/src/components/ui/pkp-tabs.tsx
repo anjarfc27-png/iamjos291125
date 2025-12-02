@@ -114,7 +114,7 @@ export function PkpTabsTrigger({ value, children, className, style }: PkpTabsTri
         border: "none",
         borderTop: "none",
         borderRight: "none",
-        borderBottom: isActive ? "2px solid #006798" : "2px solid transparent",
+        borderBottom: isActive ? "4px solid #006798" : "4px solid transparent",
         borderLeft: "none",
         cursor: "pointer",
         transition: "all 0.2s ease",

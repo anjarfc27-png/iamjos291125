@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{}> }) {
+export async function POST(request: Request, { params }: { params: Promise<{}> }) {
   try {
     const response = NextResponse.json({ message: 'Logged out successfully' })
 

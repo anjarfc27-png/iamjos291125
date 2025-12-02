@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserServer } from "@/lib/auth-server";
 import { getReviewerAssignment } from "@/features/reviewer/data";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ id: string; attachmentId: string }>;
 };
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const { id, attachmentId } = await params;
     const user = await getCurrentUserServer();

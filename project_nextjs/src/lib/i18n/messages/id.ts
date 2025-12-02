@@ -27,6 +27,11 @@ export const id = {
     details: 'Detail',
   },
 
+  user: {
+    profile: 'Edit Profil',
+    logOut: 'Keluar',
+  },
+
   // Site Administration
   admin: {
     siteAdministration: 'Administrasi Situs',
@@ -61,7 +66,7 @@ export const id = {
     languages: 'Bahasa',
     navigation: 'Navigasi',
     bulkEmails: 'Email Massal',
-    
+
     // Setup Sub-tabs
     siteName: 'Nama Situs',
     siteLogoUrl: 'URL Logo Situs',
@@ -71,12 +76,12 @@ export const id = {
     saveSettings: 'Simpan Pengaturan',
     minimumPasswordLength: 'Panjang password minimum (karakter)',
     required: 'Wajib',
-    
+
     // Information
     supportName: 'Nama dukungan',
     supportEmail: 'Email dukungan',
     supportPhone: 'Telepon dukungan',
-    
+
     // Appearance
     theme: 'Tema',
     selectTheme: 'Pilih Tema',
@@ -201,7 +206,7 @@ export const id = {
       saving: 'Menyimpan...',
       saved: 'Pengaturan berhasil disimpan',
       saveError: 'Gagal menyimpan pengaturan',
-      
+
       // Context Settings
       context: {
         title: 'Konteks',
@@ -222,7 +227,7 @@ export const id = {
         delete: 'Hapus',
         enabled: 'Diaktifkan',
       },
-      
+
       // Website Settings
       website: {
         title: 'Website',
@@ -257,7 +262,7 @@ export const id = {
         disable: 'Nonaktifkan',
         install: 'Instal',
       },
-      
+
       // Workflow Settings
       workflow: {
         title: 'Alur Kerja',
@@ -283,7 +288,7 @@ export const id = {
         emailSignature: 'Tanda Tangan Email',
         emailFooter: 'Footer Email',
       },
-      
+
       // Distribution Settings
       distribution: {
         title: 'Distribusi',
@@ -301,7 +306,7 @@ export const id = {
         currency: 'Mata Uang',
         searchEngineIndexing: 'Pengindeksan Mesin Pencari',
       },
-      
+
       // Access Settings
       access: {
         title: 'Akses',

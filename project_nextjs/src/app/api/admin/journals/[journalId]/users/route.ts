@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { JOURNAL_ROLE_OPTIONS } from "@/features/journals/types";
+export const dynamic = 'force-dynamic';
 
 // Mapping role string to role_id based on OJS PKP 3.3
 // ROLE_ID_MANAGER = 16, ROLE_ID_SUB_EDITOR = 17, ROLE_ID_REVIEWER = 4096, ROLE_ID_AUTHOR = 65536
@@ -40,7 +41,7 @@ export async function GET(
 
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     // Get users with their user groups for this journal
     const { data: userGroupsData, error: userGroupsError } = await supabase
       .from("user_user_groups")
@@ -201,7 +202,7 @@ export async function DELETE(
 
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     // Get role_id from role string
     const roleId = ROLE_TO_ROLE_ID[role];
     if (!roleId) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSiteAdmin } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 // Dummy log data for now
 const generateDummyLog = () => {
@@ -13,7 +14,7 @@ const generateDummyLog = () => {
   return logs.map((log) => `[${log.executedAt}] ${log.task} - ${log.status} (${log.duration})\n`).join("");
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     await requireSiteAdmin();
 

@@ -1,18 +1,17 @@
-import { getSiteLanguages, installLocaleAction, updateSiteLanguagesAction } from "../../actions";
-import { LOCALE_MAP } from "@/lib/locales";
+import { getSiteLanguages, updateSiteLanguagesAction, installLocaleAction } from "../../actions";
+import { getLocaleInfo } from "@/lib/locales";
 import LanguagesPageClient from "./languages-client";
-
-export const dynamic = 'force-dynamic';
 
 export default async function SiteSetupLanguagesPage() {
   const initial = await getSiteLanguages();
-  const installedLocales = Object.values(LOCALE_MAP);
+  const installedLocales = initial.enabled_locales.map((code) => getLocaleInfo(code)).filter(Boolean);
 
-  async function installLocaleWrapper(formData: FormData) {
+  // Server action wrapper yang menerima FormData (dipanggil dari Client Component)
+  async function installLocaleActionWrapper(formData: FormData) {
     "use server";
-    const localeCode = formData.get("locale_code") as string;
-    if (localeCode) {
-      await installLocaleAction(localeCode);
+    const localeCode = formData.get("locale_code");
+    if (typeof localeCode === "string" && localeCode.trim()) {
+      await installLocaleAction(localeCode.trim());
     }
   }
 
@@ -33,14 +32,13 @@ export default async function SiteSetupLanguagesPage() {
           Languages
         </h2>
       </header>
-      <div style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
-        <LanguagesPageClient
-          initial={initial}
-          installedLocales={installedLocales}
-          updateAction={updateSiteLanguagesAction}
-          installAction={installLocaleWrapper}
-        />
-      </div>
+      
+      <LanguagesPageClient 
+        initial={initial} 
+        installedLocales={installedLocales}
+        updateAction={updateSiteLanguagesAction}
+        installAction={installLocaleActionWrapper}
+      />
     </div>
   );
 }

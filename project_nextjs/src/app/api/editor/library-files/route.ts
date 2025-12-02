@@ -1,4 +1,3 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,10 +12,11 @@ import {
   mapLibraryFile,
   uploadLibraryFile,
 } from "./utils";
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });
     }
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .eq("context_id", journalId)
       .order("created_at", { ascending: false });
 
-    const search = request.nextUrl.searchParams.get("search");
+    const search = (request as any).nextUrl.searchParams.get("search");
     if (search) {
       query = query.ilike("file_name", `%${search}%`);
     }
@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    const journalId = (formData.get("journalId") as string | null) ?? request.nextUrl.searchParams.get("journalId");
+    const journalId = (formData.get("journalId") as string | null) ?? (request as any).nextUrl.searchParams.get("journalId");
 
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "journalId is required" }, { status: 400 });

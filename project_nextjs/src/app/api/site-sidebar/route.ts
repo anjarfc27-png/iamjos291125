@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSiteAppearanceSetup } from "@/app/(admin)/admin/site-settings/actions";
-
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
@@ -11,3 +10,5 @@ export async function GET() {
     return NextResponse.json({ ok: false, sidebar: [] }, { status: 500 });
   }
 }
+
+

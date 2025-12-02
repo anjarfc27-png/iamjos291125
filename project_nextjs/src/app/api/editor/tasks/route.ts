@@ -1,11 +1,11 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 
 import { getCurrentUser } from "@/lib/permissions";
 import { listSubmissionTasks } from "@/features/editor/data";
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUser(request);
     if (!user) {

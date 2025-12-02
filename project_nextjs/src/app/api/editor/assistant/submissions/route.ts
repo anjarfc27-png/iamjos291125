@@ -1,14 +1,14 @@
-"use server";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser, hasUserJournalRole, hasUserSiteRole } from "@/lib/permissions";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/editor/assistant/submissions
  * Get submissions assigned to the current assistant user
  */
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUser(request);
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseAdminClient();
 
     // Untuk sekarang, asumsikan assistant beroperasi dalam konteks satu jurnal yang dipilih
-    const journalId = request.nextUrl.searchParams.get("journalId");
+    const journalId = (request as any).nextUrl.searchParams.get("journalId");
     if (!journalId) {
       return NextResponse.json({ ok: false, message: "Missing journalId" }, { status: 400 });
     }

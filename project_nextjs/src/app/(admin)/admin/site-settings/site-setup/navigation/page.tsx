@@ -2,8 +2,6 @@ import { getSiteNavigation, updateSiteNavigationAction } from "../../actions";
 import { NavigationBuilder } from "@/features/admin/components/navigation-builder";
 import { Button } from "@/components/ui/button";
 
-export const dynamic = 'force-dynamic';
-
 export default async function SiteSetupNavigationPage() {
   const initial = await getSiteNavigation();
 

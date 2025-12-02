@@ -6,12 +6,13 @@ import {
   removeJournalUserRole,
 } from "@/app/(admin)/admin/site-management/hosted-journals/actions";
 import { requireJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteContext = {
   params: Promise<{ journalId: string }>;
 };
 
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const { journalId } = await context.params;
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function POST(request: NextRequest, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
     const { journalId } = await context.params;
 
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const { journalId } = await context.params;
 

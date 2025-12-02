@@ -1,9 +1,9 @@
-"use server";
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser, hasUserSiteRole, hasUserJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ submissionId: string; queryId: string }>;
@@ -14,7 +14,7 @@ type RouteParams = {
  * POST: Add a note to a query
  * Based on OJS 3.3 query notes system
  */
-export async function POST(request: NextRequest, context: RouteParams) {
+export async function POST(request: Request, context: RouteParams) {
   try {
     const { submissionId, queryId } = await context.params;
 

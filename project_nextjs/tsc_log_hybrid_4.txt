@@ -1,0 +1,4 @@
+scripts/verify_reviewer_actions.ts(44,97): error TS2554: Expected 1-2 arguments, but got 3.
+scripts/verify_reviewer_actions.ts(59,12): error TS2554: Expected 1 arguments, but got 2.
+src/app/(admin)/admin/site-management/hosted-journals/create/page.tsx(56,18): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string>'.

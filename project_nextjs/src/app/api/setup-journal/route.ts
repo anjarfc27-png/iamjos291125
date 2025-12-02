@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/db'
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{}> }) {
+export async function GET(request: Request, { params }: { params: Promise<{}> }) {
   try {
     // Cek apakah journal default sudah ada
     const { data: existingJournal } = await supabaseAdmin

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUserServer } from "@/lib/auth-server";
+export const dynamic = 'force-dynamic';
 
 type RouteContext = {
   params: Promise<{ submissionId: string }>;
@@ -11,7 +12,7 @@ type RouteContext = {
  * Author File Upload API Route
  * Allows authors to upload files to their own submissions
  */
-export async function POST(request: NextRequest, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   try {
     const { submissionId } = await context.params;
     

@@ -30,20 +30,13 @@ export default async function AuthorSubmissionDetailPage({ params, searchParams 
 
   // Check if user is the author of this submission
   const supabase = await createSupabaseServerClient();
+  const { data: submission } = await supabase
+    .from('submissions')
+    .select('author_id')
+    .eq('id', id)
+    .single();
 
-  // Check if user is a participant with role 'author'
-  const { data: participant } = await supabase
-    .from('submission_participants')
-    .select('user_id')
-    .eq('submission_id', id)
-    .eq('user_id', user.id)
-    .eq('role', 'author')
-    .maybeSingle();
-
-  if (!participant) {
-    // Fallback: Check if user is the one who created the submission (if we can track that)
-    // Or check if they are an admin/editor who can view it (but this is author page)
-    // For now, strict check on participant role 'author'
+  if (!submission || submission.author_id !== user.id) {
     notFound();
   }
 

@@ -1,0 +1,4 @@
+src/features/journals/components/journal-edit-form.tsx(132,7): error TS1005: ',' expected.
+src/features/journals/components/journal-edit-form.tsx(132,21): error TS1005: ')' expected.
+src/features/journals/components/journal-edit-form.tsx(140,4): error TS1005: ',' expected.
+src/features/journals/components/journal-edit-form.tsx(211,1): error TS1128: Declaration or statement expected.

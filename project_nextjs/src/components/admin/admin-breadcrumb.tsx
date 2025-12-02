@@ -36,13 +36,13 @@ export function AdminBreadcrumb({ items }: AdminBreadcrumbProps) {
                             {item.label}
                         </Link>
                     ) : (
-                        <span style={{ color: pkpColors.textGray, fontFamily: pkpTypography.fontFamily }}>{item.label}</span>
+                        <span style={{ color: pkpColors.textDark, fontFamily: pkpTypography.fontFamily }}>{item.label}</span>
                     )}
                     {index < items.length - 1 && (
                         <span style={{
                             margin: '0 0.5rem',
                             color: pkpColors.textGray
-                        }}> » </span>
+                        }}> / </span>
                     )}
                 </span>
             ))}

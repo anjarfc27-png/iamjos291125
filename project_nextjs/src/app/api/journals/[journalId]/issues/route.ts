@@ -1,9 +1,9 @@
-"use server";
 
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireJournalRole } from "@/lib/permissions";
+export const dynamic = 'force-dynamic';
 
 type RouteParams = {
   params: Promise<{ journalId: string }>;
@@ -16,7 +16,7 @@ type RouteParams = {
  * Permissions:
  * - Journal managers, editors, section editors, and site admins can view.
  */
-export async function GET(request: NextRequest, context: RouteParams) {
+export async function GET(request: Request, context: RouteParams) {
   try {
     const { journalId } = await context.params;
     if (!journalId) {
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest, context: RouteParams) {
  * Body (update):
  * { id: string, volume?: number, number?: number, year?: number, title?: string, published?: boolean, datePublished?: string | null }
  */
-export async function POST(request: NextRequest, context: RouteParams) {
+export async function POST(request: Request, context: RouteParams) {
   const { journalId } = await context.params;
   if (!journalId) {
     return NextResponse.json({ ok: false, message: "Journal tidak ditemukan." }, { status: 400 });

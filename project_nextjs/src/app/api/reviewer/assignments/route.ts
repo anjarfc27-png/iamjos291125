@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserServer } from "@/lib/auth-server";
 import { getReviewerAssignments, getPendingReviewerAssignments, getActiveReviewerAssignments, getCompletedReviewerAssignments } from "@/features/reviewer/data";
+export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUserServer();
 
